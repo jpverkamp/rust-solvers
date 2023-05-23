@@ -1,0 +1,17 @@
+{
+  "width": 7,
+  "height": 7,
+  "length": 2,
+
+  "entrances": [{ "x": 0, "y": 4 }],
+  "exits": [{ "x": 8, "y": 4 }],
+  "entities": [
+    [{ "x": 4, "y": 1 }, "Wall"],
+    [{ "x": 4, "y": 7 }, "Wall"],
+    [{ "x": 6, "y": 4 }, "Wall"],
+    [{ "x": 4, "y": 5 }, { "Alien": { "color": "Purple" } }],
+    [{ "x": 4, "y": 3 }, { "Alien": { "color": "Orange" } }],
+    [{ "x": 7, "y": 1 }, { "House": { "color": "Purple" } }],
+    [{ "x": 7, "y": 7 }, { "House": { "color": "Orange" } }]
+  ]
+}

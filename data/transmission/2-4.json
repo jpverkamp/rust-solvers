@@ -1,0 +1,12 @@
+{
+  "nodes": [
+    { "x": 2, "y": 0, "kind": "Transmitter", "size": 1, "initial_signal": 1 },
+    { "x": 2, "y": 2, "kind": "Transmitter", "size": 1, "initial_signal": 1 },
+
+    { "x": 1, "y": 1, "kind": "Transceiver", "size": 1 },
+    { "x": 3, "y": 1, "kind": "Transceiver", "size": 2 },
+
+    { "x": 0, "y": 2, "kind": "Receiver", "size": 1 },
+    { "x": 4, "y": 2, "kind": "Receiver", "size": 1 }
+  ]
+}
