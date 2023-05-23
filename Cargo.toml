@@ -3,8 +3,18 @@ name = "solver"
 version = "0.1.0"
 edition = "2021"
 
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+[profile.release]
+debug = true
 
 [dependencies]
+derive_builder = "0.12.0"
 env_logger = "0.9.1"
+im = "15.1.0"
 log = "0.4.17"
+paste = "1.0.11"
+rand = "0.8.5"
+serde = { version = "1.0.147", features = ["derive"] }
+serde-lexpr = "0.1.2"
+serde_json = "1.0.87"
+serde_sexpr = "0.1.0"
+tracing = "0.1.37"
