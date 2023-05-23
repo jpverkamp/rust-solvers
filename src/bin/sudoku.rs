@@ -1,7 +1,7 @@
 use std::fmt;
 use std::io::{self, BufRead};
 
-use solver::{SearchMode, Solver, State};
+use solver::{Solver, State};
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 struct Sudoku {
@@ -57,7 +57,7 @@ impl<G> State<G> for Sudoku {
         return true;
     }
 
-    fn next_states(&self, _: &G) -> Option<Vec<Sudoku>> {
+    fn next_states(&self, _: &G) -> Option<Vec<(i64, Sudoku)>> {
         let mut states = Vec::new();
 
         // Find the next empty square
@@ -87,7 +87,7 @@ impl<G> State<G> for Sudoku {
                         // Valid so far, so generate a new board using that value
                         let mut next = self.clone();
                         next.board[x][y] = value;
-                        states.push(next);
+                        states.push((1, next));
                     }
 
                     // Return the possible next states for this empty square
@@ -104,6 +104,24 @@ impl<G> State<G> for Sudoku {
         // If we made it here, there are no empty squares, is_solved should be true
         // (We shouldn't make it here)
         None
+    }
+
+    fn heuristic(&self, _global: &G) -> i64 {
+        let mut empty = 0;
+
+        for x in 0..9 {
+            for y in 0..9 {
+                if self.board[x][y] == 0 {
+                    empty += 1;
+                }
+            }
+        }
+
+        return empty;
+    }
+
+    fn display(&self, _global: &G) {
+        todo!()
     }
 }
 
@@ -131,68 +149,22 @@ fn main() {
     let initial_state = Sudoku { board };
     println!("initial: {}", initial_state);
 
-    {
-        println!("\nBreadth first:");
-        let mut solver = Solver::new((), &initial_state);
-        solver.set_mode(SearchMode::BreadthFirst);
-        match solver.next() {
-            Some(solution) => println!("solution: {}", solution),
-            None => println!("no solution found! :("),
-        };
-        println!(
-            "{} states, {} seconds",
-            solver.states_checked(),
-            solver.time_spent()
-        );
+    let mut solver = Solver::new((), initial_state);
+
+    while let Some(state) = solver.next() {
+        // println!("state: {}", state);
+        // println!(
+        //     "{} states, {} seconds",
+        //     solver.states_checked(),
+        //     solver.time_spent()
+        // );
     }
 
-    {
-        println!("\nDepth first:");
-        let mut solver = Solver::new((), &initial_state);
-        solver.set_mode(SearchMode::DepthFirst);
-        match solver.next() {
-            Some(solution) => println!("solution: {}", solution),
-            None => println!("no solution found! :("),
-        };
-        println!(
-            "{} states, {} seconds",
-            solver.states_checked(),
-            solver.time_spent()
-        );
-    }
+    println!("solution: {}", solver.get_solution().unwrap());
 
-    {
-        println!("\nCheck all (loop):");
-        let mut solver = Solver::new((), &initial_state);
-
-        loop {
-            match solver.next() {
-                Some(solution) => println!("solution: {}", solution),
-                None => {
-                    break;
-                }
-            };
-        }
-
-        println!(
-            "{} states, {} seconds",
-            solver.states_checked(),
-            solver.time_spent()
-        );
-    }
-
-    {
-        println!("\nCheck all (for):");
-        let mut solver = Solver::new((), &initial_state);
-
-        for solution in &mut solver {
-            println!("solution: {}", solution);
-        }
-
-        println!(
-            "{} states, {} seconds",
-            solver.states_checked(),
-            solver.time_spent()
-        );
-    }
+    println!(
+        "{} states, {} seconds",
+        solver.states_checked(),
+        solver.time_spent()
+    );
 }
