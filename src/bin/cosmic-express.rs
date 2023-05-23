@@ -5,7 +5,7 @@ use std::io;
 
 use serde::{Deserialize, Serialize};
 
-use solver::{SearchMode, Solver, State};
+use solver::{Solver, State};
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, Serialize, Deserialize)]
 struct Point {
@@ -182,7 +182,7 @@ impl State<CosmicExpressGlobal> for Path {
         return false;
     }
 
-    fn next_states(&self, g: &CosmicExpressGlobal) -> Option<Vec<Path>> {
+    fn next_states(&self, g: &CosmicExpressGlobal) -> Option<Vec<(i64, Path)>> {
         let mut result = Vec::new();
 
         // If we don't have a path yet, start with each entrance
@@ -190,7 +190,7 @@ impl State<CosmicExpressGlobal> for Path {
             for entrance in g.entrances.iter() {
                 let mut new_path = Path(Vec::new());
                 new_path.0.push(entrance.clone());
-                result.push(new_path);
+                result.push((0, new_path));
             }
         }
         // If we do have a path, expand the last node
@@ -220,7 +220,7 @@ impl State<CosmicExpressGlobal> for Path {
 
                 let mut new_path = self.clone();
                 new_path.0.push(p);
-                result.push(new_path);
+                result.push((1, new_path));
             }
         }
 
@@ -305,6 +305,18 @@ impl State<CosmicExpressGlobal> for Path {
             println!();
         }
     }
+
+    fn heuristic(&self, global: &CosmicExpressGlobal) -> i64 {
+        let p = self.0.last().unwrap();
+        let mut min_d = i64::MAX;
+
+        for exit in global.exits.iter() {
+            let d = (p.x - exit.x).abs() + (p.y - exit.y).abs();
+            min_d = min_d.min(d.into());
+        }
+
+        return min_d;
+    }
 }
 
 fn main() {
@@ -316,13 +328,21 @@ fn main() {
 
     println!("Global State: {:#?}", global);
 
-    let mut solver: Solver<CosmicExpressGlobal, Path> = Solver::new(global, &initial_path);
-    solver.set_mode(SearchMode::DepthFirst);
-    // solver.set_mode(SearchMode::BreadthFirst);
-
+    let mut solver: Solver<CosmicExpressGlobal, Path> = Solver::new(global.clone(), initial_path.clone());
     solver.display(&initial_path);
 
-    let solution = solver.next();
+    while let Some(state) = solver.next() {
+        if solver.states_checked() % 10000 == 0 {
+            state.display(&global);
+            println!(
+                "{} states, {} seconds",
+                solver.states_checked(),
+                solver.time_spent()
+            );
+        }
+        
+    }
+    let solution = solver.get_solution();
 
     println!("{:?}", solution);
     if let Some(path) = solution {
