@@ -1,7 +1,7 @@
 use std::{env, fmt::Display};
 
 use serde::{Deserialize, Serialize};
-use solver::{SearchMode, Solver, State};
+use solver::{Solver, State};
 
 const ANTENNA_RADIUS: f32 = 2.0;
 
@@ -97,7 +97,7 @@ struct Energy {
 }
 
 impl State<Map> for Energy {
-    fn next_states(&self, global: &Map) -> Option<Vec<Self>>
+    fn next_states(&self, global: &Map) -> Option<Vec<(i64, Self)>>
     where
         Self: Sized,
     {
@@ -268,7 +268,7 @@ impl State<Map> for Energy {
                     break;
                 }
 
-                next.push(new_state);
+                next.push((1, new_state));
             }
         }
 
@@ -350,6 +350,10 @@ impl State<Map> for Energy {
     fn display(&self, global: &Map) {
         println!("global: {global:?}, energy: {self:?}");
     }
+
+    fn heuristic(&self, global: &Map) -> i64 {
+        10000 // TODO
+    }
 }
 
 impl From<Map> for Energy {
@@ -382,10 +386,12 @@ fn main() {
     tracing::info!("No cross mode: {}", map.mode_no_cross);
 
     let energy = Energy::from(map.clone());
-    let mut solver: Solver<Map, Energy> = Solver::new(map.clone(), &energy);
-    solver.set_mode(SearchMode::BreadthFirst);
+    let mut solver: Solver<Map, Energy> = Solver::new(map.clone(), energy.clone());
 
-    let solution = solver.next();
+    while let Some(state) = solver.next() {    
+    }
+
+    let solution = solver.get_solution();
 
     // Output answer as text (if we have one)
     if let Some(path) = solution.clone() {
