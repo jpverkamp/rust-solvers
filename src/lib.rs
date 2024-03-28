@@ -87,6 +87,10 @@ impl<GlobalState, LocalState: State<GlobalState>> Solver<GlobalState, LocalState
         self.states_checked
     }
 
+    pub fn in_queue(&self) -> usize {
+        self.to_check.len()
+    }
+
     /// Determine how long we've been searching (mostly for debug output)
     pub fn time_spent(&self) -> f32 {
         self.time_spent
@@ -98,6 +102,20 @@ impl<GlobalState, LocalState: State<GlobalState>> Solver<GlobalState, LocalState
         state.display(&self.global_state)
     }
 
+    // Return the path between two states (if one exists)
+    pub fn path(&self, src: LocalState, dst: LocalState) -> Option<Vec<LocalState>> {
+        let mut path = Vec::new();
+        let mut current = dst.clone();
+
+        while current != src {
+            path.push(current.clone());
+            current = self.steps.get(&current).unwrap().clone();
+        }
+
+        path.push(src);
+        path.reverse();
+        Some(path)
+    }
 }
 
 /// Iterate through the search space for the current state
@@ -152,6 +170,9 @@ impl<GlobalState, LocalState: State<GlobalState> + Debug> Iterator for Solver<Gl
                 if estimated_distance >= *self.distances.get(&next_state).unwrap_or(&std::i64::MAX) {
                     continue;
                 }
+
+                // Update the distance map with the known distance
+                self.distances.insert(next_state.clone(), current_distance + step_distance);
 
                 // Otherwise, record this step and add to queue
                 self.steps.insert(next_state.clone(), current_state.clone());

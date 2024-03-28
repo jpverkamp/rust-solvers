@@ -333,6 +333,7 @@ fn main() {
 
     while let Some(state) = solver.next() {
         if solver.states_checked() % 10000 == 0 {
+            print!("\x1B[2J");
             state.display(&global);
             println!(
                 "{} states, {} seconds",
@@ -344,6 +345,7 @@ fn main() {
     }
     let solution = solver.get_solution();
 
+    print!("\x1B[2J");
     println!("{:?}", solution);
     if let Some(path) = solution {
         solver.display(&path);
