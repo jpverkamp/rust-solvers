@@ -7,10 +7,11 @@ use priority_queue::PriorityQueue;
 /// A trait for a state in a search problem
 /// 
 /// `G` should store global state which is shared between all states and does not have to be cloned
-pub trait State<G>: Clone + Eq + Hash {
+/// `S` should be the type of a single 'step' for reporting the final path
+pub trait State<G, S>: Clone + Eq + Hash {
     /// Given the current state, return a vector of all possible next states with the cost for each single step
     /// We will call is_valid on all states, so these do not *have* to be valid 
-    fn next_states(&self, global: &G) -> Option<Vec<(i64, Self)>>
+    fn next_states(&self, global: &G) -> Option<Vec<(i64, S, Self)>>
     where
         Self: Sized;
 
@@ -33,18 +34,19 @@ pub trait State<G>: Clone + Eq + Hash {
 /// Global state is shared between all states and shouldn't change
 /// Local state is what we're searching through and should only store mutable values
 #[derive(Debug)]
-pub struct Solver<GlobalState, LocalState: State<GlobalState>> {
+pub struct Solver<GlobalState, LocalState: State<GlobalState, Step>, Step> {
     // A link to the shared global state
     global_state: GlobalState,
 
     // A* parameters
     solution: Option<LocalState>,
     to_check: PriorityQueue<LocalState, i64>,
-    steps: HashMap<LocalState, LocalState>,
+    steps: HashMap<LocalState, (Step, LocalState)>,
     distances: HashMap<LocalState, i64>,
     
     // Debug values
     states_checked: usize,
+    states_invalidated: usize,
     time_spent: f32,
 }
 
@@ -52,10 +54,10 @@ pub struct Solver<GlobalState, LocalState: State<GlobalState>> {
 /// 
 /// Global state is shared between all states and shouldn't change
 /// Local state is what we're searching through and should only store mutable values
-impl<GlobalState, LocalState: State<GlobalState>> Solver<GlobalState, LocalState>
+impl<GlobalState, LocalState: State<GlobalState, Step>, Step: Copy> Solver<GlobalState, LocalState, Step>
 {
     /// Initialize a new solver with a global and local state
-    pub fn new(global_state: GlobalState, initial_state: LocalState) -> Solver<GlobalState, LocalState> {
+    pub fn new(global_state: GlobalState, initial_state: LocalState) -> Solver<GlobalState, LocalState, Step> {
         let mut to_check = PriorityQueue::new();
         to_check.push(initial_state.clone(), 0);
 
@@ -73,6 +75,7 @@ impl<GlobalState, LocalState: State<GlobalState>> Solver<GlobalState, LocalState
             distances,
 
             states_checked: 0,
+            states_invalidated: 0,
             time_spent: 0 as f32,
         }
     }
@@ -85,6 +88,10 @@ impl<GlobalState, LocalState: State<GlobalState>> Solver<GlobalState, LocalState
     /// Determine how many states we've checked (mostly for debug output)
     pub fn states_checked(&self) -> usize {
         self.states_checked
+    }
+
+    pub fn states_invalidated(&self) -> usize {
+        self.states_invalidated
     }
 
     pub fn in_queue(&self) -> usize {
@@ -103,16 +110,16 @@ impl<GlobalState, LocalState: State<GlobalState>> Solver<GlobalState, LocalState
     }
 
     // Return the path between two states (if one exists)
-    pub fn path(&self, src: LocalState, dst: LocalState) -> Option<Vec<LocalState>> {
+    pub fn path(&self, src: LocalState, dst: LocalState) -> Option<Vec<Step>> {
         let mut path = Vec::new();
         let mut current = dst.clone();
 
         while current != src {
-            path.push(current.clone());
-            current = self.steps.get(&current).unwrap().clone();
+            let (step, next) = self.steps.get(&current).unwrap().clone();
+            path.push(step);
+            current = next;
         }
 
-        path.push(src);
         path.reverse();
         Some(path)
     }
@@ -128,7 +135,7 @@ impl<GlobalState, LocalState: State<GlobalState>> Solver<GlobalState, LocalState
 ///     - calculate heuristic and priority queue the new state
 /// - update debug statistics
 /// - yield the state investigated
-impl<GlobalState, LocalState: State<GlobalState> + Debug> Iterator for Solver<GlobalState, LocalState>
+impl<GlobalState, LocalState: State<GlobalState, Step> + Debug, Step> Iterator for Solver<GlobalState, LocalState, Step>
 {
     type Item = LocalState;
 
@@ -157,9 +164,10 @@ impl<GlobalState, LocalState: State<GlobalState> + Debug> Iterator for Solver<Gl
         // Otherwise, iterate and add neighbors to the queue
         // If there are no neighbors, we will effectively backtrack
         if let Some(ls) = current_state.next_states(&self.global_state) {
-            for (step_distance, next_state) in ls {
+            for (step_distance, step, next_state) in ls {
                 // Skip invalidate states
                 if !next_state.is_valid(&self.global_state) {
+                    self.states_invalidated += 1;
                     continue;
                 }
 
@@ -175,7 +183,7 @@ impl<GlobalState, LocalState: State<GlobalState> + Debug> Iterator for Solver<Gl
                 self.distances.insert(next_state.clone(), current_distance + step_distance);
 
                 // Otherwise, record this step and add to queue
-                self.steps.insert(next_state.clone(), current_state.clone());
+                self.steps.insert(next_state.clone(), (step, current_state.clone()));
                 self.to_check.push(next_state.clone(), estimated_distance);
             }
         }

@@ -22,7 +22,6 @@ impl Sub<Point> for Point {
     fn sub(self, other: Point) -> Point {
         Point(self.0 - other.0, self.1 - other.1)
     }
-
 }
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
@@ -65,6 +64,14 @@ struct Map {
     height: u8,
     player: Point,
     data: Vec<Location>,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+enum Step {
+    North,
+    South,
+    East,
+    West,
 }
 
 impl Map {
@@ -151,7 +158,7 @@ impl fmt::Display for Map {
     }
 }
 
-impl<G> State<G> for Map {
+impl<G> State<G, Step> for Map {
     fn is_valid(&self, g: &G) -> bool {
         use Location::*;
         use Stack::*;
@@ -167,6 +174,7 @@ impl<G> State<G> for Map {
         let mut small_balls = 0;
         let mut medium_balls = 0;
         let mut large_balls = 0;
+        let mut snow_count = 0;
 
         for y in 0..self.height {
             for x in 0..self.width {
@@ -176,6 +184,7 @@ impl<G> State<G> for Map {
                         medium_balls += if (any as u8) & 2 != 0 { 1 } else { 0 };
                         large_balls += if (any as u8) & 4 != 0 { 1 } else { 0 };
                     }
+                    Some(Snow) => snow_count += 1,
                     _ => continue,
                 }
             }
@@ -188,17 +197,32 @@ impl<G> State<G> for Map {
             return false;
         }
 
+        // We have to have enough snow left to transform so that we have N L/M/S
+        // Assume we have the correct number of balls.
+        // lol
+        let target_snowmen = (small_balls + medium_balls + large_balls) / 3;
+        
+        if small_balls < target_snowmen {
+            return false;
+        }
+
+        if medium_balls + small_balls.min(snow_count) < target_snowmen {
+            return false;
+        }
+
+        if large_balls + medium_balls.min(snow_count) + small_balls.min(snow_count) < target_snowmen {
+            return false;
+        }
+
         // This overestimates
-        // Technically a snowman is 'moveable' if you can either stack them 
+        // Technically a snowman is 'moveable' if you can either stack them
         // Or the target snowman is itself moveable
         // Which we can calculate, but I haven't yet
-        let is_moveable = |l: Location| {
-            match l {
-                Empty => true,
-                Snow => true,
-                Snowman(_) => true,
-                _ => false,
-            }
+        let is_moveable = |l: Location| match l {
+            Empty => true,
+            Snow => true,
+            Snowman(_) => true,
+            _ => false,
         };
 
         // Any non-large in a corner is trapped (and thus invalid)
@@ -208,7 +232,7 @@ impl<G> State<G> for Map {
                     Some(Snowman(LargeMediumSmall)) => continue,
                     Some(Snowman(LargeMedium)) => continue,
                     Some(Snowman(Large)) => continue,
-                    Some(Snowman(_)) => {},
+                    Some(Snowman(_)) => {}
                     _ => continue,
                 }
 
@@ -232,7 +256,7 @@ impl<G> State<G> for Map {
             }
         }
 
-        // Otherwise, assume valid 
+        // Otherwise, assume valid
         return true;
     }
 
@@ -253,20 +277,21 @@ impl<G> State<G> for Map {
         return true;
     }
 
-    fn next_states(&self, _: &G) -> Option<Vec<(i64, Map)>> {
+    fn next_states(&self, _: &G) -> Option<Vec<(i64, Step, Map)>> {
         use Location::*;
         use Stack::*;
+        use Step::*;
 
         let mut states = Vec::new();
 
         let moves = [
-            Point(0, -1),
-            Point(0, 1),
-            Point(1, 0),
-            Point(-1, 0),
+            (North, Point(0, -1)),
+            (South, Point(0, 1)),
+            (East, Point(1, 0)),
+            (West, Point(-1, 0)),
         ];
 
-        for delta in moves.into_iter() {
+        for (step, delta) in moves.into_iter() {
             let next = self.player + delta;
             let next_2 = next + delta;
 
@@ -287,7 +312,7 @@ impl<G> State<G> for Map {
             if let Empty = target.unwrap() {
                 let mut new_state = self.clone();
                 new_state.player = next;
-                states.push((1, new_state));
+                states.push((1, step, new_state));
                 continue;
             }
 
@@ -295,7 +320,7 @@ impl<G> State<G> for Map {
             if let Snow = target.unwrap() {
                 let mut new_state = self.clone();
                 new_state.player = next;
-                states.push((1, new_state));
+                states.push((1, step, new_state));
                 continue;
             }
 
@@ -309,7 +334,7 @@ impl<G> State<G> for Map {
                         new_state.player = next;
                         new_state.set(next, Empty);
                         new_state.set(next_2, Snowman(any));
-                        states.push((1, new_state));
+                        states.push((1, step, new_state));
                         continue;
                     }
 
@@ -328,7 +353,7 @@ impl<G> State<G> for Map {
                         new_state.player = next;
                         new_state.set(next, Empty);
                         new_state.set(next_2, Snowman(new_size));
-                        states.push((1, new_state));
+                        states.push((1, step, new_state));
                         continue;
                     }
 
@@ -347,15 +372,17 @@ impl<G> State<G> for Map {
                             new_state.player = next;
                             new_state.set(next, Empty);
                             new_state.set(next_2, Snowman(combined));
-                            states.push((1, new_state));
+                            states.push((1, step, new_state));
                             continue;
                         }
                     }
                 }
-            
+
                 // Stacks can be broken apart if the target is empty
                 // Note: In these cases, the player *does not move*
-                if target_2.is_some() && (any == MediumSmall || any == LargeSmall || any == LargeMedium) {
+                if target_2.is_some()
+                    && (any == MediumSmall || any == LargeSmall || any == LargeMedium)
+                {
                     // Pushing into empty space
                     if let Empty = target_2.unwrap() {
                         let (a, b) = match any {
@@ -368,7 +395,7 @@ impl<G> State<G> for Map {
                         let mut new_state = self.clone();
                         new_state.set(next, Snowman(a));
                         new_state.set(next_2, Snowman(b));
-                        states.push((1, new_state));
+                        states.push((1, step, new_state));
                         continue;
                     }
 
@@ -381,15 +408,15 @@ impl<G> State<G> for Map {
                             _ => panic!("Invalid stack size"),
                         };
 
-                        let mut new_state = self.clone();        
+                        let mut new_state = self.clone();
                         new_state.set(next, Snowman(a));
                         new_state.set(next_2, Snowman(b));
-                        states.push((1, new_state));
+                        states.push((1, step, new_state));
                         continue;
                     }
                 }
             }
-        
+
             // If we made it this far, the state is invalid for some other reason
             // println!("Invalid state: {:?}", self);
             // println!("Moving: {:?}", delta);
@@ -444,13 +471,54 @@ impl<G> State<G> for Map {
                         let dx = (self.player.0 - (x as i8)).abs() as i64;
                         let dy = (self.player.1 - (y as i8)).abs() as i64;
                         distance = distance.min(dx + dy);
-                    },
+                    }
                     _ => continue,
                 }
             }
         }
         score += distance;
-        
+
+        // Add the distance from each small/medium to the nearest available medium/large
+        for y in 0..self.height {
+            for x in 0..self.width {
+                match self.get(Point(x as i8, y as i8)) {
+                    Some(Snowman(Small)) => {
+                        let mut distance = (self.width as i8 + self.height as i8) as i64;
+                        for y2 in 0..self.height {
+                            for x2 in 0..self.width {
+                                match self.get(Point(x2 as i8, y2 as i8)) {
+                                    Some(Snowman(Medium)) | Some(Snowman(LargeMedium)) => {
+                                        let dx = (x as i8 - x2 as i8).abs() as i64;
+                                        let dy = (y as i8 - y2 as i8).abs() as i64;
+                                        distance = distance.min(dx + dy);
+                                    }
+                                    _ => continue,
+                                }
+                            }
+                        }
+                        score += distance;
+                    },
+                    Some(Snowman(Medium)) => {
+                        let mut distance = (self.width as i8 + self.height as i8) as i64;
+                        for y2 in 0..self.height {
+                            for x2 in 0..self.width {
+                                match self.get(Point(x2 as i8, y2 as i8)) {
+                                    Some(Snowman(Large)) => {
+                                        let dx = (x as i8 - x2 as i8).abs() as i64;
+                                        let dy = (y as i8 - y2 as i8).abs() as i64;
+                                        distance = distance.min(dx + dy);
+                                    }
+                                    _ => continue,
+                                }
+                            }
+                        }
+                        score += distance;
+                    },
+                    _ => continue,
+                }
+            }
+        }
+
         // // Add various points per incomplete snowman
         // for y in 0..self.height {
         //     for x in 0..self.width {
@@ -481,16 +549,17 @@ fn main() {
     let mut solver = Solver::new((), initial_state.clone());
 
     while let Some(state) = solver.next() {
-        if solver.states_checked() % 10000 != 0 {
+        if solver.states_checked() % 100000 != 0 {
             continue;
         }
 
         println!("===== ===== ===== ===== =====");
         println!("state: {}", state);
         println!(
-            "{} states checked, {} in queue, {} seconds, heuristic: {}",
+            "{} states checked, {} in queue, {} invalidated, {} seconds, heuristic: {}",
             solver.states_checked(),
             solver.in_queue(),
+            solver.states_invalidated(),
             solver.time_spent(),
             state.heuristic(&()),
         );
@@ -510,18 +579,13 @@ fn main() {
     println!("solution: {}", solution);
 
     let mut steps = String::new();
-    let mut player = initial_state.player;
     for step in solver.path(initial_state, solution).unwrap() {
-        let delta = step.player - player;
-        match delta {
-            Point(0, -1) => steps += "N",
-            Point(0, 1) => steps += "S",
-            Point(1, 0) => steps += "E",
-            Point(-1, 0) => steps += "W",
-            Point(0, 0) => steps += "X",
-            _ => panic!("Invalid move delta: {:?} to {:?} is {:?}", player, step.player, delta),
+        match step {
+            Step::North => steps += "W",
+            Step::South => steps += "S",
+            Step::East => steps += "D",
+            Step::West => steps += "A",
         }
-        player = step.player;
     }
     println!("path: {}", steps);
 
@@ -530,8 +594,6 @@ fn main() {
         solver.states_checked(),
         solver.time_spent()
     );
-
 }
-
 
 // TODO: Rebecca
