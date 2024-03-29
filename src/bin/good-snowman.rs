@@ -135,11 +135,11 @@ impl From<&str> for Map {
                     '#' => {
                         data.push(Empty);
                         player = Point(x as i8, y as i8);
-                    },
+                    }
                     'T' => {
                         data.push(Teleporter);
                         teleporters.push(Point(x as i8, y as i8));
-                    },
+                    }
                     _ => {
                         let value = c.to_digit(10).unwrap() as u8;
                         data.push(Snowman(value.into()));
@@ -280,7 +280,12 @@ impl<G> State<G, Step> for Map {
                     continue;
                 }
                 if is_large && self.targets.is_some() {
-                    if self.targets.as_ref().unwrap().contains(&Point(x as i8, y as i8)) {
+                    if self
+                        .targets
+                        .as_ref()
+                        .unwrap()
+                        .contains(&Point(x as i8, y as i8))
+                    {
                         continue;
                     }
                 }

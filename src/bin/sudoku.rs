@@ -93,7 +93,11 @@ impl<G> State<G, Play> for Sudoku {
 
                         // Valid so far, so generate a new board using that value
                         let mut next = self.clone();
-                        let play = Play { x: x as u8, y: y as u8, value: value };
+                        let play = Play {
+                            x: x as u8,
+                            y: y as u8,
+                            value: value,
+                        };
                         next.board[x][y] = value;
                         states.push((1, play, next));
                     }

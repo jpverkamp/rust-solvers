@@ -125,7 +125,7 @@ impl State<Map, ()> for Energy {
                     Kind::Transmitter => continue,
                     Kind::Receiver => {}
                     Kind::Transceiver => {}
-                    Kind::Antenna => {},
+                    Kind::Antenna => {}
                 }
 
                 // Cannot send to a different color
@@ -197,12 +197,11 @@ impl State<Map, ()> for Energy {
                                 }
 
                                 // TODO: Don't broadcast to transmitters?
-                                
+
                                 // TODO: Antenna loops
                                 if dst.kind == Kind::Antenna {
                                     continue;
                                 }
-
 
                                 // Don't broadcast to anyone outside of range
                                 if src.distance(&dst) > ANTENNA_RADIUS {
@@ -221,10 +220,8 @@ impl State<Map, ()> for Energy {
                                     dst.size
                                 };
 
-                                let to_broadcast = u8::min(
-                                    new_state.current[i],
-                                    dst_size - new_state.filled[j],
-                                );
+                                let to_broadcast =
+                                    u8::min(new_state.current[i], dst_size - new_state.filled[j]);
 
                                 // println!("broadcasting from {i}={src} to {j}={dst}, sending: {to_broadcast}, state is {new_state:?}");
 
@@ -241,7 +238,7 @@ impl State<Map, ()> for Energy {
                             continue 'update_loops;
                         }
                     }
-                    
+
                     // Otherwise, try to update using previous links
                     for (i, j) in new_state.steps.iter() {
                         // Antennas are treated as maximum size
@@ -251,10 +248,7 @@ impl State<Map, ()> for Energy {
                             global.nodes[*j].size
                         };
 
-                        let to_move = u8::min(
-                            new_state.current[*i],
-                            j_size - new_state.filled[*j],
-                        );
+                        let to_move = u8::min(new_state.current[*i], j_size - new_state.filled[*j]);
 
                         if to_move > 0 {
                             new_state.current[*i] -= to_move;
@@ -331,7 +325,7 @@ impl State<Map, ()> for Energy {
 
                     let x_in_range = (pa.x as f32) < x && x < (pb.x as f32)
                         || (pb.x as f32) < x && x < (pa.x as f32);
-                        
+
                     let y_in_range = (pa.y as f32) < y && y < (pb.y as f32)
                         || (pb.y as f32) < y && y < (pa.y as f32);
 
@@ -388,8 +382,7 @@ fn main() {
     let energy = Energy::from(map.clone());
     let mut solver = Solver::new(map.clone(), energy.clone());
 
-    while let Some(_state) = solver.next() {    
-    }
+    while let Some(_state) = solver.next() {}
 
     let solution = solver.get_solution();
 
@@ -464,7 +457,7 @@ fn main() {
                     continue;
                 }
 
-                if src.kind != Kind::Antenna { 
+                if src.kind != Kind::Antenna {
                     continue;
                 }
 
@@ -481,7 +474,7 @@ fn main() {
                     continue;
                 }
 
-                println!("\tnode{i} -> node{j} [style=\"dashed\"]");                
+                println!("\tnode{i} -> node{j} [style=\"dashed\"]");
             }
         }
     }

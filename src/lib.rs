@@ -1,16 +1,16 @@
 use core::fmt::Debug;
+use priority_queue::PriorityQueue;
 use std::collections::HashMap;
 use std::hash::Hash;
 use std::time::Instant;
-use priority_queue::PriorityQueue;
 
 /// A trait for a state in a search problem
-/// 
+///
 /// `G` should store global state which is shared between all states and does not have to be cloned
 /// `S` should be the type of a single 'step' for reporting the final path
 pub trait State<G, S>: Clone + Eq + Hash {
     /// Given the current state, return a vector of all possible next states with the cost for each single step
-    /// We will call is_valid on all states, so these do not *have* to be valid 
+    /// We will call is_valid on all states, so these do not *have* to be valid
     fn next_states(&self, global: &G) -> Option<Vec<(i64, S, Self)>>
     where
         Self: Sized;
@@ -30,7 +30,7 @@ pub trait State<G, S>: Clone + Eq + Hash {
 }
 
 /// Create a solver for the current problem; this will store current states etc
-/// 
+///
 /// Global state is shared between all states and shouldn't change
 /// Local state is what we're searching through and should only store mutable values
 #[derive(Debug)]
@@ -43,7 +43,7 @@ pub struct Solver<GlobalState, LocalState: State<GlobalState, Step>, Step> {
     to_check: PriorityQueue<LocalState, i64>,
     steps: HashMap<LocalState, (Step, LocalState)>,
     distances: HashMap<LocalState, i64>,
-    
+
     // Debug values
     states_checked: usize,
     states_invalidated: usize,
@@ -51,24 +51,28 @@ pub struct Solver<GlobalState, LocalState: State<GlobalState, Step>, Step> {
 }
 
 /// Implement a generic A* solver given a Global and local State
-/// 
+///
 /// Global state is shared between all states and shouldn't change
 /// Local state is what we're searching through and should only store mutable values
-impl<GlobalState, LocalState: State<GlobalState, Step>, Step: Copy> Solver<GlobalState, LocalState, Step>
+impl<GlobalState, LocalState: State<GlobalState, Step>, Step: Copy>
+    Solver<GlobalState, LocalState, Step>
 {
     /// Initialize a new solver with a global and local state
-    pub fn new(global_state: GlobalState, initial_state: LocalState) -> Solver<GlobalState, LocalState, Step> {
+    pub fn new(
+        global_state: GlobalState,
+        initial_state: LocalState,
+    ) -> Solver<GlobalState, LocalState, Step> {
         let mut to_check = PriorityQueue::new();
         to_check.push(initial_state.clone(), 0);
 
         let steps = HashMap::new();
-        
+
         let mut distances = HashMap::new();
         distances.insert(initial_state.clone(), 0);
 
         Solver {
             global_state,
-            
+
             solution: None,
             to_check,
             steps,
@@ -104,8 +108,7 @@ impl<GlobalState, LocalState: State<GlobalState, Step>, Step: Copy> Solver<Globa
     }
 
     /// Display the current state of the solver (mostly for debug output)
-    pub fn to_string(&self, state: &LocalState) -> String
-    {
+    pub fn to_string(&self, state: &LocalState) -> String {
         state.to_string(&self.global_state)
     }
 
@@ -126,7 +129,7 @@ impl<GlobalState, LocalState: State<GlobalState, Step>, Step: Copy> Solver<Globa
 }
 
 /// Iterate through the search space for the current state
-/// 
+///
 /// This will:
 /// - take the next state to investigate
 /// - if it's a solution, return it directly
@@ -135,7 +138,8 @@ impl<GlobalState, LocalState: State<GlobalState, Step>, Step: Copy> Solver<Globa
 ///     - calculate heuristic and priority queue the new state
 /// - update debug statistics
 /// - yield the state investigated
-impl<GlobalState, LocalState: State<GlobalState, Step> + Debug, Step> Iterator for Solver<GlobalState, LocalState, Step>
+impl<GlobalState, LocalState: State<GlobalState, Step> + Debug, Step> Iterator
+    for Solver<GlobalState, LocalState, Step>
 {
     type Item = LocalState;
 
@@ -172,18 +176,22 @@ impl<GlobalState, LocalState: State<GlobalState, Step> + Debug, Step> Iterator f
                 }
 
                 // The estimated score is distance to current + step + heuristic
-                let estimated_distance = current_distance + step_distance + next_state.heuristic(&self.global_state);
+                let estimated_distance =
+                    current_distance + step_distance + next_state.heuristic(&self.global_state);
 
                 // If we've already found a better path, ignore this one
-                if estimated_distance >= *self.distances.get(&next_state).unwrap_or(&std::i64::MAX) {
+                if estimated_distance >= *self.distances.get(&next_state).unwrap_or(&std::i64::MAX)
+                {
                     continue;
                 }
 
                 // Update the distance map with the known distance
-                self.distances.insert(next_state.clone(), current_distance + step_distance);
+                self.distances
+                    .insert(next_state.clone(), current_distance + step_distance);
 
                 // Otherwise, record this step and add to queue
-                self.steps.insert(next_state.clone(), (step, current_state.clone()));
+                self.steps
+                    .insert(next_state.clone(), (step, current_state.clone()));
                 self.to_check.push(next_state.clone(), estimated_distance);
             }
         }

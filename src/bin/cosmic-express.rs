@@ -343,7 +343,6 @@ fn main() {
                 solver.time_spent()
             );
         }
-        
     }
     let solution = solver.get_solution();
 

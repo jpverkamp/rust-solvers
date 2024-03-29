@@ -82,9 +82,7 @@ impl Map {
                 height,
                 walls,
             },
-            LocalState {
-                molecules,
-            },
+            LocalState { molecules },
         )
     }
 
@@ -152,12 +150,18 @@ struct Molecule {
 
 impl Molecule {
     fn new(offset: Point, element: Element) -> Molecule {
-        Molecule { offset, elements: vec![(element, Point::ZERO, element.free_electrons())] }
+        Molecule {
+            offset,
+            elements: vec![(element, Point::ZERO, element.free_electrons())],
+        }
     }
 
     // How many free electrons in the hole molecule
     fn free_electrons(&self) -> usize {
-        self.elements.iter().map(|(_, _, free)| *free).sum::<usize>()
+        self.elements
+            .iter()
+            .map(|(_, _, free)| *free)
+            .sum::<usize>()
     }
 
     // If the given molecule at an offset would intersect with a wall
@@ -228,7 +232,11 @@ impl Molecule {
         // If we bound anything, add the other elements to our molecule
         if bound {
             for (element, element_offset, free_electrons) in other.elements {
-                self.elements.push((element, other.offset - self.offset + element_offset, free_electrons));
+                self.elements.push((
+                    element,
+                    other.offset - self.offset + element_offset,
+                    free_electrons,
+                ));
             }
             true
         } else {
@@ -347,7 +355,7 @@ struct LocalState {
 }
 
 impl LocalState {
-    // Try to move the ith molecule by the given offset 
+    // Try to move the ith molecule by the given offset
     // Will also move all other touching molecules out of the way
     // Returns the new state if successful
     fn try_move(&mut self, map: &Map, index: usize, offset: Point) -> bool {
@@ -381,7 +389,7 @@ impl LocalState {
             }
 
             break;
-        } 
+        }
 
         // Check each moving molecule to see if it would hit a wall
         for i in would_move.iter() {
@@ -421,7 +429,7 @@ impl LocalState {
     }
 }
 
-#[cfg(test)] 
+#[cfg(test)]
 mod test_localstate {
     #[test]
     fn test_move_basic() {
@@ -541,7 +549,7 @@ impl State<Map, Step> for LocalState {
         //     println!("{}: {:?}", score, step);
         //     if cfg!(debug_assertions) {
         //         println!("{}", state.to_string(map));
-        //     } 
+        //     }
         // }
 
         if next_states.is_empty() {
