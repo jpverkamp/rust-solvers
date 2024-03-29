@@ -347,8 +347,8 @@ impl State<Map, ()> for Energy {
         true
     }
 
-    fn display(&self, global: &Map) {
-        println!("global: {global:?}, energy: {self:?}");
+    fn to_string(&self, global: &Map) -> String {
+        format!("global: {global:?}, energy: {self:?}")
     }
 
     fn heuristic(&self, _global: &Map) -> i64 {

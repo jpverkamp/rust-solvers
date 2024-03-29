@@ -26,7 +26,7 @@ pub trait State<G, S>: Clone + Eq + Hash {
     fn is_solved(&self, global: &G) -> bool;
 
     /// Display this state for debugging purposes
-    fn display(&self, global: &G);
+    fn to_string(&self, global: &G) -> String;
 }
 
 /// Create a solver for the current problem; this will store current states etc
@@ -104,17 +104,17 @@ impl<GlobalState, LocalState: State<GlobalState, Step>, Step: Copy> Solver<Globa
     }
 
     /// Display the current state of the solver (mostly for debug output)
-    pub fn display(&self, state: &LocalState)
+    pub fn to_string(&self, state: &LocalState) -> String
     {
-        state.display(&self.global_state)
+        state.to_string(&self.global_state)
     }
 
     // Return the path between two states (if one exists)
-    pub fn path(&self, src: LocalState, dst: LocalState) -> Option<Vec<Step>> {
+    pub fn path(&self, src: &LocalState, dst: &LocalState) -> Option<Vec<Step>> {
         let mut path = Vec::new();
         let mut current = dst.clone();
 
-        while current != src {
+        while current != *src {
             let (step, next) = self.steps.get(&current).unwrap().clone();
             path.push(step);
             current = next;

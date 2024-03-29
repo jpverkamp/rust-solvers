@@ -611,7 +611,7 @@ impl<G> State<G, Step> for Map {
             }
         }
 
-        // wSs// Add various points per incomplete snowman
+        // // Add various points per incomplete snowman
         // for y in 0..self.height {
         //     for x in 0..self.width {
         //         match self.get(Point(x as i8, y as i8)) {
@@ -635,8 +635,8 @@ impl<G> State<G, Step> for Map {
         return score;
     }
 
-    fn display(&self, _global: &G) {
-        println!("{}", self);
+    fn to_string(&self, _global: &G) -> String {
+        format!("{}", self)
     }
 }
 
@@ -681,7 +681,7 @@ fn main() {
     println!("solution: {}", solution);
 
     let mut steps = String::new();
-    for step in solver.path(initial_state, solution).unwrap() {
+    for step in solver.path(&initial_state, &solution).unwrap() {
         match step {
             Step::North => steps += "W",
             Step::South => steps += "S",

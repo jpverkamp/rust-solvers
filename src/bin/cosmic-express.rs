@@ -229,7 +229,9 @@ impl State<CosmicExpressGlobal, ()> for Path {
         Some(result)
     }
 
-    fn display(&self, g: &CosmicExpressGlobal) {
+    fn to_string(&self, g: &CosmicExpressGlobal) -> String {
+        let mut output = String::new();
+
         for y in 1..=g.height {
             for x in 1..=g.width {
                 let p = Point { x, y };
@@ -272,9 +274,9 @@ impl State<CosmicExpressGlobal, ()> for Path {
 
                             _ => 'X',
                         };
-                        print!("{}", c);
+                        output.push(c);
                     } else {
-                        print!("X");
+                        output.push('X');
                     }
                 } else {
                     let mut printed = false;
@@ -286,24 +288,25 @@ impl State<CosmicExpressGlobal, ()> for Path {
 
                         match e {
                             Entity::Alien { color: c } => {
-                                print!("{}", ('a' as u8 + *c as u8) as char)
+                                output.push(('a' as u8 + *c as u8) as char);
                             }
                             Entity::House { color: c } => {
-                                print!("{}", ('A' as u8 + *c as u8) as char)
+                                output.push(('A' as u8 + *c as u8) as char);
                             }
-                            Entity::Wall => print!("*"),
+                            Entity::Wall => output.push('*'),
                         }
 
                         printed = true;
                     }
 
                     if !printed {
-                        print!(".");
+                        output.push('.');
                     }
                 }
             }
-            println!();
+            output.push('\n');
         }
+        output
     }
 
     fn heuristic(&self, global: &CosmicExpressGlobal) -> i64 {
@@ -329,11 +332,11 @@ fn main() {
     println!("Global State: {:#?}", global);
 
     let mut solver = Solver::new(global.clone(), initial_path.clone());
-    solver.display(&initial_path);
+    println!("{}", solver.to_string(&initial_path));
 
     while let Some(state) = solver.next() {
         if solver.states_checked() % 10000 == 0 {
-            state.display(&global);
+            println!("{}", state.to_string(&global));
             println!(
                 "{} states, {} seconds",
                 solver.states_checked(),
@@ -346,7 +349,7 @@ fn main() {
 
     println!("{:?}", solution);
     if let Some(path) = solution {
-        solver.display(&path);
+        println!("{}", solver.to_string(&path));
     }
 
     println!(

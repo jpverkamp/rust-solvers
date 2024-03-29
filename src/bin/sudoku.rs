@@ -128,7 +128,7 @@ impl<G> State<G, Play> for Sudoku {
         return empty;
     }
 
-    fn display(&self, _global: &G) {
+    fn to_string(&self, _global: &G) -> String {
         todo!()
     }
 }
