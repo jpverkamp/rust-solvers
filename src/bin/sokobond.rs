@@ -100,6 +100,8 @@ impl Map {
 enum Element {
     Hydrogen,
     Helium,
+    Nitrogen,
+    Carbon,
     Oxygen,
 }
 
@@ -112,6 +114,8 @@ impl TryFrom<char> for Element {
         match value {
             'h' | 'H' => Ok(Hydrogen),
             'e' | 'E' => Ok(Helium),
+            'n' | 'N' => Ok(Nitrogen),
+            'c' | 'C' => Ok(Carbon),
             'o' | 'O' => Ok(Oxygen),
             _ => Err(()),
         }
@@ -123,6 +127,8 @@ impl Into<char> for &Element {
         match self {
             Element::Hydrogen => 'H',
             Element::Helium => 'E',
+            Element::Nitrogen => 'N',
+            Element::Carbon => 'C',
             Element::Oxygen => 'O',
         }
     }
@@ -135,6 +141,8 @@ impl Element {
         match self {
             Hydrogen => 1,
             Helium => 0,
+            Nitrogen => 3,
+            Carbon => 4,
             Oxygen => 2,
         }
     }

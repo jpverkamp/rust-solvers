@@ -1,0 +1,9 @@
+---xxx---
+--xxCxx--
+-xx---xx-
+xx-h-h-xx
+x-------x
+xx-h-h-xx
+-xx---xx-
+--xx-xx--
+---xxx---
