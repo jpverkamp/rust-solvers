@@ -75,6 +75,25 @@ impl Map {
                 }
             }
         }
+                }
+            }
+        }
+
+        // Try to bond each original pair of molecules
+        'settled: loop {
+            for i in 0..molecules.len() {
+                for j in (i+1)..molecules.len() {
+                    let mut primary = molecules[i].clone();
+
+                    if primary.try_bind(Point::ZERO, &molecules[j]) {
+                        molecules[i] = primary;
+                        molecules.remove(j);
+                        continue 'settled;
+                    }
+                }
+            }
+            break;
+        }
 
         (
             Map {
