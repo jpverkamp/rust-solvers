@@ -96,8 +96,8 @@ struct Energy {
     steps: Vec<(usize, usize)>,
 }
 
-impl State<Map> for Energy {
-    fn next_states(&self, global: &Map) -> Option<Vec<(i64, Self)>>
+impl State<Map, ()> for Energy {
+    fn next_states(&self, global: &Map) -> Option<Vec<(i64, (), Self)>>
     where
         Self: Sized,
     {
@@ -268,7 +268,7 @@ impl State<Map> for Energy {
                     break;
                 }
 
-                next.push((1, new_state));
+                next.push((1, (), new_state));
             }
         }
 
@@ -386,7 +386,7 @@ fn main() {
     tracing::info!("No cross mode: {}", map.mode_no_cross);
 
     let energy = Energy::from(map.clone());
-    let mut solver: Solver<Map, Energy> = Solver::new(map.clone(), energy.clone());
+    let mut solver = Solver::new(map.clone(), energy.clone());
 
     while let Some(state) = solver.next() {    
     }
