@@ -4,6 +4,13 @@ use std::io::{self, BufRead};
 use solver::{Solver, State};
 
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+struct Play {
+    x: u8,
+    y: u8,
+    value: u8,
+}
+
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 struct Sudoku {
     board: [[u8; 9]; 9],
 }
@@ -39,7 +46,7 @@ impl fmt::Display for Sudoku {
     }
 }
 
-impl<G> State<G> for Sudoku {
+impl<G> State<G, Play> for Sudoku {
     fn is_valid(&self, _: &G) -> bool {
         // TODO: fix this
         return true;
@@ -57,7 +64,7 @@ impl<G> State<G> for Sudoku {
         return true;
     }
 
-    fn next_states(&self, _: &G) -> Option<Vec<(i64, Sudoku)>> {
+    fn next_states(&self, _: &G) -> Option<Vec<(i64, Play, Sudoku)>> {
         let mut states = Vec::new();
 
         // Find the next empty square
@@ -86,8 +93,9 @@ impl<G> State<G> for Sudoku {
 
                         // Valid so far, so generate a new board using that value
                         let mut next = self.clone();
+                        let play = Play { x: x as u8, y: y as u8, value: value };
                         next.board[x][y] = value;
-                        states.push((1, next));
+                        states.push((1, play, next));
                     }
 
                     // Return the possible next states for this empty square
@@ -151,8 +159,8 @@ fn main() {
 
     let mut solver = Solver::new((), initial_state);
 
-    while let Some(state) = solver.next() {
-        // println!("state: {}", state);
+    while let Some(_state) = solver.next() {
+        // println!("state: {}", _state);
         // println!(
         //     "{} states, {} seconds",
         //     solver.states_checked(),
