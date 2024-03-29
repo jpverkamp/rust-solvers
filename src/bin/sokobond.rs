@@ -537,7 +537,11 @@ impl State<Map, Step> for LocalState {
 
     fn is_solved(&self, _global: &Map) -> bool {
         // The puzzle is solved once there is no longer any free electrons
-        self.molecules.iter().all(|m| m.free_electrons() == 0)
+        // self.molecules.iter().all(|m| m.free_electrons() == 0)
+
+        // Puzzle is solved once there's one molecule with no free electrons 
+        // Is this true? 
+        self.molecules.len() == 1 && self.molecules.iter().all(|m| m.free_electrons() == 0)
     }
 
     fn next_states(&self, map: &Map) -> Option<Vec<(i64, Step, LocalState)>> {
