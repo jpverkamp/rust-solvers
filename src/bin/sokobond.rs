@@ -46,7 +46,6 @@ impl Map {
         let mut height = 0;
         let mut walls = Vec::new();
 
-        let mut primary = None;
         let mut molecules = Vec::new();
 
         for (y, line) in input.lines().enumerate() {
@@ -68,11 +67,7 @@ impl Map {
                         };
 
                         if c.is_uppercase() {
-                            if primary.is_some() {
-                                panic!("Multiple primary molecules");
-                            }
-
-                            primary = Some(molecule);
+                            molecules.insert(0, molecule);
                         } else {
                             molecules.push(molecule);
                         }
@@ -91,8 +86,7 @@ impl Map {
                 walls,
             },
             LocalState {
-                primary: primary.expect("Must have a primary"),
-                others: molecules,
+                molecules,
             },
         )
     }
@@ -354,8 +348,7 @@ mod test_molecule {
 // The primary is the one that can move
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 struct LocalState {
-    primary: Molecule,
-    others: Vec<Molecule>,
+    molecules: Vec<Molecule>,
 }
 
 // The step the primary molecule takes each tick
@@ -387,7 +380,7 @@ impl State<Map, Step> for LocalState {
 
     fn is_solved(&self, _global: &Map) -> bool {
         // The puzzle is solved once there is no longer any free electrons
-        self.primary.free_electrons() == 0 && self.others.iter().all(|m| m.free_electrons() == 0)
+        self.molecules.iter().all(|m| m.free_electrons() == 0)
     }
 
     fn next_states(&self, map: &Map) -> Option<Vec<(i64, Step, LocalState)>> {
@@ -398,15 +391,16 @@ impl State<Map, Step> for LocalState {
             // Check for intersections
 
             // Would hit a wall
-            if self.primary.intersects_wall((*step).into(), map) {
-                log::debug!("intersected {:?} with offset {step:?}", self.primary);
+            if self.molecules[0].intersects_wall((*step).into(), map) {
+                log::debug!("intersected {:?} with offset {step:?}", self.molecules[0]);
                 log::debug!("{step:?} failed, wall"); 
                 continue 'next_step;
             }
 
             // Would hit another molecule
-            for molecule in self.others.iter() {
-                if self.primary.intersects((*step).into(), molecule) {
+            // TODO: Try to move it
+            for molecule in self.molecules.iter().skip(1) {
+                if self.molecules[0].intersects((*step).into(), molecule) {
                     log::debug!("{step:?} failed, molecule"); 
                     continue 'next_step;
                 }
@@ -414,20 +408,25 @@ impl State<Map, Step> for LocalState {
 
             // Move is allowed, update primary
             let mut new_state = self.clone();
-            new_state.primary.offset = new_state.primary.offset + (*step).into();
+            new_state.molecules[0].offset = new_state.molecules[0].offset + (*step).into();
 
             // Try to bind with each other molecule
+            // Have to extract the primary to get around issues with immutable vec borrows 
+            // Plus it's the only one that mutates
+            let mut primary = new_state.molecules[0].clone();
             let mut bound_indexes = Vec::new();
 
-            for (i, other) in new_state.others.iter().enumerate() {
-                if new_state.primary.try_bind(other.offset - new_state.primary.offset, other) {
+            for (i, other) in new_state.molecules.iter().enumerate().skip(1) {
+                if primary.try_bind(other.offset - primary.offset, other) {
                     bound_indexes.push(i);
                 }
             }
 
             for i in bound_indexes.iter().rev() {
-                new_state.others.remove(*i);
+                new_state.molecules.remove(*i);
             }
+
+            new_state.molecules[0] = primary;
 
             // Valid state, queue it
             next_states.push((1, *step, new_state));
@@ -462,16 +461,14 @@ impl State<Map, Step> for LocalState {
         //     output.push_str(format!("{}x{}: {:?}", map.width, map.height, self).as_str());
         // }
 
-        for (element, offset, _) in &self.primary.elements {
-            let offset = self.primary.offset + *offset;
-            grid[offset.1 as usize][offset.0 as usize] = element.into();
-        }
-
-        for molecule in self.others.iter() {
+        for (i, molecule) in self.molecules.iter().enumerate() {
             for (element, offset, _) in &molecule.elements {
                 let offset = molecule.offset + *offset;
-                let c: char = element.into();
-                grid[offset.1 as usize][offset.0 as usize] = c.to_ascii_lowercase();
+                let mut c: char = element.into();
+                if i > 0 {
+                    c = c.to_ascii_lowercase();
+                }
+                grid[offset.1 as usize][offset.0 as usize] = c;
             }
         }
 
