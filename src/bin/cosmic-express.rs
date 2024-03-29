@@ -73,7 +73,7 @@ struct CosmicExpressGlobal {
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 struct Path(Vec<Point>);
 
-impl State<CosmicExpressGlobal> for Path {
+impl State<CosmicExpressGlobal, ()> for Path {
     fn is_valid(&self, _g: &CosmicExpressGlobal) -> bool {
         return true;
     }
@@ -182,7 +182,7 @@ impl State<CosmicExpressGlobal> for Path {
         return false;
     }
 
-    fn next_states(&self, g: &CosmicExpressGlobal) -> Option<Vec<(i64, Path)>> {
+    fn next_states(&self, g: &CosmicExpressGlobal) -> Option<Vec<(i64, (), Path)>> {
         let mut result = Vec::new();
 
         // If we don't have a path yet, start with each entrance
@@ -190,7 +190,7 @@ impl State<CosmicExpressGlobal> for Path {
             for entrance in g.entrances.iter() {
                 let mut new_path = Path(Vec::new());
                 new_path.0.push(entrance.clone());
-                result.push((0, new_path));
+                result.push((0, (), new_path));
             }
         }
         // If we do have a path, expand the last node
@@ -220,7 +220,7 @@ impl State<CosmicExpressGlobal> for Path {
 
                 let mut new_path = self.clone();
                 new_path.0.push(p);
-                result.push((1, new_path));
+                result.push((1, (), new_path));
             }
         }
 
@@ -328,12 +328,11 @@ fn main() {
 
     println!("Global State: {:#?}", global);
 
-    let mut solver: Solver<CosmicExpressGlobal, Path> = Solver::new(global.clone(), initial_path.clone());
+    let mut solver = Solver::new(global.clone(), initial_path.clone());
     solver.display(&initial_path);
 
     while let Some(state) = solver.next() {
         if solver.states_checked() % 10000 == 0 {
-            print!("\x1B[2J");
             state.display(&global);
             println!(
                 "{} states, {} seconds",
@@ -345,7 +344,6 @@ fn main() {
     }
     let solution = solver.get_solution();
 
-    print!("\x1B[2J");
     println!("{:?}", solution);
     if let Some(path) = solution {
         solver.display(&path);
