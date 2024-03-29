@@ -351,7 +351,7 @@ impl State<Map, ()> for Energy {
         println!("global: {global:?}, energy: {self:?}");
     }
 
-    fn heuristic(&self, global: &Map) -> i64 {
+    fn heuristic(&self, _global: &Map) -> i64 {
         10000 // TODO
     }
 }
@@ -388,7 +388,7 @@ fn main() {
     let energy = Energy::from(map.clone());
     let mut solver = Solver::new(map.clone(), energy.clone());
 
-    while let Some(state) = solver.next() {    
+    while let Some(_state) = solver.next() {    
     }
 
     let solution = solver.get_solution();
