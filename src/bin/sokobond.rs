@@ -61,10 +61,7 @@ impl Map {
                     // The rest are added to the end
                     // Technically only one primary is supported, this will take the last if multiple
                     Ok(e) => {
-                        let molecule = Molecule {
-                            offset: pt,
-                            elements: vec![(e, Point::ZERO, e.free_electrons())],
-                        };
+                        let molecule = Molecule::new(pt, e);
 
                         if c.is_uppercase() {
                             molecules.insert(0, molecule);
@@ -104,6 +101,7 @@ impl Map {
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 enum Element {
     Hydrogen,
+    Helium,
     Oxygen,
 }
 
@@ -115,6 +113,7 @@ impl TryFrom<char> for Element {
 
         match value {
             'h' | 'H' => Ok(Hydrogen),
+            'e' | 'E' => Ok(Helium),
             'o' | 'O' => Ok(Oxygen),
             _ => Err(()),
         }
@@ -125,6 +124,7 @@ impl Into<char> for &Element {
     fn into(self) -> char {
         match self {
             Element::Hydrogen => 'H',
+            Element::Helium => 'E',
             Element::Oxygen => 'O',
         }
     }
@@ -136,6 +136,7 @@ impl Element {
 
         match self {
             Hydrogen => 1,
+            Helium => 0,
             Oxygen => 2,
         }
     }
@@ -150,6 +151,10 @@ struct Molecule {
 }
 
 impl Molecule {
+    fn new(offset: Point, element: Element) -> Molecule {
+        Molecule { offset, elements: vec![(element, Point::ZERO, element.free_electrons())] }
+    }
+
     // How many free electrons in the hole molecule
     fn free_electrons(&self) -> usize {
         self.elements.iter().map(|(_, _, free)| *free).sum::<usize>()
@@ -197,8 +202,11 @@ impl Molecule {
             }
 
             for (_, dst_offset, dst_free) in other.elements.iter_mut() {
+                let src_pt = self.offset + offset + *src_offset;
+                let dst_pt = other.offset + *dst_offset;
+
                 // Not adjacent
-                if src_offset.manhattan_distance(offset + *dst_offset) != 1 {
+                if src_pt.manhattan_distance(dst_pt) != 1 {
                     continue;
                 }
 
@@ -220,7 +228,7 @@ impl Molecule {
         // If we bound anything, add the other elements to our molecule
         if bound {
             for (element, element_offset, free_electrons) in other.elements {
-                self.elements.push((element, offset + element_offset, free_electrons));
+                self.elements.push((element, other.offset - self.offset + element_offset, free_electrons));
             }
             true
         } else {
@@ -264,23 +272,17 @@ mod test_molecule {
             elements: vec![(Element::Hydrogen, Point::ZERO, 1)],
         };
 
-        assert!(a.intersects(Point(0, 0), &b));
+        assert!(a.intersects(Point(1, 0), &b));
+        assert!(!a.intersects(Point(0, 0), &b));
         assert!(!a.intersects(Point(0, 1), &b));
     }
 
     #[test]
     fn test_bind() {
-        let mut a = Molecule {
-            offset: Point::ZERO,
-            elements: vec![(Element::Hydrogen, Point::ZERO, 1)],
-        };
+        let mut a = Molecule::new(Point::ZERO, Element::Hydrogen);
+        let b = Molecule::new(Point(1, 0), Element::Hydrogen);
 
-        let b = Molecule {
-            offset: Point(1, 0),
-            elements: vec![(Element::Hydrogen, Point::ZERO, 1)],
-        };
-
-        let bound = a.try_bind(Point(1, 0), &b);
+        let bound = a.try_bind(Point::ZERO, &b);
 
         assert!(bound);
         assert_eq!(a.elements.len(), 2);
@@ -289,15 +291,8 @@ mod test_molecule {
 
     #[test]
     fn test_nobind_no_free() {
-        let mut a = Molecule {
-            offset: Point::ZERO,
-            elements: vec![(Element::Hydrogen, Point::ZERO, 1)],
-        };
-
-        let b = Molecule {
-            offset: Point(1, 0),
-            elements: vec![(Element::Hydrogen, Point::ZERO, 0)],
-        };
+        let mut a = Molecule::new(Point::ZERO, Element::Hydrogen);
+        let b = Molecule::new(Point(1, 0), Element::Helium);
 
         let bound = a.try_bind(Point(1, 0), &b);
 
@@ -335,7 +330,7 @@ mod test_molecule {
             elements: vec![(Element::Oxygen, Point::ZERO, 2)],
         };
 
-        let bound = a.try_bind(Point(1, 0), &b);
+        let bound = a.try_bind(Point::ZERO, &b);
 
         assert!(bound);
         assert_eq!(a.elements.len(), 2);
@@ -349,6 +344,152 @@ mod test_molecule {
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 struct LocalState {
     molecules: Vec<Molecule>,
+}
+
+impl LocalState {
+    // Try to move the ith molecule by the given offset 
+    // Will also move all other touching molecules out of the way
+    // Returns the new state if successful
+    fn try_move(&mut self, map: &Map, index: usize, offset: Point) -> bool {
+        if index > self.molecules.len() {
+            return false;
+        }
+
+        // Collect all molecules that would move
+        let mut would_move = vec![index];
+
+        // Recursively add any molecules we'd hit
+        // Each will try to move by the same offset (represent a chain of moving)
+        'settling: loop {
+            // For each currently moving molecule
+            for i in 0..self.molecules.len() {
+                if !would_move.contains(&i) {
+                    continue;
+                }
+
+                // If moving that molecule into another would cause an intersection, add it to the list
+                for j in 0..self.molecules.len() {
+                    if i == j || would_move.contains(&j) {
+                        continue;
+                    }
+
+                    if self.molecules[i].intersects(offset, &self.molecules[j]) {
+                        would_move.push(j);
+                        continue 'settling;
+                    }
+                }
+            }
+
+            break;
+        } 
+
+        // Check each moving molecule to see if it would hit a wall
+        for i in would_move.iter() {
+            if self.molecules[*i].intersects_wall(offset, map) {
+                return false;
+            }
+        }
+
+        // Assume move is allowed, update all moving molecules
+        for i in would_move.iter() {
+            self.molecules[*i].offset = self.molecules[*i].offset + offset;
+        }
+
+        // Try to bind all pairs of molecules
+        // TODO: Inefficient, we only really need to check moved (?); especially with all the cloning
+        'settling: loop {
+            for i in 0..self.molecules.len() {
+                for j in 0..self.molecules.len() {
+                    if i == j {
+                        continue;
+                    }
+
+                    let mut primary = self.molecules[i].clone();
+
+                    if primary.try_bind(Point::ZERO, &self.molecules[j]) {
+                        self.molecules[i] = primary;
+                        self.molecules.remove(j);
+                        continue 'settling;
+                    }
+                }
+            }
+
+            break;
+        }
+
+        true
+    }
+}
+
+#[cfg(test)] 
+mod test_localstate {
+    #[test]
+    fn test_move_basic() {
+        use super::*;
+
+        let (map, mut state) = Map::load("H-#");
+
+        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert_eq!(state.molecules[0].offset, Point(1, 0));
+    }
+
+    #[test]
+    fn test_bump_into_wall() {
+        use super::*;
+
+        let (map, mut state) = Map::load("-H#");
+
+        assert!(!state.try_move(&map, 0, Point(1, 0)));
+    }
+
+    #[test]
+    fn test_move_push() {
+        use super::*;
+
+        let (map, mut state) = Map::load("Ee-#");
+
+        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert_eq!(state.molecules.len(), 2);
+        assert_eq!(state.molecules[0].offset, Point(1, 0));
+        assert_eq!(state.molecules[1].offset, Point(2, 0));
+    }
+
+    #[test]
+    fn test_move_and_bind() {
+        use super::*;
+
+        let (map, mut state) = Map::load("H-h#");
+
+        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert_eq!(state.molecules.len(), 1);
+        assert_eq!(state.molecules[0].offset, Point(1, 0));
+        assert_eq!(state.molecules[0].elements.len(), 2);
+
+        assert_eq!(state.to_string(&map), "-HH#\n".to_string())
+    }
+
+    #[test]
+    fn test_push_and_bind() {
+        use super::*;
+
+        let (map, mut state) = Map::load("Hh-#");
+
+        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert_eq!(state.molecules.len(), 1);
+        assert_eq!(state.molecules[0].offset, Point(1, 0));
+        assert_eq!(state.molecules[0].elements.len(), 2);
+    }
+
+    #[test]
+    fn test_no_move_push_into_wall() {
+        use super::*;
+
+        let (map, mut state) = Map::load("Hh#");
+
+        assert!(!state.try_move(&map, 0, Point(1, 0)));
+        assert_eq!(state.molecules[0].offset, Point(0, 0));
+        assert_eq!(state.molecules[1].offset, Point(1, 0));
+    }
 }
 
 // The step the primary molecule takes each tick
@@ -387,59 +528,20 @@ impl State<Map, Step> for LocalState {
         let mut next_states = Vec::new();
 
         // Try to move the primary each direction
-        'next_step: for step in [Step::North, Step::South, Step::East, Step::West].iter() {
-            // Check for intersections
-
-            // Would hit a wall
-            if self.molecules[0].intersects_wall((*step).into(), map) {
-                log::debug!("intersected {:?} with offset {step:?}", self.molecules[0]);
-                log::debug!("{step:?} failed, wall"); 
-                continue 'next_step;
+        for step in [Step::North, Step::South, Step::East, Step::West].iter() {
+            let mut next_state = self.clone();
+            if next_state.try_move(map, 0, (*step).into()) {
+                next_states.push((1, *step, next_state));
             }
-
-            // Would hit another molecule
-            // TODO: Try to move it
-            for molecule in self.molecules.iter().skip(1) {
-                if self.molecules[0].intersects((*step).into(), molecule) {
-                    log::debug!("{step:?} failed, molecule"); 
-                    continue 'next_step;
-                }
-            }
-
-            // Move is allowed, update primary
-            let mut new_state = self.clone();
-            new_state.molecules[0].offset = new_state.molecules[0].offset + (*step).into();
-
-            // Try to bind with each other molecule
-            // Have to extract the primary to get around issues with immutable vec borrows 
-            // Plus it's the only one that mutates
-            let mut primary = new_state.molecules[0].clone();
-            let mut bound_indexes = Vec::new();
-
-            for (i, other) in new_state.molecules.iter().enumerate().skip(1) {
-                if primary.try_bind(other.offset - primary.offset, other) {
-                    bound_indexes.push(i);
-                }
-            }
-
-            for i in bound_indexes.iter().rev() {
-                new_state.molecules.remove(*i);
-            }
-
-            new_state.molecules[0] = primary;
-
-            // Valid state, queue it
-            next_states.push((1, *step, new_state));
         }
 
-        // if cfg!(debug_assertions) {} {
-        //     log::debug!("--- next states generated:");
-        //     for (score, step, state) in &next_states {
-        //         log::debug!("{}: {:?}", score, step);
-        //         if cfg!(debug_assertions) {
-        //             println!("{}", state.to_string(map)));
-        //         } 
-        //     }
+        // DEBUG
+        // println!("--- next states generated:");
+        // for (score, step, state) in &next_states {
+        //     println!("{}: {:?}", score, step);
+        //     if cfg!(debug_assertions) {
+        //         println!("{}", state.to_string(map));
+        //     } 
         // }
 
         if next_states.is_empty() {
@@ -454,7 +556,7 @@ impl State<Map, Step> for LocalState {
     }
 
     fn to_string(&self, map: &Map) -> String {
-        let mut grid = vec![vec![' '; map.width]; map.height];
+        let mut grid = vec![vec!['-'; map.width]; map.height];
 
         // DEBUG
         // if cfg!(debug_assertions) {
@@ -503,24 +605,24 @@ fn main() {
     let mut solver = Solver::new(map.clone(), molecules.clone());
 
     while let Some(state) = solver.next() {
-        if solver.states_checked() % 100000 != 0 {
-            continue;
-        }
+        // if solver.states_checked() % 100000 != 0 {
+        //     continue;
+        // }
 
         println!("===== ===== ===== ===== =====");
-        println!("{}", state.to_string(&map));
         println!(
-            "{} states checked, {} in queue, {} invalidated, {} seconds, heuristic: {}",
+            "{} states checked, {} in queue, {} invalidated, {} seconds, heuristic: {}, state:\n{}\n",
             solver.states_checked(),
             solver.in_queue(),
             solver.states_invalidated(),
             solver.time_spent(),
             state.heuristic(&map),
+            state.to_string(&map),
         );
 
-        if solver.states_checked() > 100 {
-            break;
-        }
+        // if solver.states_checked() > 100 {
+        //     break;
+        // }
     }
 
     let solution = solver.get_solution();
