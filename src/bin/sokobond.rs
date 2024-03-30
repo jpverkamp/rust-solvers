@@ -285,7 +285,7 @@ impl Molecule {
             }
         }
 
-        // If we bound anything, add the other elements to our molecule
+        // If we bound anything, add the other elements and bonds to our molecule
         if bound {
             for (element, element_offset, free_electrons) in other.elements {
                 self.elements.push((
@@ -294,6 +294,15 @@ impl Molecule {
                     free_electrons,
                 ));
             }
+
+            for (src, dst, count) in other.bonds {
+                self.bonds.push((
+                    other.offset - self.offset + src,
+                    other.offset - self.offset + dst,
+                    count,
+                ));
+            }
+
             true
         } else {
             false
@@ -653,8 +662,6 @@ impl State<Map, Step> for LocalState {
                 // Offset from src to dst
                 let dx = dst.0 - src.0;
                 let dy = dst.1 - src.1;
-
-                println!("{molecule:?}, {src:?}, {dst:?}, {dx:?}, {dy:?}, {count:?}");
 
                 // Use abs to choose horizontal or vertical; count to choose single, double, or triple
                 let c = match (dx.abs(), dy.abs(), count) {
