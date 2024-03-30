@@ -38,6 +38,7 @@ struct Map {
     width: usize,
     height: usize,
     walls: Vec<bool>,
+    splitters: Vec<Point>,
 }
 
 impl Map {
@@ -45,6 +46,7 @@ impl Map {
         let mut width = 0;
         let mut height = 0;
         let mut walls = Vec::new();
+        let mut splitters = Vec::new();
 
         let mut molecules = Vec::new();
 
@@ -71,10 +73,18 @@ impl Map {
 
                         walls.push(false);
                     }
-                    Err(_) => walls.push(c != '-'),
-                }
-            }
-        }
+                    Err(_) => {
+                        match c {
+                            // Splitters are offset between the grid lines
+                            '\\' => {
+                                walls.push(false);
+                                splitters.push(pt);
+                            }
+                            ' ' | '-' => walls.push(false),
+                            'x' | 'X' | '#' => walls.push(true),
+                            _ => panic!("unknown character: {}", c),
+                        }
+                    }
                 }
             }
         }
@@ -100,6 +110,7 @@ impl Map {
                 width,
                 height,
                 walls,
+                splitters,
             },
             LocalState { molecules },
         )
@@ -251,12 +262,9 @@ impl Molecule {
                     continue;
                 }
 
-                // We'll automatically bind as many free electrons as we can
-                let bind_electrons = *src_free.min(dst_free);
-
-                // We're good! Bind it, using up that many electrons from each
-                *src_free -= bind_electrons;
-                *dst_free -= bind_electrons;
+                // Bind the two elements
+                *src_free -= 1;
+                *dst_free -= 1;
                 bound = true;
             }
         }
@@ -294,6 +302,7 @@ mod test_molecule {
             walls: vec![
                 true, true, true, true, false, true, true, true, true, // 3x3
             ],
+            splitters: Vec::new(),
         };
 
         assert!(a.intersects_wall(Point(1, 0), &map));
