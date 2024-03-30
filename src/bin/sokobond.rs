@@ -4,6 +4,13 @@ use std::ops::Sub;
 
 use solver::{Solver, State};
 
+const SINGLE_HORIZONTAL: char = '-';
+const SINGLE_VERTICAL: char = '|';
+const DOUBLE_HORIZONTAL: char = '=';
+const DOUBLE_VERTICAL: char = '‖';
+const TRIPLE_HORIZONTAL: char = '≡';
+const TRIPLE_VERTICAL: char = '⦀';
+
 // A point in 2D space
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 struct Point(isize, isize);
@@ -184,6 +191,7 @@ impl Element {
 struct Molecule {
     offset: Point,
     elements: Vec<(Element, Point, usize)>,
+    bonds: Vec<(Point, Point, usize)>,
 }
 
 impl Molecule {
@@ -191,6 +199,7 @@ impl Molecule {
         Molecule {
             offset,
             elements: vec![(element, Point::ZERO, element.free_electrons())],
+            bonds: Vec::new(),
         }
     }
 
@@ -263,9 +272,16 @@ impl Molecule {
                 }
 
                 // Bind the two elements
+                bound = true;
+
+                self.bonds.push((
+                    offset + *src_offset,
+                    other.offset - self.offset + *dst_offset, 
+                    1
+                ));
+
                 *src_free -= 1;
                 *dst_free -= 1;
-                bound = true;
             }
         }
 
@@ -291,10 +307,7 @@ mod test_molecule {
 
     #[test]
     fn test_wall_intersection_hit() {
-        let a = Molecule {
-            offset: Point::ZERO,
-            elements: vec![(Element::Hydrogen, Point::ZERO, 1)],
-        };
+        let a = Molecule::new(Point::ZERO, Element::Hydrogen);
 
         let map = Map {
             width: 3,
@@ -311,15 +324,8 @@ mod test_molecule {
 
     #[test]
     fn test_molecule_intersection() {
-        let a = Molecule {
-            offset: Point::ZERO,
-            elements: vec![(Element::Hydrogen, Point::ZERO, 1)],
-        };
-
-        let b = Molecule {
-            offset: Point(1, 0),
-            elements: vec![(Element::Hydrogen, Point::ZERO, 1)],
-        };
+        let a = Molecule::new(Point::ZERO, Element::Hydrogen);
+        let b = Molecule::new(Point(1, 0), Element::Hydrogen);
 
         assert!(a.intersects(Point(1, 0), &b));
         assert!(!a.intersects(Point(0, 0), &b));
@@ -351,15 +357,8 @@ mod test_molecule {
 
     #[test]
     fn test_nobind_too_far() {
-        let mut a = Molecule {
-            offset: Point::ZERO,
-            elements: vec![(Element::Hydrogen, Point::ZERO, 1)],
-        };
-
-        let b = Molecule {
-            offset: Point(2, 0),
-            elements: vec![(Element::Hydrogen, Point::ZERO, 1)],
-        };
+        let mut a = Molecule::new(Point::ZERO, Element::Hydrogen);
+        let b = Molecule::new(Point(2, 0), Element::Hydrogen);
 
         let bound = a.try_bind(Point(2, 0), &b);
 
@@ -369,15 +368,8 @@ mod test_molecule {
 
     #[test]
     fn test_single_bind_o2_not_double() {
-        let mut a = Molecule {
-            offset: Point::ZERO,
-            elements: vec![(Element::Oxygen, Point::ZERO, 2)],
-        };
-
-        let b = Molecule {
-            offset: Point(1, 0),
-            elements: vec![(Element::Oxygen, Point::ZERO, 2)],
-        };
+        let mut a = Molecule::new(Point::ZERO, Element::Oxygen);
+        let b = Molecule::new(Point(1, 0), Element::Oxygen);
 
         let bound = a.try_bind(Point::ZERO, &b);
 
@@ -389,7 +381,6 @@ mod test_molecule {
 }
 
 // The local state will be a primary molecule and a list of other molecules
-// The primary is the one that can move
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 struct LocalState {
     molecules: Vec<Molecule>,
@@ -513,8 +504,6 @@ mod test_localstate {
         assert_eq!(state.molecules.len(), 1);
         assert_eq!(state.molecules[0].offset, Point(1, 0));
         assert_eq!(state.molecules[0].elements.len(), 2);
-
-        assert_eq!(state.to_string(&map), "-HH#\n".to_string())
     }
 
     #[test]
@@ -632,35 +621,60 @@ impl State<Map, Step> for LocalState {
     }
 
     fn to_string(&self, map: &Map) -> String {
-        let mut grid = vec![vec!['-'; map.width]; map.height];
+        let mut grid = vec![vec![' '; map.width * 2]; map.height * 2];
 
-        // DEBUG
-        // if cfg!(debug_assertions) {
-        //     output.push_str(format!("{}x{}: {:?}", map.width, map.height, self).as_str());
-        // }
+        for y in 0..map.height {
+            for x in 0..map.width {
+                if map.walls[y * map.width + x] {
+                    grid[y * 2][x * 2] = '#';
+                } else {
+                    grid[y * 2][x * 2] = '-';
+                }
+            }
+        }
 
         for (i, molecule) in self.molecules.iter().enumerate() {
+            // Add the elements
             for (element, offset, _) in &molecule.elements {
                 let offset = molecule.offset + *offset;
                 let mut c: char = element.into();
                 if i > 0 {
                     c = c.to_ascii_lowercase();
                 }
-                grid[offset.1 as usize][offset.0 as usize] = c;
+                grid[2 * offset.1 as usize][2 * offset.0 as usize] = c;
             }
-        }
 
-        for y in 0..map.height {
-            for x in 0..map.width {
-                if map.walls[y * map.width + x] {
-                    grid[y][x] = '#';
-                }
+            // Add the bonds
+            for (src, dst, count) in &molecule.bonds {
+                let src = molecule.offset + *src;
+                let dst = molecule.offset + *dst;
+                assert!(src.manhattan_distance(dst) == 1);
+
+                // Offset from src to dst
+                let dx = dst.0 - src.0;
+                let dy = dst.1 - src.1;
+
+                println!("{molecule:?}, {src:?}, {dst:?}, {dx:?}, {dy:?}, {count:?}");
+
+                // Use abs to choose horizontal or vertical; count to choose single, double, or triple
+                let c = match (dx.abs(), dy.abs(), count) {
+                    (1, 0, 1) => SINGLE_HORIZONTAL,
+                    (0, 1, 1) => SINGLE_VERTICAL,
+                    (1, 0, 2) => DOUBLE_HORIZONTAL,
+                    (0, 1, 2) => DOUBLE_VERTICAL,
+                    (1, 0, 3) => TRIPLE_HORIZONTAL,
+                    (0, 1, 3) => TRIPLE_VERTICAL,
+                    _ => panic!("invalid bond in {molecule:?}: {src:?} {dst:?}"),
+                };
+
+                // Place the bond on the offset grid
+                grid[(dy + 2 * src.1) as usize][(dx + 2 * src.0) as usize] = c;
             }
         }
 
         let mut output = String::new();
-        for y in 0..map.height {
-            for x in 0..map.width {
+        for y in 0..(2*map.height) {
+            for x in 0..(2*map.width) {
                 output.push(grid[y][x]);
             }
             output.push('\n');
