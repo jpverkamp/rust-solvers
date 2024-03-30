@@ -359,7 +359,7 @@ mod test_molecule {
     }
 
     #[test]
-    fn test_double_bind_o2() {
+    fn test_single_bind_o2_not_double() {
         let mut a = Molecule {
             offset: Point::ZERO,
             elements: vec![(Element::Oxygen, Point::ZERO, 2)],
@@ -374,8 +374,8 @@ mod test_molecule {
 
         assert!(bound);
         assert_eq!(a.elements.len(), 2);
-        assert_eq!(a.elements[0].2, 0);
-        assert_eq!(a.elements[1].2, 0);
+        assert_eq!(a.elements[0].2, 1);
+        assert_eq!(a.elements[1].2, 1);
     }
 }
 
@@ -524,11 +524,35 @@ mod test_localstate {
     fn test_no_move_push_into_wall() {
         use super::*;
 
-        let (map, mut state) = Map::load("Hh#");
+        let (map, mut state) = Map::load("Ee#");
 
         assert!(!state.try_move(&map, 0, Point(1, 0)));
         assert_eq!(state.molecules[0].offset, Point(0, 0));
         assert_eq!(state.molecules[1].offset, Point(1, 0));
+    }
+
+    #[test]
+    fn test_push_unbound() {
+        use super::*;
+
+        let (map, mut state) = Map::load("-H-\no--\n-h-\n---");
+
+        assert!(state.try_move(&map, 0, Point(0, 1)));
+        assert!(state.try_move(&map, 0, Point(0, 1)));
+
+        println!("{}", state.to_string(&map));
+
+        // Two molecules
+        assert_eq!(state.molecules.len(), 2);
+
+        // First is OH with a free still on the O
+        assert_eq!(state.molecules[0].offset, Point(1, 2));
+        assert_eq!(state.molecules[0].elements[0].2, 0);
+        assert_eq!(state.molecules[0].elements[1].2, 1);
+
+        // Second is h with a free still open
+        assert_eq!(state.molecules[1].offset, Point(1, 3));
+        assert_eq!(state.molecules[1].elements[0].2, 1);
     }
 }
 
@@ -559,7 +583,7 @@ impl State<Map, Step> for LocalState {
         }
 
         // The primary molecule must have free electrons
-        if !(self.molecules[0].is_helium() || self.molecules[0].free_electrons() == 0) {
+        if !(self.molecules[0].is_helium() || self.molecules[0].free_electrons() > 0) {
             return false;
         }
 
@@ -572,21 +596,8 @@ impl State<Map, Step> for LocalState {
     }
 
     fn is_solved(&self, _global: &Map) -> bool {
-        // The puzzle is solved once there is no longer any free electrons
-        // self.molecules.iter().all(|m| m.free_electrons() == 0)
+        self.molecules.iter().all(|m| m.is_helium() || m.free_electrons() == 0)
 
-        // // Puzzle is solved once there's one molecule with no free electrons 
-        // // Is this true? 
-        // self.molecules.len() == 1 && self.molecules.iter().all(|m| m.free_electrons() == 0)
-
-        // Starting with gray, we can allow free heliums
-        // self.molecules[0].free_electrons() == 0 &&
-        //     self.molecules.iter().skip(1).all(|m| m.is_helium())
-
-        // Starting with gray 03-Freedom, our primary is a Helium
-        // So now, there must be 1 molecule with no free electrons and the rest helium
-        self.molecules.iter().filter(|m| !m.is_helium()).count() == 1
-            && self.molecules.iter().all(|m| m.is_helium() || m.free_electrons() == 0)
     }
 
     fn next_states(&self, map: &Map) -> Option<Vec<(i64, Step, LocalState)>> {
@@ -600,15 +611,6 @@ impl State<Map, Step> for LocalState {
             }
         }
 
-        // DEBUG
-        // println!("--- next states generated:");
-        // for (score, step, state) in &next_states {
-        //     println!("{}: {:?}", score, step);
-        //     if cfg!(debug_assertions) {
-        //         println!("{}", state.to_string(map));
-        //     }
-        // }
-
         if next_states.is_empty() {
             return None;
         } else {
@@ -617,7 +619,7 @@ impl State<Map, Step> for LocalState {
     }
 
     fn heuristic(&self, _global: &Map) -> i64 {
-        return 0;
+        self.molecules.iter().map(|m| m.free_electrons() as i64).sum()
     }
 
     fn to_string(&self, map: &Map) -> String {
@@ -658,24 +660,15 @@ impl State<Map, Step> for LocalState {
     }
 }
 
-fn main() {
-    env_logger::init();
+fn solve(input: &str) -> Option<String> {
+    let (map, molecules) = Map::load(input);
 
-    let input = io::read_to_string(io::stdin()).unwrap();
-    let (map, molecules) = Map::load(&input);
-
-    println!("Initial state:");
-    println!("{}", molecules.to_string(&map));
+    log::info!("Initial state:\n{}", molecules.to_string(&map));
 
     let mut solver = Solver::new(map.clone(), molecules.clone());
 
     while let Some(state) = solver.next() {
-        // if solver.states_checked() % 100000 != 0 {
-        //     continue;
-        // }
-
-        println!("===== ===== ===== ===== =====");
-        println!(
+        log::info!(
             "{} states checked, {} in queue, {} invalidated, {} seconds, heuristic: {}, state:\n{}\n",
             solver.states_checked(),
             solver.in_queue(),
@@ -684,21 +677,19 @@ fn main() {
             state.heuristic(&map),
             state.to_string(&map),
         );
-
-        // if solver.states_checked() > 100 {
-        //     break;
-        // }
     }
 
     let solution = solver.get_solution();
     if solution.is_none() {
-        println!("no solution found");
-        return;
+        return None;
     }
     let solution = solution.unwrap();
 
-    println!("Solved state:");
-    println!("{}", solution.to_string(&map));
+    log::info!("Solved after {} states in {} seconds:\n{}",
+        solver.states_checked(),
+        solver.time_spent(),
+        solution.to_string(&map),
+    );
 
     let mut steps = String::new();
     for step in solver.path(&molecules, &solution).unwrap() {
@@ -709,13 +700,62 @@ fn main() {
             Step::West => steps += "A",
         }
     }
-    println!("path: {}", steps);
-
-    println!(
-        "{} states, {} seconds",
-        solver.states_checked(),
-        solver.time_spent()
-    );
+    Some(steps)
 }
 
-// TODO: Rebecca
+fn main() {
+    env_logger::init();
+
+    let input = io::read_to_string(io::stdin()).unwrap();
+    let solution = solve(&input);
+
+    if solution.is_none() {
+        panic!("no solution found");
+    }
+    
+    let solution = solution.unwrap();
+    println!("{}", solution);
+}
+
+#[cfg(test)]
+mod test_solutions {
+    use super::*;
+
+    macro_rules! test {
+        ($name:ident, $folder:expr, $file:expr, $expected:expr) => {
+            #[test]
+            fn $name() {
+                let input = include_str!(concat!("../../data/sokobond/", $folder, "/", $file));
+                let solution = solve(input);
+                assert_eq!(solution.expect("solution exists"), $expected);
+            }            
+        };
+    }
+
+    test!{test_01_01, "01 - Yellow", "01 - Let's Go.txt", "WWDDWWDD"}
+    test!{test_01_02, "01 - Yellow", "02 - Cell.txt", "DWDDAA"}
+    test!{test_01_03, "01 - Yellow", "03 - Loop.txt", "WWDDSSWWAAASSSSD"}
+    test!{test_01_04, "01 - Yellow", "04 - Monty Hall.txt", "WSDDWSAAWWWDAAA"}
+    test!{test_01_05, "01 - Yellow", "05 - Knot.txt", "WDSASAWDDDAAAA"}
+    test!{test_01_06, "01 - Yellow", "06 - Push.txt", "DDWDSD"}
+    test!{test_01_07, "01 - Yellow", "07 - Structure.txt", "DSSWAAA"}
+    test!{test_01_08, "01 - Yellow", "08 - Lotus.txt", "SDSSWWAADSSADSSWAWA"}
+    test!{test_01_09, "01 - Yellow", "09 - Coyote.txt", "WWAASASDDWWAASSSAWWSSDDDWWWAASSSAAWW"}
+    test!{test_01_10, "01 - Yellow", "10 - Roadrunner.txt", "AWWDDSSWWDDSDAWAASSASDWWWDDSDSWAAASS"}
+
+    test!{test_02_01, "02 - Orange", "01 - Suit.txt", "SSDDDWWSSAAASSWWWWDDDSSSSA"}
+    test!{test_02_02, "02 - Orange", "02 - Chimney.txt", "WAWSSDDWAAADWSS"}
+    test!{test_02_03, "02 - Orange", "03 - Heart.txt", "WWDWASAAWDAWWDSSASDWDDWW"}
+    test!{test_02_04, "02 - Orange", "04 - Factory.txt", "AASSDDDDDWWWWSSSSAAAAAWWWWWDSWD"}
+    test!{test_02_05, "02 - Orange", "05 - Scoop.txt", "DAASSDSDWWSAAAWWDDSSDDW"}
+    test!{test_02_06, "02 - Orange", "06 - Block.txt", "ASSSDDWSDDWWWADSSSAAWAW"}
+    test!{test_02_07, "02 - Orange", "07 - Chandelier.txt", "DSSWDSSAAWDWWASSWDDSSWWAASWDDSSA"}
+    test!{test_02_08, "02 - Orange", "08 - Creature.txt", "WAAWWDDWDSWAASAASSDDSSWWDDSDW"}
+    test!{test_02_09, "02 - Orange", "09 - Rosie.txt", "WDWWWSDSSAAASDDDWWWWAA"}
+    test!{test_02_10, "02 - Orange", "10 - Kruskal.txt", "DWDSASAWAWDSSAWWDDSSAAWWWSSSDDWWWSSS"}
+
+    test!{test_03_01, "03 - Gray", "01 - Helium.txt", "WDDDDDSAAWASSASSDWWWSSSS"}
+    test!{test_03_02, "03 - Gray", "02 - Tee.txt", "WWDDSAWAASWDDSAWAAAASDWDDSWASWDDSSSSADWWWASDSSSAWDWW"}
+    test!{test_03_03, "03 - Gray", "03 - Freedom.txt", "WWWSSSDWWSSAAWWSSAWSDDWWWADSSSAAWAWDWD"}
+    // test!{test_03_04, "03 - Gray", "04 - Against the Wall.txt", ""}
+}
