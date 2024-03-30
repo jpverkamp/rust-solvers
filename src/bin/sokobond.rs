@@ -698,6 +698,10 @@ fn solve(input: &str) -> Option<String> {
     let mut solver = Solver::new(map.clone(), molecules.clone());
 
     while let Some(state) = solver.next() {
+        if solver.states_checked() % 10000 != 0 {
+            continue;
+        }
+
         log::info!(
             "{} states checked, {} in queue, {} invalidated, {} seconds, heuristic: {}, state:\n{}\n",
             solver.states_checked(),
@@ -788,4 +792,5 @@ mod test_solutions {
     test!{test_03_02, "03 - Gray", "02 - Tee.txt", "WWDDSAWAASWDDSAWAAAASDWDDSWASWDDSSSSADWWWASDSSSAWDWW"}
     test!{test_03_03, "03 - Gray", "03 - Freedom.txt", "WWWSSSDWWSSAAWWSSAWSDDWWWADSSSAAWAWDWD"}
     // test!{test_03_04, "03 - Gray", "04 - Against the Wall.txt", ""}
+    // test!{test_03_05, "03 - Gray", "05 - Pathways.txt", ""}
 }
