@@ -183,6 +183,11 @@ impl Molecule {
         }
     }
 
+    // Test for molecular helium
+    fn is_helium(&self) -> bool {
+        self.elements.len() == 1 && self.elements[0].0 == Element::Helium
+    }
+
     // How many free electrons in the hole molecule
     fn free_electrons(&self) -> usize {
         self.elements
@@ -549,7 +554,19 @@ impl Into<Point> for Step {
 
 impl State<Map, Step> for LocalState {
     fn is_valid(&self, _global: &Map) -> bool {
-        // TODO: If we have no free electrons (and we're not solved), we're invalid
+        if self.is_solved(_global) {
+            return true;
+        }
+
+        // The primary molecule must have free electrons
+        if !(self.molecules[0].is_helium() || self.molecules[0].free_electrons() == 0) {
+            return false;
+        }
+
+        // Any non-primary (other than helium) must have free electrons
+        if self.molecules.iter().skip(1).any(|m| !m.is_helium() && m.free_electrons() == 0) {
+            return false;
+        }
 
         return true;
     }
@@ -558,9 +575,18 @@ impl State<Map, Step> for LocalState {
         // The puzzle is solved once there is no longer any free electrons
         // self.molecules.iter().all(|m| m.free_electrons() == 0)
 
-        // Puzzle is solved once there's one molecule with no free electrons 
-        // Is this true? 
-        self.molecules.len() == 1 && self.molecules.iter().all(|m| m.free_electrons() == 0)
+        // // Puzzle is solved once there's one molecule with no free electrons 
+        // // Is this true? 
+        // self.molecules.len() == 1 && self.molecules.iter().all(|m| m.free_electrons() == 0)
+
+        // Starting with gray, we can allow free heliums
+        // self.molecules[0].free_electrons() == 0 &&
+        //     self.molecules.iter().skip(1).all(|m| m.is_helium())
+
+        // Starting with gray 03-Freedom, our primary is a Helium
+        // So now, there must be 1 molecule with no free electrons and the rest helium
+        self.molecules.iter().filter(|m| !m.is_helium()).count() == 1
+            && self.molecules.iter().all(|m| m.is_helium() || m.free_electrons() == 0)
     }
 
     fn next_states(&self, map: &Map) -> Option<Vec<(i64, Step, LocalState)>> {
