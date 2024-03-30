@@ -102,7 +102,7 @@ impl Map {
                 for j in (i+1)..molecules.len() {
                     let mut primary = molecules[i].clone();
 
-                    if primary.try_bind(Point::ZERO, &molecules[j]) {
+                    if primary.try_bond(Point::ZERO, &molecules[j]) {
                         molecules[i] = primary;
                         molecules.remove(j);
                         continue 'settled;
@@ -241,10 +241,10 @@ impl Molecule {
         false
     }
 
-    // Try to bind two molecules together
+    // Try to bond two molecules together
     // Offset is between the centers of the molecules
     // Updates and returns true if successful
-    fn try_bind(&mut self, offset: Point, other: &Molecule) -> bool {
+    fn try_bond(&mut self, offset: Point, other: &Molecule) -> bool {
         let mut bound = false;
 
         // Make local mutable copies
@@ -271,7 +271,7 @@ impl Molecule {
                     continue;
                 }
 
-                // Bind the two elements
+                // bond the two elements
                 bound = true;
 
                 self.bonds.push((
@@ -342,11 +342,11 @@ mod test_molecule {
     }
 
     #[test]
-    fn test_bind() {
+    fn test_bond() {
         let mut a = Molecule::new(Point::ZERO, Element::Hydrogen);
         let b = Molecule::new(Point(1, 0), Element::Hydrogen);
 
-        let bound = a.try_bind(Point::ZERO, &b);
+        let bound = a.try_bond(Point::ZERO, &b);
 
         assert!(bound);
         assert_eq!(a.elements.len(), 2);
@@ -354,33 +354,33 @@ mod test_molecule {
     }
 
     #[test]
-    fn test_nobind_no_free() {
+    fn test_nobond_no_free() {
         let mut a = Molecule::new(Point::ZERO, Element::Hydrogen);
         let b = Molecule::new(Point(1, 0), Element::Helium);
 
-        let bound = a.try_bind(Point(1, 0), &b);
+        let bound = a.try_bond(Point(1, 0), &b);
 
         assert!(!bound);
         assert!(a.elements[0].2 == 1);
     }
 
     #[test]
-    fn test_nobind_too_far() {
+    fn test_nobond_too_far() {
         let mut a = Molecule::new(Point::ZERO, Element::Hydrogen);
         let b = Molecule::new(Point(2, 0), Element::Hydrogen);
 
-        let bound = a.try_bind(Point(2, 0), &b);
+        let bound = a.try_bond(Point(2, 0), &b);
 
         assert!(!bound);
         assert!(a.elements[0].2 == 1);
     }
 
     #[test]
-    fn test_single_bind_o2_not_double() {
+    fn test_single_bond_o2_not_double() {
         let mut a = Molecule::new(Point::ZERO, Element::Oxygen);
         let b = Molecule::new(Point(1, 0), Element::Oxygen);
 
-        let bound = a.try_bind(Point::ZERO, &b);
+        let bound = a.try_bond(Point::ZERO, &b);
 
         assert!(bound);
         assert_eq!(a.elements.len(), 2);
@@ -444,7 +444,7 @@ impl LocalState {
             self.molecules[*i].offset = self.molecules[*i].offset + offset;
         }
 
-        // Try to bind all pairs of molecules
+        // Try to bond all pairs of molecules
         // TODO: Inefficient, we only really need to check moved (?); especially with all the cloning
         'settling: loop {
             for i in 0..self.molecules.len() {
@@ -455,7 +455,7 @@ impl LocalState {
 
                     let mut primary = self.molecules[i].clone();
 
-                    if primary.try_bind(Point::ZERO, &self.molecules[j]) {
+                    if primary.try_bond(Point::ZERO, &self.molecules[j]) {
                         self.molecules[i] = primary;
                         self.molecules.remove(j);
                         continue 'settling;
@@ -504,7 +504,7 @@ mod test_localstate {
     }
 
     #[test]
-    fn test_move_and_bind() {
+    fn test_move_and_bond() {
         use super::*;
 
         let (map, mut state) = Map::load("H-h#");
@@ -516,7 +516,7 @@ mod test_localstate {
     }
 
     #[test]
-    fn test_push_and_bind() {
+    fn test_push_and_bond() {
         use super::*;
 
         let (map, mut state) = Map::load("Hh-#");
