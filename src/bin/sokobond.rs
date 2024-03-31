@@ -404,6 +404,136 @@ impl LocalState {
             return false;
         }
 
+        // Apply splitter before moving, since the split half doesn't move
+        // TODO: Splitting multiple bonds
+        let mut to_split = None;
+        'splitting: for splitter in &map.splitters {
+            for (i, (a, b, _count)) in self.molecules[index].bonds.iter().enumerate() {
+                let a = self.molecules[index].offset + *a;
+                let b = self.molecules[index].offset + *b;
+
+                // Vertical bonds have the same x
+                let is_vertical = a.0 == b.0;
+                
+                // We'll hit a vertical splitter if the offset is horizontal and we're moving across it
+                // Ignore bonds that are moving the wrong way
+                if is_vertical && offset.0 == 0 || !is_vertical && offset.1 == 0{
+                    continue;
+                }
+
+                // Moving 'positive' is down or right
+                let is_positive = offset.0 > 0 || offset.1 > 0;
+
+                // Because either x or y is the same for all bonds, min is top/left and max is bottom/right
+                // This will always match the splitter if we're moving across it right or down
+                let pre_min = Point(a.0.min(b.0), a.1.min(b.1));
+
+                // The post point is the one after we've moved
+                let post_a = a + offset;
+                let post_b = b + offset;
+                let post_min = Point(post_a.0.min(post_b.0), post_a.1.min(post_b.1));
+                
+                // If we're moving positive, the min (top left) will equal the splitter
+                if is_positive && splitter != &pre_min {
+                    continue;
+                }
+
+                // If we're moving negative, then the *post* min will equal the splitter
+                if !is_positive && splitter != &post_min {
+                    continue;
+                }
+
+                // If we made it this far in the loop, this is the bond to break
+                to_split = Some(i);
+                break 'splitting;
+            }
+        };
+
+        // If we found a bond to split, do that
+        if let Some(i) = to_split {
+            // Create a new copy of the molecule to modify
+            let mut src = self.molecules[index].clone();
+
+            // Add the count of the bond to the free electrons of both
+            {
+                let (bond_a, bond_b, count) = src.bonds[i];
+                for (_, pt, free) in &mut src.elements {
+                    if *pt == bond_a || *pt == bond_b {
+                        *free += count;
+                    }
+                }
+            }
+
+            // Remove the bond
+            src.bonds.remove(i);
+
+            // Create the new molecule (we'll remove the halves from each)
+            let mut dst = src.clone();
+
+            
+
+            // Now starting at the origin in src, remove anything we can get to in dst
+            let mut connected_elements = Vec::new();
+            let mut connected_bonds = Vec::new();
+
+            let mut todo = vec![Point::ZERO];
+            let mut done = vec![];
+            
+            while let Some(pt) = todo.pop() {
+                done.push(pt);
+
+                for (i, (_, offset, _)) in src.elements.iter().enumerate() {
+                    if *offset == pt {
+                        connected_elements.push(i);
+                    }
+                }
+
+                for (i, (src, dst, _)) in src.bonds.iter().enumerate() {
+                    if src == &pt {
+                        connected_bonds.push(i);
+                    }
+
+                    if todo.contains(dst) || done.contains(dst) {
+                        continue;
+                    }
+
+                    todo.push(*dst);
+                }
+            }
+
+            // Now remove the connected elements and bonds from the dst
+            for i in connected_elements.iter().rev() {
+                dst.elements.remove(*i);
+            }
+            for i in connected_bonds.iter().rev() {
+                dst.bonds.remove(*i);
+            }
+
+            // Update dst's offset so it has a 0,0
+            let new_zero = dst.elements[0].1;
+            dst.offset = dst.offset + new_zero;
+            for (_, element_offset, _) in &mut dst.elements {
+                *element_offset = *element_offset - new_zero;
+            }
+
+            // And remove everything else from src
+            for i in (0..src.elements.len()).rev() {
+                if !connected_elements.contains(&i) {
+                    src.elements.remove(i);
+                }
+            }
+            for i in (0..src.bonds.len()).rev() {
+                if !connected_bonds.contains(&i) {
+                    src.bonds.remove(i);
+                }
+            }
+
+            // Now, update the original molecule and add the new one
+            self.molecules[index] = src;
+            self.molecules.push(dst);
+        }
+
+
         // Collect all molecules that would move
         let mut would_move = vec![index];
 
@@ -561,6 +691,75 @@ mod test_localstate {
         assert_eq!(state.molecules[1].offset, Point(1, 3));
         assert_eq!(state.molecules[1].elements[0].2, 1);
     }
+
+    #[test]
+    fn test_move_across_splitter() {
+        use super::*;
+
+        let (map, mut state) = Map::load("H\\--\nh---");
+
+        // Map will look like:
+        // H - - -
+        // |  +
+        // H - - -
+        
+        // Move once, still together
+        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert_eq!(state.molecules.len(), 1);
+        assert_eq!(state.molecules[0].elements.len(), 2);
+        
+        // Move again, now we're split
+        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert_eq!(state.molecules.len(), 2);
+        assert_eq!(state.molecules[0].elements.len(), 1);
+        assert_eq!(state.molecules[1].elements.len(), 1);
+
+        // Molecule 0 is the one that moved
+        assert_eq!(state.molecules[0].offset, Point(2, 0));
+        assert_eq!(state.molecules[1].offset, Point(1, 1));
+
+        // Move once more, doesn't rejoin or anything
+        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert_eq!(state.molecules.len(), 2);
+        assert_eq!(state.molecules[0].offset, Point(3, 0));
+        assert_eq!(state.molecules[1].offset, Point(1, 1));
+    }
+
+    #[test]
+    fn test_partial_split() {
+        // Map will look like:
+        // O-H - -
+        // |  +
+        // H - - -
+
+        use super::*;
+
+        let (map, mut state) = Map::load("Oh\\--\nh----");
+
+        // Move twice, still together
+        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert_eq!(state.molecules.len(), 1);
+        assert_eq!(state.molecules[0].elements.len(), 3);
+
+        // Move again, now we're split
+        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert_eq!(state.molecules.len(), 2);
+        assert_eq!(state.molecules[0].elements.len(), 2);
+        assert_eq!(state.molecules[1].elements.len(), 1);
+
+        // Molecule 0 is the one that moved
+        assert_eq!(state.molecules[0].offset, Point(3, 0));
+        assert_eq!(state.molecules[1].offset, Point(2, 1));
+
+        // Move down, rejoin
+        assert!(state.try_move(&map, 0, Point(0, 1)));
+        assert_eq!(state.molecules.len(), 1);
+        assert_eq!(state.molecules[0].elements.len(), 3);
+        assert_eq!(state.molecules[0].offset, Point(3, 1));
+
+
+    }
 }
 
 // The step the primary molecule takes each tick
@@ -584,8 +783,13 @@ impl Into<Point> for Step {
 }
 
 impl State<Map, Step> for LocalState {
-    fn is_valid(&self, _global: &Map) -> bool {
-        if self.is_solved(_global) {
+    fn is_valid(&self, map: &Map) -> bool {
+        if self.is_solved(map) {
+            return true;
+        }
+
+        // If we have any splitters, anything goes :)
+        if !map.splitters.is_empty() {
             return true;
         }
 
@@ -679,6 +883,11 @@ impl State<Map, Step> for LocalState {
             }
         }
 
+        // Add splitters
+        for splitter in &map.splitters {
+            grid[1 + 2 * splitter.1 as usize][1 + 2 * splitter.0 as usize] = '+';
+        }
+
         let mut output = String::new();
         for y in 0..(2*map.height) {
             for x in 0..(2*map.width) {
@@ -698,9 +907,9 @@ fn solve(input: &str) -> Option<String> {
     let mut solver = Solver::new(map.clone(), molecules.clone());
 
     while let Some(state) = solver.next() {
-        if solver.states_checked() % 10000 != 0 {
-            continue;
-        }
+        // if solver.states_checked() % 10000 != 0 {
+        //     continue;
+        // }
 
         log::info!(
             "{} states checked, {} in queue, {} invalidated, {} seconds, heuristic: {}, state:\n{}\n",
@@ -793,4 +1002,6 @@ mod test_solutions {
     test!{test_03_03, "03 - Gray", "03 - Freedom.txt", "WWWSSSDWWSSAAWWSSAWSDDWWWADSSSAAWAWDWD"}
     // test!{test_03_04, "03 - Gray", "04 - Against the Wall.txt", ""}
     // test!{test_03_05, "03 - Gray", "05 - Pathways.txt", ""}
+
+    test!{test_04_01, "04 - Red", "01 - Split.txt", "DDWWDSSDDWWWAASSDWDSSAAWDSDDAAWWWASSWWDSAWDDS"}
 }
