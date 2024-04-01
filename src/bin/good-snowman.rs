@@ -640,7 +640,7 @@ impl<G> State<G, Step> for Map {
         return score;
     }
 
-    fn to_string(&self, _global: &G) -> String {
+    fn stringify(&self, _global: &G) -> String {
         format!("{}", self)
     }
 }
@@ -656,24 +656,10 @@ fn main() {
     let mut solver = Solver::new((), initial_state.clone());
 
     while let Some(state) = solver.next() {
-        if solver.states_checked() % 100000 != 0 {
+        if solver.states_checked() % 10000 != 0 {
             continue;
         }
-
-        println!("===== ===== ===== ===== =====");
-        println!("state: {}", state);
-        println!(
-            "{} states checked, {} in queue, {} invalidated, {} seconds, heuristic: {}",
-            solver.states_checked(),
-            solver.in_queue(),
-            solver.states_invalidated(),
-            solver.time_spent(),
-            state.heuristic(&()),
-        );
-
-        // if solver.states_checked() > 100 {
-        //     break;
-        // }
+        log::info!("{solver}, state:\n{}", state.stringify(&()));
     }
 
     let solution = solver.get_solution();

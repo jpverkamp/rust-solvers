@@ -83,9 +83,14 @@ impl Map {
                     Err(_) => {
                         match c {
                             // Splitters are offset between the grid lines
+                            // \ for NW of a splitter, / for NE (if NW is otherwise occupied)
                             '\\' => {
                                 walls.push(false);
                                 splitters.push(pt);
+                            }
+                            '/' => {
+                                walls.push(false);
+                                splitters.push(pt - Point(1, 0));
                             }
                             ' ' | '-' => walls.push(false),
                             'x' | 'X' | '#' => walls.push(true),
@@ -99,7 +104,7 @@ impl Map {
         // Try to bond each original pair of molecules
         'settled: loop {
             for i in 0..molecules.len() {
-                for j in (i+1)..molecules.len() {
+                for j in (i + 1)..molecules.len() {
                     let mut primary = molecules[i].clone();
 
                     if primary.try_bond(Point::ZERO, &molecules[j]) {
@@ -276,8 +281,8 @@ impl Molecule {
 
                 self.bonds.push((
                     offset + *src_offset,
-                    other.offset - self.offset + *dst_offset, 
-                    1
+                    other.offset - self.offset + *dst_offset,
+                    1,
                 ));
 
                 *src_free -= 1;
@@ -414,10 +419,10 @@ impl LocalState {
 
                 // Vertical bonds have the same x
                 let is_vertical = a.0 == b.0;
-                
+
                 // We'll hit a vertical splitter if the offset is horizontal and we're moving across it
                 // Ignore bonds that are moving the wrong way
-                if is_vertical && offset.0 == 0 || !is_vertical && offset.1 == 0{
+                if is_vertical && offset.0 == 0 || !is_vertical && offset.1 == 0 {
                     continue;
                 }
 
@@ -432,7 +437,7 @@ impl LocalState {
                 let post_a = a + offset;
                 let post_b = b + offset;
                 let post_min = Point(post_a.0.min(post_b.0), post_a.1.min(post_b.1));
-                
+
                 // If we're moving positive, the min (top left) will equal the splitter
                 if is_positive && splitter != &pre_min {
                     continue;
@@ -447,7 +452,7 @@ impl LocalState {
                 to_split = Some(i);
                 break 'splitting;
             }
-        };
+        }
 
         // If we found a bond to split, do that
         if let Some(i) = to_split {
@@ -456,9 +461,9 @@ impl LocalState {
 
             // Add the count of the bond to the free electrons of both
             {
-                let (bond_a, bond_b, count) = src.bonds[i];
+                let (a, b, count) = src.bonds[i];
                 for (_, pt, free) in &mut src.elements {
-                    if *pt == bond_a || *pt == bond_b {
+                    if *pt == a || *pt == b {
                         *free += count;
                     }
                 }
@@ -467,10 +472,8 @@ impl LocalState {
             // Remove the bond
             src.bonds.remove(i);
 
-            // Create the new molecule (we'll remove the halves from each)
+            // Copy with removed/updated src to create the new molecule
             let mut dst = src.clone();
-
-            
 
             // Now starting at the origin in src, remove anything we can get to in dst
             let mut connected_elements = Vec::new();
@@ -478,33 +481,45 @@ impl LocalState {
 
             let mut todo = vec![Point::ZERO];
             let mut done = vec![];
-            
+
             while let Some(pt) = todo.pop() {
                 done.push(pt);
 
                 for (i, (_, offset, _)) in src.elements.iter().enumerate() {
-                    if *offset == pt {
+                    if *offset == pt && !connected_elements.contains(&i) {
                         connected_elements.push(i);
                     }
                 }
 
-                for (i, (src, dst, _)) in src.bonds.iter().enumerate() {
-                    if src == &pt {
-                        connected_bonds.push(i);
+                for (i, (a, b, _)) in src.bonds.iter().enumerate() {
+                    if a == &pt {
+                        if !connected_bonds.contains(&i) {
+                            connected_bonds.push(i);
+                        }
+
+                        if !(todo.contains(b) || done.contains(b)) {
+                            todo.push(*b);
+                        }
                     }
 
-                    if todo.contains(dst) || done.contains(dst) {
-                        continue;
-                    }
+                    if b == &pt {
+                        if !connected_bonds.contains(&i) {
+                            connected_bonds.push(i);
+                        }
 
-                    todo.push(*dst);
+                        if !(todo.contains(a) || done.contains(a)) {
+                            todo.push(*a);
+                        }
+                    }
                 }
             }
 
             // Now remove the connected elements and bonds from the dst
+            connected_elements.sort();
             for i in connected_elements.iter().rev() {
                 dst.elements.remove(*i);
             }
+            connected_bonds.sort();
             for i in connected_bonds.iter().rev() {
                 dst.bonds.remove(*i);
             }
@@ -512,8 +527,13 @@ impl LocalState {
             // Update dst's offset so it has a 0,0
             let new_zero = dst.elements[0].1;
             dst.offset = dst.offset + new_zero;
+
             for (_, element_offset, _) in &mut dst.elements {
                 *element_offset = *element_offset - new_zero;
+            }
+            for (src, dst, _) in &mut dst.bonds {
+                *src = *src - new_zero;
+                *dst = *dst - new_zero;
             }
 
             // And remove everything else from src
@@ -532,7 +552,6 @@ impl LocalState {
             self.molecules[index] = src;
             self.molecules.push(dst);
         }
-
 
         // Collect all molecules that would move
         let mut would_move = vec![index];
@@ -677,7 +696,7 @@ mod test_localstate {
         assert!(state.try_move(&map, 0, Point(0, 1)));
         assert!(state.try_move(&map, 0, Point(0, 1)));
 
-        println!("{}", state.to_string(&map));
+        println!("{}", state.stringify(&map));
 
         // Two molecules
         assert_eq!(state.molecules.len(), 2);
@@ -702,12 +721,12 @@ mod test_localstate {
         // H - - -
         // |  +
         // H - - -
-        
+
         // Move once, still together
         assert!(state.try_move(&map, 0, Point(1, 0)));
         assert_eq!(state.molecules.len(), 1);
         assert_eq!(state.molecules[0].elements.len(), 2);
-        
+
         // Move again, now we're split
         assert!(state.try_move(&map, 0, Point(1, 0)));
         assert_eq!(state.molecules.len(), 2);
@@ -757,8 +776,6 @@ mod test_localstate {
         assert_eq!(state.molecules.len(), 1);
         assert_eq!(state.molecules[0].elements.len(), 3);
         assert_eq!(state.molecules[0].offset, Point(3, 1));
-
-
     }
 }
 
@@ -799,7 +816,12 @@ impl State<Map, Step> for LocalState {
         }
 
         // Any non-primary (other than helium) must have free electrons
-        if self.molecules.iter().skip(1).any(|m| !m.is_helium() && m.free_electrons() == 0) {
+        if self
+            .molecules
+            .iter()
+            .skip(1)
+            .any(|m| !m.is_helium() && m.free_electrons() == 0)
+        {
             return false;
         }
 
@@ -807,8 +829,9 @@ impl State<Map, Step> for LocalState {
     }
 
     fn is_solved(&self, _global: &Map) -> bool {
-        self.molecules.iter().all(|m| m.is_helium() || m.free_electrons() == 0)
-
+        self.molecules
+            .iter()
+            .all(|m| m.is_helium() || m.free_electrons() == 0)
     }
 
     fn next_states(&self, map: &Map) -> Option<Vec<(i64, Step, LocalState)>> {
@@ -830,10 +853,13 @@ impl State<Map, Step> for LocalState {
     }
 
     fn heuristic(&self, _global: &Map) -> i64 {
-        self.molecules.iter().map(|m| m.free_electrons() as i64).sum()
+        self.molecules
+            .iter()
+            .map(|m| m.free_electrons() as i64)
+            .sum()
     }
 
-    fn to_string(&self, map: &Map) -> String {
+    fn stringify(&self, map: &Map) -> String {
         let mut grid = vec![vec![' '; map.width * 2]; map.height * 2];
 
         for y in 0..map.height {
@@ -889,8 +915,8 @@ impl State<Map, Step> for LocalState {
         }
 
         let mut output = String::new();
-        for y in 0..(2*map.height) {
-            for x in 0..(2*map.width) {
+        for y in 0..(2 * map.height) {
+            for x in 0..(2 * map.width) {
                 output.push(grid[y][x]);
             }
             output.push('\n');
@@ -902,24 +928,15 @@ impl State<Map, Step> for LocalState {
 fn solve(input: &str) -> Option<String> {
     let (map, molecules) = Map::load(input);
 
-    log::info!("Initial state:\n{}", molecules.to_string(&map));
+    log::info!("Initial state:\n{}", molecules.stringify(&map));
 
     let mut solver = Solver::new(map.clone(), molecules.clone());
 
     while let Some(state) = solver.next() {
-        // if solver.states_checked() % 10000 != 0 {
-        //     continue;
-        // }
-
-        log::info!(
-            "{} states checked, {} in queue, {} invalidated, {} seconds, heuristic: {}, state:\n{}\n",
-            solver.states_checked(),
-            solver.in_queue(),
-            solver.states_invalidated(),
-            solver.time_spent(),
-            state.heuristic(&map),
-            state.to_string(&map),
-        );
+        if solver.states_checked() % 100000 != 0 {
+            continue;
+        }
+        log::info!("{solver}, state:\n{}", state.stringify(&map));
     }
 
     let solution = solver.get_solution();
@@ -928,10 +945,11 @@ fn solve(input: &str) -> Option<String> {
     }
     let solution = solution.unwrap();
 
-    log::info!("Solved after {} states in {} seconds:\n{}",
+    log::info!(
+        "Solved after {} states in {} seconds:\n{}",
         solver.states_checked(),
         solver.time_spent(),
-        solution.to_string(&map),
+        solution.stringify(&map),
     );
 
     let mut steps = String::new();
@@ -955,7 +973,7 @@ fn main() {
     if solution.is_none() {
         panic!("no solution found");
     }
-    
+
     let solution = solution.unwrap();
     println!("{}", solution);
 }
@@ -971,37 +989,42 @@ mod test_solutions {
                 let input = include_str!(concat!("../../data/sokobond/", $folder, "/", $file));
                 let solution = solve(input);
                 assert_eq!(solution.expect("solution exists"), $expected);
-            }            
+            }
         };
     }
 
-    test!{test_01_01, "01 - Yellow", "01 - Let's Go.txt", "WWDDWWDD"}
-    test!{test_01_02, "01 - Yellow", "02 - Cell.txt", "DWDDAA"}
-    test!{test_01_03, "01 - Yellow", "03 - Loop.txt", "WWDDSSWWAAASSSSD"}
-    test!{test_01_04, "01 - Yellow", "04 - Monty Hall.txt", "WSDDWSAAWWWDAAA"}
-    test!{test_01_05, "01 - Yellow", "05 - Knot.txt", "WDSASAWDDDAAAA"}
-    test!{test_01_06, "01 - Yellow", "06 - Push.txt", "DDWDSD"}
-    test!{test_01_07, "01 - Yellow", "07 - Structure.txt", "DSSWAAA"}
-    test!{test_01_08, "01 - Yellow", "08 - Lotus.txt", "SDSSWWAADSSADSSWAWA"}
-    test!{test_01_09, "01 - Yellow", "09 - Coyote.txt", "WWAASASDDWWAASSSAWWSSDDDWWWAASSSAAWW"}
-    test!{test_01_10, "01 - Yellow", "10 - Roadrunner.txt", "AWWDDSSWWDDSDAWAASSASDWWWDDSDSWAAASS"}
+    test! {test_01_01, "01 - Yellow", "01 - Let's Go.txt", "WWDDWWDD"}
+    test! {test_01_02, "01 - Yellow", "02 - Cell.txt", "DWDDAA"}
+    test! {test_01_03, "01 - Yellow", "03 - Loop.txt", "WWDDSSWWAAASSSSD"}
+    test! {test_01_04, "01 - Yellow", "04 - Monty Hall.txt", "WSDDWSAAWWWDAAA"}
+    test! {test_01_05, "01 - Yellow", "05 - Knot.txt", "WDSASAWDDDAAAA"}
+    test! {test_01_06, "01 - Yellow", "06 - Push.txt", "DDWDSD"}
+    test! {test_01_07, "01 - Yellow", "07 - Structure.txt", "DSSWAAA"}
+    test! {test_01_08, "01 - Yellow", "08 - Lotus.txt", "SDSSWWAADSSADSSWAWA"}
+    test! {test_01_09, "01 - Yellow", "09 - Coyote.txt", "WWAASASDDWWAASSSAWWSSDDDWWWAASSSAAWW"}
+    test! {test_01_10, "01 - Yellow", "10 - Roadrunner.txt", "AWWDDSSWWDDSDAWAASSASDWWWDDSDSWAAASS"}
 
-    test!{test_02_01, "02 - Orange", "01 - Suit.txt", "SSDDDWWSSAAASSWWWWDDDSSSSA"}
-    test!{test_02_02, "02 - Orange", "02 - Chimney.txt", "WAWSSDDWAAADWSS"}
-    test!{test_02_03, "02 - Orange", "03 - Heart.txt", "WWDWASAAWDAWWDSSASDWDDWW"}
-    test!{test_02_04, "02 - Orange", "04 - Factory.txt", "AASSDDDDDWWWWSSSSAAAAAWWWWWDSWD"}
-    test!{test_02_05, "02 - Orange", "05 - Scoop.txt", "DAASSDSDWWSAAAWWDDSSDDW"}
-    test!{test_02_06, "02 - Orange", "06 - Block.txt", "ASSSDDWSDDWWWADSSSAAWAW"}
-    test!{test_02_07, "02 - Orange", "07 - Chandelier.txt", "DSSWDSSAAWDWWASSWDDSSWWAASWDDSSA"}
-    test!{test_02_08, "02 - Orange", "08 - Creature.txt", "WAAWWDDWDSWAASAASSDDSSWWDDSDW"}
-    test!{test_02_09, "02 - Orange", "09 - Rosie.txt", "WDWWWSDSSAAASDDDWWWWAA"}
-    test!{test_02_10, "02 - Orange", "10 - Kruskal.txt", "DWDSASAWAWDSSAWWDDSSAAWWWSSSDDWWWSSS"}
+    test! {test_02_01, "02 - Orange", "01 - Suit.txt", "SSDDDWWSSAAASSWWWWDDDSSSSA"}
+    test! {test_02_02, "02 - Orange", "02 - Chimney.txt", "WAWSSDDWAAADWSS"}
+    test! {test_02_03, "02 - Orange", "03 - Heart.txt", "WWDWASAAWDAWWDSSASDWDDWW"}
+    test! {test_02_04, "02 - Orange", "04 - Factory.txt", "AASSDDDDDWWWWSSSSAAAAAWWWWWDSWD"}
+    test! {test_02_05, "02 - Orange", "05 - Scoop.txt", "DAASSDSDWWSAAAWWDDSSDDW"}
+    test! {test_02_06, "02 - Orange", "06 - Block.txt", "ASSSDDWSDDWWWADSSSAAWAW"}
+    test! {test_02_07, "02 - Orange", "07 - Chandelier.txt", "DSSWDSSAAWDWWASSWDDSSWWAASWDDSSA"}
+    test! {test_02_08, "02 - Orange", "08 - Creature.txt", "WAAWWDDWDSWAASAASSDDSSWWDDSDW"}
+    test! {test_02_09, "02 - Orange", "09 - Rosie.txt", "WDWWWSDSSAAASDDDWWWWAA"}
+    test! {test_02_10, "02 - Orange", "10 - Kruskal.txt", "DWDSASAWAWDSSAWWDDSSAAWWWSSSDDWWWSSS"}
 
-    test!{test_03_01, "03 - Gray", "01 - Helium.txt", "WDDDDDSAAWASSASSDWWWSSSS"}
-    test!{test_03_02, "03 - Gray", "02 - Tee.txt", "WWDDSAWAASWDDSAWAAAASDWDDSWASWDDSSSSADWWWASDSSSAWDWW"}
-    test!{test_03_03, "03 - Gray", "03 - Freedom.txt", "WWWSSSDWWSSAAWWSSAWSDDWWWADSSSAAWAWDWD"}
+    test! {test_03_01, "03 - Gray", "01 - Helium.txt", "WDDDDDSAAWASSASSDWWWSSSS"}
+    test! {test_03_02, "03 - Gray", "02 - Tee.txt", "WWDDSAWAASWDDSAWAAAASDWDDSWASWDDSSSSADWWWASDSSSAWDWW"}
+    test! {test_03_03, "03 - Gray", "03 - Freedom.txt", "WWWSSSDWWSSAAWWSSAWSDDWWWADSSSAAWAWDWD"}
     // test!{test_03_04, "03 - Gray", "04 - Against the Wall.txt", ""}
     // test!{test_03_05, "03 - Gray", "05 - Pathways.txt", ""}
 
-    test!{test_04_01, "04 - Red", "01 - Split.txt", "DDWWDSSDDWWWAASSDWDSSAAWDSDDAAWWWASSWWDSAWDDS"}
+    test! {test_04_01, "04 - Red", "01 - Split.txt", "DDWWDSSDDWWWAASSDWDSSAAWDSDDAAWWWASSWWDSAWDDS"}
+    test! {test_04_02, "04 - Red", "02 - Lock.txt", "DDWDSAWWWWAADDSSSA"}
+    // test!{test_04_03, "04 - Red", "03 - Push Up.txt", "DDWDSAWWWWAADDSSSA"}
+    test! {test_04_04, "04 - Red", "04 - Out of Reach.txt", "WDDDDSAWDSAAWW"}
+    test! {test_04_05, "04 - Red", "05 - Small Key.txt", "DAASDAWWDSDSAWWASWDDASDDD"}
+    test! {test_04_06, "04 - Red", "06 - Anxiety.txt", "WAASAWSDWAWDSAWSSDWDWAWSSDWDSAAW"}
 }

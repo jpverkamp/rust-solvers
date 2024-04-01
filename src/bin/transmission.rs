@@ -341,7 +341,7 @@ impl State<Map, ()> for Energy {
         true
     }
 
-    fn to_string(&self, global: &Map) -> String {
+    fn stringify(&self, global: &Map) -> String {
         format!("global: {global:?}, energy: {self:?}")
     }
 

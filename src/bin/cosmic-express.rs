@@ -229,7 +229,7 @@ impl State<CosmicExpressGlobal, ()> for Path {
         Some(result)
     }
 
-    fn to_string(&self, g: &CosmicExpressGlobal) -> String {
+    fn stringify(&self, g: &CosmicExpressGlobal) -> String {
         let mut output = String::new();
 
         for y in 1..=g.height {
@@ -332,11 +332,11 @@ fn main() {
     println!("Global State: {:#?}", global);
 
     let mut solver = Solver::new(global.clone(), initial_path.clone());
-    println!("{}", solver.to_string(&initial_path));
+    println!("{}", solver.stringify(&initial_path));
 
     while let Some(state) = solver.next() {
         if solver.states_checked() % 10000 == 0 {
-            println!("{}", state.to_string(&global));
+            println!("{}", state.stringify(&global));
             println!(
                 "{} states, {} seconds",
                 solver.states_checked(),
@@ -348,7 +348,7 @@ fn main() {
 
     println!("{:?}", solution);
     if let Some(path) = solution {
-        println!("{}", solver.to_string(&path));
+        println!("{}", solver.stringify(&path));
     }
 
     println!(

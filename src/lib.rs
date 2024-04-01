@@ -1,6 +1,7 @@
 use core::fmt::Debug;
 use priority_queue::PriorityQueue;
 use std::collections::HashMap;
+use std::fmt::Display;
 use std::hash::Hash;
 use std::time::Instant;
 
@@ -26,7 +27,7 @@ pub trait State<G, S>: Clone + Eq + Hash {
     fn is_solved(&self, global: &G) -> bool;
 
     /// Display this state for debugging purposes
-    fn to_string(&self, global: &G) -> String;
+    fn stringify(&self, global: &G) -> String;
 }
 
 /// Create a solver for the current problem; this will store current states etc
@@ -47,6 +48,7 @@ pub struct Solver<GlobalState, LocalState: State<GlobalState, Step>, Step> {
     // Debug values
     states_checked: usize,
     states_invalidated: usize,
+    states_time_pruned: usize,
     time_spent: f32,
 }
 
@@ -80,6 +82,7 @@ impl<GlobalState, LocalState: State<GlobalState, Step>, Step: Copy>
 
             states_checked: 0,
             states_invalidated: 0,
+            states_time_pruned: 0,
             time_spent: 0 as f32,
         }
     }
@@ -108,8 +111,8 @@ impl<GlobalState, LocalState: State<GlobalState, Step>, Step: Copy>
     }
 
     /// Display the current state of the solver (mostly for debug output)
-    pub fn to_string(&self, state: &LocalState) -> String {
-        state.to_string(&self.global_state)
+    pub fn stringify(&self, state: &LocalState) -> String {
+        state.stringify(&self.global_state)
     }
 
     // Return the path between two states (if one exists)
@@ -125,6 +128,21 @@ impl<GlobalState, LocalState: State<GlobalState, Step>, Step: Copy>
 
         path.reverse();
         Some(path)
+    }
+}
+
+impl<GlobalState, LocalState: State<GlobalState, Step> + Debug, Step> Display
+    for Solver<GlobalState, LocalState, Step>
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(
+            f, 
+            "Solver<time={}, checked={}, invalid={}, timed={}>", 
+            self.time_spent,
+            self.states_checked, 
+            self.states_invalidated, 
+            self.states_time_pruned, 
+        )
     }
 }
 
@@ -155,7 +173,7 @@ impl<GlobalState, LocalState: State<GlobalState, Step> + Debug, Step> Iterator
         self.states_checked += 1;
 
         // Unwrap the next state to investigate
-        let (current_state, current_distance) = self.to_check.pop().unwrap();
+        let (current_state, _) = self.to_check.pop().unwrap();
 
         // If this is a valid solution, return it directly and mark solved
         if current_state.is_solved(&self.global_state) {
@@ -165,8 +183,7 @@ impl<GlobalState, LocalState: State<GlobalState, Step> + Debug, Step> Iterator
             return Some(current_state.clone());
         }
 
-        // Otherwise, iterate and add neighbors to the queue
-        // If there are no neighbors, we will effectively backtrack
+        // Otherwise, iterate and add neighbors to the queue with priority based on heuristic
         if let Some(ls) = current_state.next_states(&self.global_state) {
             for (step_distance, step, next_state) in ls {
                 // Skip invalidate states
@@ -176,12 +193,14 @@ impl<GlobalState, LocalState: State<GlobalState, Step> + Debug, Step> Iterator
                 }
 
                 // The estimated score is distance to current + step + heuristic
+                let current_distance = self.distances[&current_state];
                 let estimated_distance =
                     current_distance + step_distance + next_state.heuristic(&self.global_state);
 
+                let best_next_distance = self.distances.get(&next_state).cloned().unwrap_or(i64::MAX);
+
                 // If we've already found a better path, ignore this one
-                if estimated_distance >= *self.distances.get(&next_state).unwrap_or(&std::i64::MAX)
-                {
+                if estimated_distance >= best_next_distance {
                     continue;
                 }
 
