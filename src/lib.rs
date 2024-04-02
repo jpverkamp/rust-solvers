@@ -213,7 +213,7 @@ impl<GlobalState, LocalState: State<GlobalState, Step> + Debug, Step> Iterator
                 // Otherwise, record this step and add to queue
                 self.steps
                     .insert(next_state.clone(), (step, current_state.clone()));
-                self.to_check.push(next_state.clone(), estimated_distance);
+                self.to_check.push(next_state, -estimated_distance);
             }
         }
 
