@@ -598,6 +598,12 @@ impl LocalState {
             // Handle different modifier types
             match modifier.kind {
                 ModifierKind::Weaken => {
+                    // Verify we have a bond to weaken
+                    // TODO: Why would we have a bond with 0 count?
+                    if self.molecules[index].bonds[bond_index].count == 0 {
+                        continue;
+                    }
+
                     // Reduce the bond and give back electrons
                     self.molecules[index].elements[el_a_index].free_electrons += 1;
                     self.molecules[index].elements[el_b_index].free_electrons += 1;
@@ -1358,7 +1364,7 @@ mod test_solutions {
     test! {test_05_11, "05 - Green", "11 - Cat's Cradle.txt", "DWWDAAASSWWDDDSSSAAA"}
 
     test! {test_06_01, "06 - Dark Green", "01 - Papers Please.txt", "DADDDDDDDASWWASAAA"}
-    // test! {test_06_02, "06 - Dark Green", "02 - Airplane.txt", "SSWWWAASDDDWDSAAWWSWDSSSADWWDDDSAAWASSASDAWWAWAASDDWDSSDSAWWWWDADSSSSS"} // Slow
+    test! {test_06_02, "06 - Dark Green", "02 - Airplane.txt", "SSWWWAASDDDWDSAAWWSWDSSSADWDWDDSAAWASSASDWWWAAAASDDWDSSDSAWWWWDADSSSSS"} // Slow
     test! {test_06_03, "06 - Dark Green", "03 - Mine Field.txt", "SDDDDSSSAWAWAWDSAAWWSDSDSDSAAAAAA"}
     // test! {test_06_04, "06 - Dark Green", "04 - Workshop.txt", ""}
 
