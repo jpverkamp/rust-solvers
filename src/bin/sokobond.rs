@@ -491,6 +491,7 @@ impl LocalState {
         }
 
         // Apply splitter before moving, since the split half doesn't move
+        // TODO: A double/triple bond moving across a splitter results in a single/double bond (doesn't split)
         loop {
             let mut to_split = None;
             'splitting: for (i, (a, b, _count)) in self.molecules[index].bonds.iter().enumerate() {
@@ -957,6 +958,38 @@ n - N");
         assert_eq!(state.molecules[0].bonds[0].2, 2); // C/N double bond
         assert_eq!(state.molecules[0].bonds[1].2, 1); // N/N single bond
     }
+
+    #[test]
+    fn test_split_multiple() {
+        use super::*;
+
+        let (map, mut state) = Map::load(
+            "\
+v2
+C - - -
+ + + /
+c - - -");
+
+        // First move double bond
+        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert_eq!(state.molecules[0].bonds.len(), 1);
+        assert_eq!(state.molecules[0].bonds[0].2, 2);
+
+        // Second move triple bond
+        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert_eq!(state.molecules[0].bonds.len(), 1);
+        assert_eq!(state.molecules[0].bonds[0].2, 3);
+
+        // Third move makes it a double again
+        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert_eq!(state.molecules[0].bonds.len(), 1);
+        assert_eq!(state.molecules[0].bonds[0].2, 2);
+
+        // Going back will make it a single
+        assert!(state.try_move(&map, 0, Point(-1, 0)));
+        assert_eq!(state.molecules[0].bonds.len(), 1);
+        assert_eq!(state.molecules[0].bonds[0].2, 1);
+    }
 }
 
 // The step the primary molecule takes each tick
@@ -1234,7 +1267,12 @@ mod test_solutions {
     test! {test_05_06, "05 - Green", "06 - Forethought.txt", "WDWWSSDDDAAASA"}
     test! {test_05_07, "05 - Green", "07 - Apartment.txt", "SDDWWDDDSDWWWWAAAADDDDW"}
     test! {test_05_08, "05 - Green", "08 - Lettuce.txt", "WDDWAWSSA"}
-    // test! {test_05_09, "05 - Green", "09 - Landing Pad.txt", ""} // Currently no solution?
+    test! {test_05_09, "05 - Green", "09 - Landing Pad.txt", "SDDDWWSSSSWWAAAAWSS"}
     test! {test_05_10, "05 - Green", "10 - Matchmaker.txt", "WWDDDWSASSSWAWWAA"}
     test! {test_05_11, "05 - Green", "11 - Cat's Cradle.txt", "DWWDAAASSWWDDDSSSAAA"}
+
+    // test! {test_06_01, "06 - Dark Green", "01 - Papers Please.txt", ""}
+
+    test! {test_07_01, "07 - Dark Red", "01 - Plunge.txt", "WDSSWASAWWDWDSSADWAASDDSAWAWDSSDWDDD"}
+    test! {test_07_02, "07 - Dark Red", "02 - Compass.txt", ""}
 }
