@@ -608,43 +608,36 @@ impl LocalState {
         }
 
         // Apply doublers
-        loop {
-            // Find a bond that crosses a doubler
-            let mut indexes = None;
+        let mut to_double_indexes = Vec::new();
 
-            for (i, (a, b, _count)) in self.molecules[index].bonds.iter().enumerate() {
-                let a_real = self.molecules[index].offset + *a;
-                let b_real = self.molecules[index].offset + *b;
+        for (i, (a, b, _count)) in self.molecules[index].bonds.iter().enumerate() {
+            let a_real = self.molecules[index].offset + *a;
+            let b_real = self.molecules[index].offset + *b;
 
-                if bond_crossing(&map.doublers, &a_real, &b_real, &offset) {
-                    // Verify we have enough free electrons
-                    let ai = self.molecules[index]
-                        .elements
-                        .iter()
-                        .position(|(_, pt, _)| pt == a)
-                        .unwrap();
+            if bond_crossing(&map.doublers, &a_real, &b_real, &offset) {
+                // Verify we have enough free electrons
+                let ai = self.molecules[index]
+                    .elements
+                    .iter()
+                    .position(|(_, pt, _)| pt == a)
+                    .unwrap();
 
-                    let bi = self.molecules[index]
-                        .elements
-                        .iter()
-                        .position(|(_, pt, _)| pt == b)
-                        .unwrap();
+                let bi = self.molecules[index]
+                    .elements
+                    .iter()
+                    .position(|(_, pt, _)| pt == b)
+                    .unwrap();
 
-                    if self.molecules[index].elements[ai].2 == 0 || self.molecules[index].elements[bi].2 == 0 {
-                        continue;
-                    }
-
-                    indexes = Some((i, ai, bi));
+                if self.molecules[index].elements[ai].2 == 0 || self.molecules[index].elements[bi].2 == 0 {
+                    continue;
                 }
-            }
 
-            // None, we're done
-            if indexes.is_none() {
-                break;
+                to_double_indexes.push((i, ai, bi));
             }
+        }
 
-            // Otherwise, use those electrons and increase the bond
-            let (i, ai, bi) = indexes.unwrap();
+        // If we have any to double, remove free electrons and up the bond
+        for (i, ai, bi) in to_double_indexes {
             self.molecules[index].elements[ai].2 -= 1;
             self.molecules[index].elements[bi].2 -= 1;
             self.molecules[index].bonds[i].2 += 1;
@@ -939,7 +932,30 @@ o - - -");
         assert_eq!(state.molecules[0].elements[1].2, 0);
         assert_eq!(state.molecules[0].bonds.len(), 1);
         assert_eq!(state.molecules[0].bonds[0].2, 2);
+    }
 
+    #[test]
+    fn test_cats_cradle() {
+        use super::*;
+
+        let (map, mut state) = Map::load(
+            "\
+v2
+- - c
+   + 
+n - N");
+
+        assert!(state.try_move(&map, 0, Point(-1, 0)));
+
+        // Should result in one molecule with the right C/N double bonded and a single N/N bond
+        assert_eq!(state.molecules.len(), 1);
+        assert_eq!(state.molecules[0].elements.len(), 3);
+        assert_eq!(state.molecules[0].elements[0].2, 0); // N has 0/3 free left
+        assert_eq!(state.molecules[0].elements[1].2, 2); // c has 2/4 free left
+        assert_eq!(state.molecules[0].elements[2].2, 2); // Other n has 2/3 free left
+        assert_eq!(state.molecules[0].bonds.len(), 2);
+        assert_eq!(state.molecules[0].bonds[0].2, 2); // C/N double bond
+        assert_eq!(state.molecules[0].bonds[1].2, 1); // N/N single bond
     }
 }
 
@@ -1209,4 +1225,16 @@ mod test_solutions {
     test! {test_04_10, "04 - Red", "10 - Cottage.txt", "SWWWWAASASDWWDDDDSDSAWWAASSSS"}
     test! {test_04_11, "04 - Red", "11 - Hanoi.txt", "SAAWDDDDSAAWAASDDDDWAAAASDDDDWAAAA"}
     test! {test_04_12, "04 - Red", "12 - Trap.txt", "DSDWAASDWWASDDASDDDDDWSAWWDSASAAA"}
+
+    test! {test_05_01, "05 - Green", "01 - Breathe.txt", "WWDSDSWAW"}
+    test! {test_05_02, "05 - Green", "02 - Doubling.txt", "WAWWASSDW"}
+    test! {test_05_03, "05 - Green", "03 - Koan.txt", "WAAWADDSASWDW"}
+    test! {test_05_04, "05 - Green", "04 - Together.txt", "SSWDWWDSSAWA"}
+    test! {test_05_05, "05 - Green", "05 - Agoraphobia.txt", "SWDWDDSSSA"}
+    test! {test_05_06, "05 - Green", "06 - Forethought.txt", "WDWWSSDDDAAASA"}
+    test! {test_05_07, "05 - Green", "07 - Apartment.txt", "SDDWWDDDSDWWWWAAAADDDDW"}
+    test! {test_05_08, "05 - Green", "08 - Lettuce.txt", "WDDWAWSSA"}
+    // test! {test_05_09, "05 - Green", "09 - Landing Pad.txt", ""} // Currently no solution?
+    test! {test_05_10, "05 - Green", "10 - Matchmaker.txt", "WWDDDWSASSSWAWWAA"}
+    test! {test_05_11, "05 - Green", "11 - Cat's Cradle.txt", "DWWDAAASSWWDDDSSSAAA"}
 }
