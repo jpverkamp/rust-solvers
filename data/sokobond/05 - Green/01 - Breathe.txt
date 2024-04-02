@@ -1,0 +1,12 @@
+v2
+x x x x x x
+
+x o - - - x
+
+x - - - - x
+     +
+x - - - - x
+
+x C - - o x
+
+x x x x x x
