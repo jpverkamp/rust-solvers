@@ -1459,4 +1459,15 @@ mod test_solutions {
 
     test! {test_07_01, "07 - Dark Red", "01 - Plunge.txt", "SAWDSDWWSAWASSWDWDWASASDDWWAASDDSDDD"}
     test! {test_07_02, "07 - Dark Red", "02 - Compass.txt", "SSDDASAAWADSDS"}
+    // test! {test_07_03, "07 - Dark Red", "03 - Blocking the Way.txt", ""}
+    test! {test_07_04, "07 - Dark Red", "04 - Power.txt", "WWDDSWWDSAAAWDDWSSAAWSSS"}
+    test! {test_07_05, "07 - Dark Red", "05 - Around.txt", "DWAASWDDSAAASSWWDDDSWAASSSDWAWWASSDWSSDD"}
+    test! {test_07_06, "07 - Dark Red", "06 - Infinity.txt", "SSSWDDAWASSWDWSDDWDDAASADWDDSSADAWDSWW"}
+    test! {test_07_07, "07 - Dark Red", "07 - Grater.txt", "SSAWDSSSWWWDS"}
+    test! {test_07_08, "07 - Dark Red", "08 - Windows.txt", "WWAAWDSAWASDWDDDDSSWWAAAAASDWASDDDSSSD"}
+    // test! {test_07_09, "07 - Dark Red", "09 - Home.txt", ""}
+    test! {test_07_10, "07 - Dark Red", "10 - Long Legs.txt", "DWDDDSSSWWAWAASADDSWWDDD"}
+    test! {test_07_11, "07 - Dark Red", "11 - Station.txt", "DSSDDDDDAAAAAWWDAWWDDDDSSWWAAAAASS"}    
+    // test! {test_07_12, "07 - Dark Red", "12 - Arena.txt", ""}
+
 }

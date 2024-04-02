@@ -1,0 +1,20 @@
+v2
+- - x x x x x x - -
+
+- x x - - - - x x -
+
+x x - - - - - - x x
+       /   /
+x - - o h - C - - x
+     /       /
+x - - h - - - - - x
+
+x - - - - - h - - x
+     /       /
+x - - c - h O - - x
+       /   /
+x x - - - - - - x x
+
+- x x - - - - x x -
+
+- - x x x x x x - -
