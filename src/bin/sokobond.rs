@@ -1324,6 +1324,8 @@ mod test_solutions {
 
     test! {test_06_01, "06 - Dark Green", "01 - Papers Please.txt", "DADDDDDDDASWWASAAA"}
     // test! {test_06_02, "06 - Dark Green", "02 - Airplane.txt", "SSWWWAASDWDDDSAAWWSWDSSSADWDWDDSAAWASSASDAWWAWAASDDWDSSDSAWWWWDADSSSSS"} // Slow
+    test! {test_06_03, "06 - Dark Green", "03 - Mine Field.txt", "SDDDDSSSAWAWAWDSAAWWSDSDSDSAAAAAA"}
+    // test! {test_06_04, "06 - Dark Green", "04 - Workshop.txt", ""} // Doesn't currently solve
 
     // test! {test_07_01, "07 - Dark Red", "01 - Plunge.txt", "WDSSWASAWWDWDSSADWAASDDSAWAWDSSDWDDD"}
     test! {test_07_02, "07 - Dark Red", "02 - Compass.txt", "SSDDASAAWADSDS"}
