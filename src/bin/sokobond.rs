@@ -225,6 +225,34 @@ impl Map {
     }
 }
 
+#[cfg(test)]
+mod test_map {
+    #[test]
+    fn test_load() {
+        use super::*;
+
+        let (map, state) = Map::load("H-#");
+
+        assert_eq!(map.width, 3);
+        assert_eq!(map.height, 1);
+        assert!(map.is_wall(2, 0));
+        assert_eq!(state.molecules.len(), 1);
+        assert_eq!(state.molecules[0].elements.len(), 1);
+    }
+
+    #[test]
+    fn test_load_prebond() {
+        use super::*;
+
+        let (_, state) = Map::load("Hh-#");
+
+        assert_eq!(state.molecules.len(), 1);
+        assert_eq!(state.molecules[0].elements.len(), 2);
+        assert_eq!(state.molecules[0].bonds.len(), 1);
+        assert_eq!(state.molecules[0].bonds[0].count, 1);
+    }
+}
+
 // Represents single elements
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
 enum ElementKind {
@@ -362,37 +390,37 @@ impl Molecule {
         let mut other = other.clone();
 
         // Go through each molecule pairwise
-        for src in self.elements.iter_mut() {
+        for a in self.elements.iter_mut() {
             // Skip our elements that are no longer free
-            if src.free_electrons == 0 {
+            if a.free_electrons == 0 {
                 continue;
             }
 
-            for dst in other.elements.iter_mut() {
-                let src_pt = self.offset + offset + src.offset;
-                let dst_pt = other.offset + dst.offset;
+            for b in other.elements.iter_mut() {
+                let real_a = self.offset + offset + a.offset;
+                let real_b = other.offset + b.offset;
 
                 // Not adjacent
-                if src_pt.manhattan_distance(dst_pt) != 1 {
+                if real_a.manhattan_distance(real_b) != 1 {
                     continue;
                 }
 
                 // Not enough free electrons
-                if dst.free_electrons == 0 {
+                if b.free_electrons == 0 {
                     continue;
                 }
 
-                // bond the two elements
+                // Bond the two elements
                 bound = true;
 
                 self.bonds.push(Bond {
-                    a: offset + src.offset,
-                    b: other.offset - self.offset + dst.offset,
+                    a: offset + a.offset,
+                    b: other.offset - self.offset + b.offset,
                     count: 1,
                 });
 
-                src.free_electrons -= 1;
-                dst.free_electrons -= 1;
+                a.free_electrons -= 1;
+                b.free_electrons -= 1;
             }
         }
 
@@ -598,12 +626,6 @@ impl LocalState {
             // Handle different modifier types
             match modifier.kind {
                 ModifierKind::Weaken => {
-                    // Verify we have a bond to weaken
-                    // TODO: Why would we have a bond with 0 count?
-                    if self.molecules[index].bonds[bond_index].count == 0 {
-                        continue;
-                    }
-
                     // Reduce the bond and give back electrons
                     self.molecules[index].elements[el_a_index].free_electrons += 1;
                     self.molecules[index].elements[el_b_index].free_electrons += 1;
@@ -660,6 +682,7 @@ impl LocalState {
 
                     // If we actually keep all of the elements, we don't need to modify src/dst at all
                     if connected_elements.len() == src.elements.len() {
+                        self.molecules[index] = src;
                         continue;
                     }
 
