@@ -1446,10 +1446,17 @@ mod test_solutions {
     test! {test_05_11, "05 - Green", "11 - Cat's Cradle.txt", "DWWDAAASSWWDDDSSSAAA"}
 
     test! {test_06_01, "06 - Dark Green", "01 - Papers Please.txt", "DADDDDDDDASWWASAAA"}
-    test! {test_06_02, "06 - Dark Green", "02 - Airplane.txt", "SSWWWAASDDDWDSAAWWSWDSSSADWDWDDSAAWASSASDWWWAAAASDDWDSSDSAWWWWDADSSSSS"} // Slow
+    test! {test_06_02, "06 - Dark Green", "02 - Airplane.txt", "SSWWWAASDDDWDSAAWWSWDSSSADWWDDDSAAWASSASDWWAWAAASDDWDSSDSAWWWWDADSSSSS"} // Slow
     test! {test_06_03, "06 - Dark Green", "03 - Mine Field.txt", "SDDDDSSSAWAWAWDSAAWWSDSDSDSAAAAAA"}
     // test! {test_06_04, "06 - Dark Green", "04 - Workshop.txt", ""}
+    test! {test_06_05, "06 - Dark Green", "05 - Dissection.txt", "AASSDDAWADWASDDDDD"}
+    test! {test_06_06, "06 - Dark Green", "06 - Casket.txt", "DDAASSDDDWAWSAWSD"}
+    test! {test_06_07, "06 - Dark Green", "07 - Three Body Problem.txt", "DDAWDSAWWDDASSAAWWS"}
+    test! {test_06_08, "06 - Dark Green", "08 - Cat.txt", "WAADDDAADAAWSSDDWD"}
+    test! {test_06_09, "06 - Dark Green", "09 - Halves.txt", "ADDSAWAAWDSDD"}
+    test! {test_06_10, "06 - Dark Green", "10 - Arrow.txt", "SWWWADWWSWASSSSDWWWAA"}
+    test! {test_06_11, "06 - Dark Green", "11 - Hallway.txt", "DDASAWSAAWDDDDSAWDSWAADDAASDWSAAWSWASDDDA"}
 
-    test! {test_07_01, "07 - Dark Red", "01 - Plunge.txt", "WDSSWASAWWDWDSSADWAASDDSAWAWDSSDWDDD"}
+    test! {test_07_01, "07 - Dark Red", "01 - Plunge.txt", "SAWDSDWWSAWASSWDWDWASASDDWWAASDDSDDD"}
     test! {test_07_02, "07 - Dark Red", "02 - Compass.txt", "SSDDASAAWADSDS"}
 }
