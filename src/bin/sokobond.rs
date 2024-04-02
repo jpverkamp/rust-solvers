@@ -52,12 +52,56 @@ impl Map {
     fn load(input: &str) -> (Map, LocalState) {
         let mut width = 0;
         let mut height = 0;
+
         let mut walls = Vec::new();
         let mut splitters = Vec::new();
-
         let mut molecules = Vec::new();
 
-        for (y, line) in input.lines().enumerate() {
+        // Version 1 files are just the grid of elements
+        
+        // Version 2 files start with v2 on the first line
+        // After that, grid elements are spaced out with extra items in between, like:
+        // H - - 
+        //    /
+        // H - - 
+
+        let mut lines = input.lines().peekable();
+        
+        // In v2, build a new input array as alternating lines
+        let grid = if lines.peek().is_some_and(|l| l.starts_with("v2")) {
+            lines.next(); // Skip the v2 line
+            let mut new_input = String::new();
+            
+            let mut y = 0;
+            while let Some(line) = lines.next() {
+                y += 1;
+                if y % 2 == 1 {
+                    for (x, c) in line.chars().enumerate() {
+                        if x % 2 == 0 {
+                            new_input.push(c);
+                        } else if c != ' ' {
+                            panic!("unexpected character in v2 grid spacing: {}", c);
+                        }
+                    }
+                    new_input.push('\n');
+                } else {
+                    for (x, c) in line.chars().enumerate() {
+                        match c {
+                            '/' => splitters.push(Point((x / 2) as isize, (y / 2 - 1) as isize)),
+                            ' ' => continue,
+                            _ => panic!("unknown character on splitter line: {}", c)
+                        }
+                    }
+                }
+            }
+
+            new_input
+        } else {
+            String::from(input)
+        };
+
+        // Now grid contains just the elements, walls, and empty space
+        for (y, line) in grid.lines().enumerate() {
             width = width.max(line.len());
             height += 1;
 
@@ -82,16 +126,6 @@ impl Map {
                     }
                     Err(_) => {
                         match c {
-                            // Splitters are offset between the grid lines
-                            // \ for NW of a splitter, / for NE (if NW is otherwise occupied)
-                            '\\' => {
-                                walls.push(false);
-                                splitters.push(pt);
-                            }
-                            '/' => {
-                                walls.push(false);
-                                splitters.push(pt - Point(1, 0));
-                            }
                             ' ' | '-' => walls.push(false),
                             'x' | 'X' | '#' => walls.push(true),
                             _ => panic!("unknown character: {}", c),
@@ -715,12 +749,11 @@ mod test_localstate {
     fn test_move_across_splitter() {
         use super::*;
 
-        let (map, mut state) = Map::load("H\\--\nh---");
-
-        // Map will look like:
-        // H - - -
-        // |  +
-        // H - - -
+        let (map, mut state) = Map::load("\
+v2
+H - - -
+   /
+h - - -");
 
         // Move once, still together
         assert!(state.try_move(&map, 0, Point(1, 0)));
@@ -729,6 +762,7 @@ mod test_localstate {
 
         // Move again, now we're split
         assert!(state.try_move(&map, 0, Point(1, 0)));
+        println!("{}", state.stringify(&map));
         assert_eq!(state.molecules.len(), 2);
         assert_eq!(state.molecules[0].elements.len(), 1);
         assert_eq!(state.molecules[1].elements.len(), 1);
@@ -753,7 +787,11 @@ mod test_localstate {
 
         use super::*;
 
-        let (map, mut state) = Map::load("Oh\\--\nh----");
+        let (map, mut state) = Map::load("\
+v2
+O h - - -
+     /
+h - - - -");
 
         // Move twice, still together
         assert!(state.try_move(&map, 0, Point(1, 0)));
@@ -1020,7 +1058,7 @@ mod test_solutions {
     test! {test_03_03, "03 - Gray", "03 - Freedom.txt", "AAWAWDD"}
     test!{test_03_04, "03 - Gray", "04 - Against the Wall.txt", "WAASWAWWDSASDDSSSAWWSAAWWDDWWDDSSAAWAWASASDDDD"}
     test!{test_03_05, "03 - Gray", "05 - Pathways.txt", "AWWDSASDSSSDDWWAASSAAWW"}
-    // test!{test_03_06, "03 - Gray", "06 - Three Doors.txt", ""}
+    // test!{test_03_06, "03 - Gray", "06 - Three Doors.txt", "DAWWSAAWWAWDDSDSSAASDSDWWWSDDWSDSSAWWAAAAWWDD"} // Slow, takes about 4 minutes
     test!{test_03_07, "03 - Gray", "07 - Cloud.txt", "DWWASDDSWWASSD"}
     test!{test_03_08, "03 - Gray", "08 - Planning.txt", "WDSDSAASSAWDWASAAWDDDDSDDW"}
     test!{test_03_09, "03 - Gray", "09 - Out of the Way.txt", "AWDDDSAWAAAWWDDDDSWAAAASSDDWSDSDDWAAADDWWAAADSSASAW"}
@@ -1028,7 +1066,7 @@ mod test_solutions {
     test!{test_03_11, "03 - Gray", "11 - Fetch.txt", "WDWASSSADDASWWWWDSAWASDSDAA"}
     test!{test_03_12, "03 - Gray", "12 - Drill.txt", "AWWWWDSASSSDWDWAWWAASDSDASSDWAWWDSWWDDSAS"}
 
-    // test! {test_04_01, "04 - Red", "01 - Split.txt", "DDWWDSSDDWWWAASSDWDSSAAWDSDDAAWWWASSWWDSAASSDDWWASDSAAWWWDDSWAASSSDDWWSAWASSDDWASDDWWAADSASDDWWSSAAW"}
+    test! {test_04_01, "04 - Red", "01 - Split.txt", "DDWDSDWASDDDAAAA"}
     // test! {test_04_02, "04 - Red", "02 - Lock.txt", "DDWDSAWWWWAADDSSSA"}
     // // // test!{test_04_03, "04 - Red", "03 - Push Up.txt", "DDWDSAWWWWAADDSSSA"}
     // test! {test_04_04, "04 - Red", "04 - Out of Reach.txt", "WDDDDSAWDSAAWW"}
