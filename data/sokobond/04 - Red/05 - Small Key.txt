@@ -1,5 +1,10 @@
-xxxxxxx-
-x\h/xhxx
-x\N/---x
-x-h-xxxx
-xxxxx---
+v2
+x x x x x x x -
+
+x - h - x h x x
+   / /
+x - N - - - - x
+   / /
+x - h - x x x x
+
+x x x x x - - -

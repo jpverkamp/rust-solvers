@@ -444,52 +444,57 @@ impl LocalState {
         }
 
         // Apply splitter before moving, since the split half doesn't move
-        // TODO: Splitting multiple bonds
-        let mut to_split = None;
-        'splitting: for splitter in &map.splitters {
-            for (i, (a, b, _count)) in self.molecules[index].bonds.iter().enumerate() {
-                let a = self.molecules[index].offset + *a;
-                let b = self.molecules[index].offset + *b;
+        loop {
+            let mut to_split = None;
+            'splitting: for splitter in &map.splitters {
+                for (i, (a, b, _count)) in self.molecules[index].bonds.iter().enumerate() {
+                    let a = self.molecules[index].offset + *a;
+                    let b = self.molecules[index].offset + *b;
 
-                // Vertical bonds have the same x
-                let is_vertical = a.0 == b.0;
+                    // Vertical bonds have the same x
+                    let is_vertical = a.0 == b.0;
 
-                // We'll hit a vertical splitter if the offset is horizontal and we're moving across it
-                // Ignore bonds that are moving the wrong way
-                if is_vertical && offset.0 == 0 || !is_vertical && offset.1 == 0 {
-                    continue;
+                    // We'll hit a vertical splitter if the offset is horizontal and we're moving across it
+                    // Ignore bonds that are moving the wrong way
+                    if is_vertical && offset.0 == 0 || !is_vertical && offset.1 == 0 {
+                        continue;
+                    }
+
+                    // Moving 'positive' is down or right
+                    let is_positive = offset.0 > 0 || offset.1 > 0;
+
+                    // Because either x or y is the same for all bonds, min is top/left and max is bottom/right
+                    // This will always match the splitter if we're moving across it right or down
+                    let pre_min = Point(a.0.min(b.0), a.1.min(b.1));
+
+                    // The post point is the one after we've moved
+                    let post_a = a + offset;
+                    let post_b = b + offset;
+                    let post_min = Point(post_a.0.min(post_b.0), post_a.1.min(post_b.1));
+
+                    // If we're moving positive, the min (top left) will equal the splitter
+                    if is_positive && splitter != &pre_min {
+                        continue;
+                    }
+
+                    // If we're moving negative, then the *post* min will equal the splitter
+                    if !is_positive && splitter != &post_min {
+                        continue;
+                    }
+
+                    // If we made it this far in the loop, this is the bond to break
+                    to_split = Some(i);
+                    break 'splitting;
                 }
-
-                // Moving 'positive' is down or right
-                let is_positive = offset.0 > 0 || offset.1 > 0;
-
-                // Because either x or y is the same for all bonds, min is top/left and max is bottom/right
-                // This will always match the splitter if we're moving across it right or down
-                let pre_min = Point(a.0.min(b.0), a.1.min(b.1));
-
-                // The post point is the one after we've moved
-                let post_a = a + offset;
-                let post_b = b + offset;
-                let post_min = Point(post_a.0.min(post_b.0), post_a.1.min(post_b.1));
-
-                // If we're moving positive, the min (top left) will equal the splitter
-                if is_positive && splitter != &pre_min {
-                    continue;
-                }
-
-                // If we're moving negative, then the *post* min will equal the splitter
-                if !is_positive && splitter != &post_min {
-                    continue;
-                }
-
-                // If we made it this far in the loop, this is the bond to break
-                to_split = Some(i);
-                break 'splitting;
             }
-        }
 
-        // If we found a bond to split, do that
-        if let Some(i) = to_split {
+            // If we have no bonds, stop splitting
+            if to_split.is_none() {
+                break;
+            }
+
+            // Otherwise, make that split
+            let i = to_split.unwrap();
             // Create a new copy of the molecule to modify
             let mut src = self.molecules[index].clone();
 
@@ -815,6 +820,32 @@ h - - - -");
         assert_eq!(state.molecules[0].elements.len(), 3);
         assert_eq!(state.molecules[0].offset, Point(3, 1));
     }
+
+    #[test]
+    fn test_small_key() {
+        use super::*;
+
+        let (map, mut state) = Map::load("\
+v2
+x - h - x 
+   / /
+x - N - - 
+   / /
+x - h - x 
+");
+
+        assert!(state.try_move(&map, 0, Point(1, 0)));
+
+        // We should have moved just the N split from the two h
+        assert_eq!(state.molecules.len(), 3);
+        assert_eq!(state.molecules[0].elements.len(), 1);
+        assert_eq!(state.molecules[0].offset, Point(3, 1));
+        assert_eq!(state.molecules[1].elements.len(), 1);
+        assert_eq!(state.molecules[1].offset, Point(2, 0));
+        assert_eq!(state.molecules[2].elements.len(), 1);
+        assert_eq!(state.molecules[2].offset, Point(2, 2));
+    }
+
 }
 
 // The step the primary molecule takes each tick
@@ -1066,10 +1097,10 @@ mod test_solutions {
     test!{test_03_11, "03 - Gray", "11 - Fetch.txt", "WDWASSSADDASWWWWDSAWASDSDAA"}
     test!{test_03_12, "03 - Gray", "12 - Drill.txt", "AWWWWDSASSSDWDWAWWAASDSDASSDWAWWDSWWDDSAS"}
 
-    test! {test_04_01, "04 - Red", "01 - Split.txt", "DDWDSDWASDDDAAAA"}
-    // test! {test_04_02, "04 - Red", "02 - Lock.txt", "DDWDSAWWWWAADDSSSA"}
-    // // // test!{test_04_03, "04 - Red", "03 - Push Up.txt", "DDWDSAWWWWAADDSSSA"}
-    // test! {test_04_04, "04 - Red", "04 - Out of Reach.txt", "WDDDDSAWDSAAWW"}
+    test! {test_04_01, "04 - Red", "01 - Split.txt", "DDWWDSSDDDAAWA"}
+    test! {test_04_02, "04 - Red", "02 - Lock.txt", "DDWDSAWWWWAADDSSSA"}
+    test!{test_04_03, "04 - Red", "03 - Push Up.txt", "DAAWDSDWA"}
+    test! {test_04_04, "04 - Red", "04 - Out of Reach.txt", "WDDDDSAWDSAAWW"}
     // test! {test_04_05, "04 - Red", "05 - Small Key.txt", "DAASDAWWDSDSAWWASWDDASDDD"}
     // test! {test_04_06, "04 - Red", "06 - Anxiety.txt", "WAASAWSDWAWDSAWSSDWDWAWSSDWDSAAW"}
 }
