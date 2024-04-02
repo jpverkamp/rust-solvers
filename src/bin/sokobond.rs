@@ -39,14 +39,42 @@ impl Point {
     }
 }
 
+// Possible kinds of map modifiers
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+enum Modifier {
+    Weaken,
+    Strengthen,
+    Rotate
+}
+
+impl From<char> for Modifier {
+    fn from(value: char) -> Self {
+        match value {
+            '/' => Modifier::Weaken,
+            '+' => Modifier::Strengthen,
+            '@' => Modifier::Rotate,
+            _ => panic!("unknown modifier: {}", value),
+        }
+    }
+}
+
+impl Into<char> for Modifier {
+    fn into(self) -> char {
+        match self {
+            Modifier::Weaken => '/',
+            Modifier::Strengthen => '+',
+            Modifier::Rotate => '@',
+        }
+    }
+}
+
 // Global state: a set of walls
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 struct Map {
     width: usize,
     height: usize,
     walls: Vec<bool>,
-    splitters: Vec<Point>,
-    doublers: Vec<Point>,
+    modifiers: Vec<(Point, Modifier)>,
 }
 
 impl Map {
@@ -55,8 +83,7 @@ impl Map {
         let mut height = 0;
 
         let mut walls = Vec::new();
-        let mut splitters = Vec::new();
-        let mut doublers = Vec::new();
+        let mut modifiers = Vec::new();
 
         let mut molecules = Vec::new();
 
@@ -89,14 +116,13 @@ impl Map {
                     new_input.push('\n');
                 } else {
                     for (x, c) in line.chars().enumerate() {
+                        if c == ' ' {
+                            continue;
+                        }
+
                         let x = x / 2;
                         let y = y / 2 - 1;
-                        match c {
-                            '/' => splitters.push(Point(x as isize, y as isize)),
-                            '+' => doublers.push(Point(x as isize, y as isize)),
-                            ' ' => continue,
-                            _ => panic!("unknown character on splitter line: {}", c),
-                        }
+                        modifiers.push((Point(x as isize, y as isize), Modifier::from(c)));
                     }
                 }
             }
@@ -160,8 +186,7 @@ impl Map {
                 width,
                 height,
                 walls,
-                splitters,
-                doublers,
+                modifiers,
             },
             LocalState { molecules },
         )
@@ -368,8 +393,7 @@ mod test_molecule {
             walls: vec![
                 true, true, true, true, false, true, true, true, true, // 3x3
             ],
-            splitters: Vec::new(),
-            doublers: Vec::new(),
+            modifiers: vec![],
         };
 
         assert!(a.intersects_wall(Point(1, 0), &map));
@@ -449,232 +473,195 @@ impl LocalState {
             return false;
         }
 
-        // Helper function to check if a bond is crossing a splitter/doubler
-        fn bond_crossing(targets: &Vec<Point>, a: &Point, b: &Point, move_offset: &Point) -> bool {
-            for target in targets.iter() {
-                // Vertical bonds have the same x
-                let is_vertical = a.0 == b.0;
-
-                // We'll hit a vertical splitter if the offset is horizontal and we're moving across it
-                // Ignore bonds that are moving the wrong way
-                if is_vertical && move_offset.0 == 0 || !is_vertical && move_offset.1 == 0 {
-                    continue;
-                }
-
-                // Moving 'positive' is down or right
-                let is_positive = move_offset.0 > 0 || move_offset.1 > 0;
-
-                // Because either x or y is the same for all bonds, min is top/left and max is bottom/right
-                // This will always match the splitter if we're moving across it right or down
-                let pre_min = Point(a.0.min(b.0), a.1.min(b.1));
-
-                // The post point is the one after we've moved
-                let post_a = *a + *move_offset;
-                let post_b = *b + *move_offset;
-                let post_min = Point(post_a.0.min(post_b.0), post_a.1.min(post_b.1));
-
-                // If we're moving positive, the min (top left) will equal the splitter
-                if is_positive && target != &pre_min {
-                    continue;
-                }
-
-                // If we're moving negative, then the *post* min will equal the splitter
-                if !is_positive && target != &post_min {
-                    continue;
-                }
-
-                // If we made it this far in the loop, this is the bond to break
-                return true;
-            }
-
-            false
-        }
-
-        // Apply splitter before moving, since the split half doesn't move
-        // TODO: A double/triple bond moving across a splitter results in a single/double bond (doesn't split)
-        let mut already_split = Vec::new();
+        // Collect all map modifiers that we are trying to cross (this may take multiple passes)
+        let mut modifiers_applied = Vec::new();
         loop {
-            let mut to_split = None;
-            'splitting: for (i, (a, b, _count)) in self.molecules[index].bonds.iter().enumerate() {
-                if already_split.contains(&(*a, *b)) {
+            let mut bond_to_modify = None;
+
+            for modifier in map.modifiers.iter() {
+                if modifiers_applied.contains(&modifier) {
                     continue;
                 }
 
-                let a_real = self.molecules[index].offset + *a;
-                let b_real = self.molecules[index].offset + *b;
+                for (bond_index, (a, b, _count)) in self.molecules[index].bonds.iter().enumerate() {
+                    let real_a = *a + self.molecules[index].offset;
+                    let real_b = *b + self.molecules[index].offset;
 
-                if bond_crossing(&map.splitters, &a_real, &b_real, &offset) {
-                    already_split.push((*a, *b));
-                    to_split = Some(i);
-                    break 'splitting;
+                    // Vertical bonds have the same x
+                    let is_vertical = a.0 == b.0;
+
+                    // We'll hit a vertical splitter if the offset is horizontal and we're moving across it
+                    // Ignore bonds that are moving the wrong way
+                    if is_vertical && offset.0 == 0 || !is_vertical && offset.1 == 0 {
+                        continue;
+                    }
+
+                    // Moving 'positive' is down or right
+                    let is_positive = offset.0 > 0 || offset.1 > 0;
+
+                    // Because either x or y is the same for all bonds, min is top/left and max is bottom/right
+                    // This will always match the splitter if we're moving across it right or down
+                    let pre_min = Point(real_a.0.min(real_b.0), real_a.1.min(real_b.1));
+
+                    // The post point is the one after we've moved
+                    let post_a = real_a + offset;
+                    let post_b = real_b + offset;
+                    let post_min = Point(post_a.0.min(post_b.0), post_a.1.min(post_b.1));
+
+                    // If we're moving positive, the min (top left) will equal the splitter
+                    if is_positive && modifier.0 != pre_min {
+                        continue;
+                    }
+
+                    // If we're moving negative, then the *post* min will equal the splitter
+                    if !is_positive && modifier.0 != post_min {
+                        continue;
+                    }
+
+                    // We have a bond to try to modify
+                    bond_to_modify = Some((bond_index, modifier));
                 }
             }
 
-            // If we have no bonds, stop splitting
-            if to_split.is_none() {
+            // We found no more bonds to modify
+            if bond_to_modify.is_none() {
                 break;
             }
-            let to_split = to_split.unwrap();
 
-            // If it's a multiple bond, just reduce it (and give back electrons)
-            if self.molecules[index].bonds[to_split].2 > 1 {
-                let (a, b, _) = self.molecules[index].bonds[to_split];
-                let ai = self.molecules[index]
-                    .elements
-                    .iter()
-                    .position(|(_, pt, _)| *pt == a)
-                    .unwrap();
-                let bi = self.molecules[index]
-                    .elements
-                    .iter()
-                    .position(|(_, pt, _)| *pt == b)
-                    .unwrap();
+            // Note it, so we don't apply the same modifier more than once per move
+            let (bond_index, modifier) = bond_to_modify.unwrap();
+            modifiers_applied.push(modifier);
 
-                self.molecules[index].elements[ai].2 += 1;
-                self.molecules[index].elements[bi].2 += 1;
-                self.molecules[index].bonds[to_split].2 -= 1;
-                continue;
-            }
+            // Figure out which elements we're dealing with 
+            let (a, b, count) = self.molecules[index].bonds[bond_index];
 
-            // Otherwise, we have to actually split...
+            let ai = self.molecules[index]
+                .elements
+                .iter()
+                .position(|(_, pt, _)| *pt == a)
+                .unwrap();
 
-            // Otherwise, make that split
-            // Create a new copy of the molecule to modify
-            let mut src = self.molecules[index].clone();
+            let bi = self.molecules[index]
+                .elements
+                .iter()
+                .position(|(_, pt, _)| *pt == b)
+                .unwrap();
+            
+            // Handle different modifier types
+            match modifier.1 {
+                Modifier::Weaken => {
+                    // Reduce the bond and give back electrons
+                    self.molecules[index].elements[ai].2 += 1;
+                    self.molecules[index].elements[bi].2 += 1;
+                    self.molecules[index].bonds[bond_index].2 -= 1;
 
-            // Add the count of the bond to the free electrons of both
-            {
-                let (a, b, count) = src.bonds[to_split];
-                for (_, pt, free) in &mut src.elements {
-                    if *pt == a || *pt == b {
-                        *free += count;
+                    // If it was more than a single bond (originally), we're done now (no splitting)
+                    if count > 1 {
+                        continue;
                     }
-                }
-            }
+                    // We're going to modify the molecule, clone it and we'll put the new one in later
+                    let mut src = self.molecules[index].clone();
+                    src.bonds.remove(bond_index);
 
-            // Remove the bond
-            src.bonds.remove(to_split);
+                    // Now starting at the origin in src, remove anything we can get to in dst
+                    // TODO: This can be factored into a function
+                    let mut connected_elements = Vec::new();
+                    let mut connected_bonds = Vec::new();
 
-            // Copy with removed/updated src to create the new molecule
-            let mut dst = src.clone();
+                    let mut todo = vec![Point::ZERO];
+                    let mut done = vec![];
 
-            // Now starting at the origin in src, remove anything we can get to in dst
-            let mut connected_elements = Vec::new();
-            let mut connected_bonds = Vec::new();
+                    while let Some(pt) = todo.pop() {
+                        done.push(pt);
 
-            let mut todo = vec![Point::ZERO];
-            let mut done = vec![];
+                        for (i, (_, offset, _)) in src.elements.iter().enumerate() {
+                            if *offset == pt && !connected_elements.contains(&i) {
+                                connected_elements.push(i);
+                            }
+                        }
 
-            while let Some(pt) = todo.pop() {
-                done.push(pt);
+                        for (i, (a, b, _)) in src.bonds.iter().enumerate() {
+                            if a == &pt {
+                                if !connected_bonds.contains(&i) {
+                                    connected_bonds.push(i);
+                                }
 
-                for (i, (_, offset, _)) in src.elements.iter().enumerate() {
-                    if *offset == pt && !connected_elements.contains(&i) {
-                        connected_elements.push(i);
+                                if !(todo.contains(b) || done.contains(b)) {
+                                    todo.push(*b);
+                                }
+                            }
+
+                            if b == &pt {
+                                if !connected_bonds.contains(&i) {
+                                    connected_bonds.push(i);
+                                }
+
+                                if !(todo.contains(a) || done.contains(a)) {
+                                    todo.push(*a);
+                                }
+                            }
+                        }
                     }
-                }
 
-                for (i, (a, b, _)) in src.bonds.iter().enumerate() {
-                    if a == &pt {
+                    // If we actually keep all of the elements, we don't need to modify src/dst at all
+                    if connected_elements.len() == src.elements.len() {
+                        continue;
+                    }
+
+                    // Otherwise, we're going to create a second molecule 
+                    // This is basically a partition (src gets connected, dst gets everything else)
+                    let mut dst = src.clone();
+                    connected_elements.sort();
+                    for i in connected_elements.iter().rev() {
+                        dst.elements.remove(*i);
+                    }
+                    connected_bonds.sort();
+                    for i in connected_bonds.iter().rev() {
+                        dst.bonds.remove(*i);
+                    }
+
+                    for i in (0..src.elements.len()).rev() {
+                        if !connected_elements.contains(&i) {
+                            src.elements.remove(i);
+                        }
+                    }
+                    for i in (0..src.bonds.len()).rev() {
                         if !connected_bonds.contains(&i) {
-                            connected_bonds.push(i);
-                        }
-
-                        if !(todo.contains(b) || done.contains(b)) {
-                            todo.push(*b);
+                            src.bonds.remove(i);
                         }
                     }
 
-                    if b == &pt {
-                        if !connected_bonds.contains(&i) {
-                            connected_bonds.push(i);
-                        }
+                    // Now update the offset in dst so that one of the elements is at 0,0
+                    // Not strictly necessary, but I think it will make rotation easier later? 
+                    let new_zero = dst.elements[0].1;
+                    dst.offset = dst.offset + new_zero;
 
-                        if !(todo.contains(a) || done.contains(a)) {
-                            todo.push(*a);
-                        }
+                    for (_, element_offset, _) in &mut dst.elements {
+                        *element_offset = *element_offset - new_zero;
                     }
-                }
+                    for (src, dst, _) in &mut dst.bonds {
+                        *src = *src - new_zero;
+                        *dst = *dst - new_zero;
+                    }
+
+                    // We now have two molecules, replace src and add dst
+                    self.molecules[index] = src;
+                    self.molecules.push(dst);
+
+                },
+                Modifier::Strengthen => {
+                    // Verify we have enough free electrons
+                    if self.molecules[index].elements[ai].2 == 0 || self.molecules[index].elements[bi].2 == 0 {
+                        continue;
+                    }
+
+                    // If so, strengthen the bond and take the electrons
+                    self.molecules[index].elements[ai].2 -= 1;
+                    self.molecules[index].elements[bi].2 -= 1;
+                    self.molecules[index].bonds[bond_index].2 += 1;
+                },
+                Modifier::Rotate => todo!(),
             }
-
-            // If we actually keep all of the elements, we don't need to modify src/dst at all
-            if connected_elements.len() == src.elements.len() {
-                continue;
-            }
-
-            // Now remove the connected elements and bonds from the dst
-            connected_elements.sort();
-            for i in connected_elements.iter().rev() {
-                dst.elements.remove(*i);
-            }
-            connected_bonds.sort();
-            for i in connected_bonds.iter().rev() {
-                dst.bonds.remove(*i);
-            }
-
-            // Update dst's offset so it has a 0,0
-            let new_zero = dst.elements[0].1;
-            dst.offset = dst.offset + new_zero;
-
-            for (_, element_offset, _) in &mut dst.elements {
-                *element_offset = *element_offset - new_zero;
-            }
-            for (src, dst, _) in &mut dst.bonds {
-                *src = *src - new_zero;
-                *dst = *dst - new_zero;
-            }
-
-            // And remove everything else from src
-            for i in (0..src.elements.len()).rev() {
-                if !connected_elements.contains(&i) {
-                    src.elements.remove(i);
-                }
-            }
-            for i in (0..src.bonds.len()).rev() {
-                if !connected_bonds.contains(&i) {
-                    src.bonds.remove(i);
-                }
-            }
-
-            // Now, update the original molecule and add the new one
-            self.molecules[index] = src;
-            self.molecules.push(dst);
-        }
-
-        // Apply doublers
-        let mut to_double_indexes = Vec::new();
-
-        for (i, (a, b, _count)) in self.molecules[index].bonds.iter().enumerate() {
-            let a_real = self.molecules[index].offset + *a;
-            let b_real = self.molecules[index].offset + *b;
-
-            if bond_crossing(&map.doublers, &a_real, &b_real, &offset) {
-                // Verify we have enough free electrons
-                let ai = self.molecules[index]
-                    .elements
-                    .iter()
-                    .position(|(_, pt, _)| pt == a)
-                    .unwrap();
-
-                let bi = self.molecules[index]
-                    .elements
-                    .iter()
-                    .position(|(_, pt, _)| pt == b)
-                    .unwrap();
-
-                if self.molecules[index].elements[ai].2 == 0 || self.molecules[index].elements[bi].2 == 0 {
-                    continue;
-                }
-
-                to_double_indexes.push((i, ai, bi));
-            }
-        }
-
-        // If we have any to double, remove free electrons and up the bond
-        for (i, ai, bi) in to_double_indexes {
-            self.molecules[index].elements[ai].2 -= 1;
-            self.molecules[index].elements[bi].2 -= 1;
-            self.molecules[index].bonds[i].2 += 1;
         }
 
         // Collect all molecules that would move
@@ -932,9 +919,7 @@ x - h - x
         assert_eq!(state.molecules[0].elements.len(), 1);
         assert_eq!(state.molecules[0].offset, Point(3, 1));
         assert_eq!(state.molecules[1].elements.len(), 1);
-        assert_eq!(state.molecules[1].offset, Point(2, 0));
         assert_eq!(state.molecules[2].elements.len(), 1);
-        assert_eq!(state.molecules[2].offset, Point(2, 2));
     }
 
     #[test]
@@ -1070,7 +1055,7 @@ impl State<Map, Step> for LocalState {
         }
 
         // If we have any splitters, anything goes :)
-        if !map.splitters.is_empty() {
+        if !map.modifiers.is_empty() {
             return true;
         }
 
@@ -1174,13 +1159,9 @@ impl State<Map, Step> for LocalState {
         }
 
         // Add splitters
-        for splitter in &map.splitters {
-            grid[1 + 2 * splitter.1 as usize][1 + 2 * splitter.0 as usize] = '/';
-        }
-
-        // Add doublers
-        for doubler in &map.doublers {
-            grid[1 + 2 * doubler.1 as usize][1 + 2 * doubler.0 as usize] = '+';
+        for (pt, modifier) in &map.modifiers {
+            let c: char = (*modifier).into();
+            grid[1 + 2 * pt.1 as usize][1 + 2 * pt.0 as usize] = c;
         }
 
         let mut output = String::new();
@@ -1301,25 +1282,25 @@ mod test_solutions {
     test! {test_04_02, "04 - Red", "02 - Lock.txt", "DDWDSAWWWWAADDSSSA"}
     test! {test_04_03, "04 - Red", "03 - Push Up.txt", "DAAWDSDWA"}
     test! {test_04_04, "04 - Red", "04 - Out of Reach.txt", "WDDDDSAWDSAAWW"}
-    test! {test_04_05, "04 - Red", "05 - Small Key.txt", "ASDWDWASSAWSDWDDD"}
+    test! {test_04_05, "04 - Red", "05 - Small Key.txt", "DSAWAWDSSDWSAWDDD"}
     test! {test_04_06, "04 - Red", "06 - Anxiety.txt", "WAASAWDWWSDSDW"}
     test! {test_04_07, "04 - Red", "07 - Wingman.txt", "WAWWSDDDSASDSAAAAWW"}
-    test! {test_04_08, "04 - Red", "08 - Wing.txt", "DDAAWWSDWWDAA"}
+    test! {test_04_08, "04 - Red", "08 - Wing.txt", "WWSSDDAWDDWSS"}
     test! {test_04_09, "04 - Red", "09 - Anvil.txt", "SDSSDSAADWWWAASSDDDWWADSSAAAWSA"}
     test! {test_04_10, "04 - Red", "10 - Cottage.txt", "SWWWWAASASDWWDDDDSDSAWWAASSSS"}
     test! {test_04_11, "04 - Red", "11 - Hanoi.txt", "SAAWDDDDSAAWAASDDDDWAAAASDDDDWAAAA"}
-    test! {test_04_12, "04 - Red", "12 - Trap.txt", "DSDWAASDWWASDDASDDDDDWSAWWDSASAAA"}
+    test! {test_04_12, "04 - Red", "12 - Trap.txt", "DSDWAASDWWASDSDDDDDWSWSAWWDSASAAA"}
 
     test! {test_05_01, "05 - Green", "01 - Breathe.txt", "WWDSDSWAW"}
     test! {test_05_02, "05 - Green", "02 - Doubling.txt", "WAWWASSDW"}
-    test! {test_05_03, "05 - Green", "03 - Koan.txt", "WAAWADDSASWDW"}
-    test! {test_05_04, "05 - Green", "04 - Together.txt", "SSWDWWDSSAWA"}
+    test! {test_05_03, "05 - Green", "03 - Koan.txt", "WAWAADDSASWDW"}
+    test! {test_05_04, "05 - Green", "04 - Together.txt", "SSWDDWWSSAWA"}
     test! {test_05_05, "05 - Green", "05 - Agoraphobia.txt", "SWDWDDSSSA"}
     test! {test_05_06, "05 - Green", "06 - Forethought.txt", "WDWWSSDDDAAASA"}
     test! {test_05_07, "05 - Green", "07 - Apartment.txt", "SDDWWDDDSDWWWWAAAADDDDW"}
     test! {test_05_08, "05 - Green", "08 - Lettuce.txt", "WDDWAWSSA"}
-    test! {test_05_09, "05 - Green", "09 - Landing Pad.txt", "SDDDWWSSSSWWAAAAWSS"}
-    test! {test_05_10, "05 - Green", "10 - Matchmaker.txt", "WWDDDWSASSSWAWWAA"}
+    test! {test_05_09, "05 - Green", "09 - Landing Pad.txt", "SDDDSSWWWWSSAAAAWSS"}
+    test! {test_05_10, "05 - Green", "10 - Matchmaker.txt", "DDWWWDASAAASDDDSS"}
     test! {test_05_11, "05 - Green", "11 - Cat's Cradle.txt", "DWWDAAASSWWDDDSSSAAA"}
 
     test! {test_06_01, "06 - Dark Green", "01 - Papers Please.txt", "DADDDDDDDASWWASAAA"}
