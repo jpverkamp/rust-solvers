@@ -492,13 +492,19 @@ impl LocalState {
 
         // Apply splitter before moving, since the split half doesn't move
         // TODO: A double/triple bond moving across a splitter results in a single/double bond (doesn't split)
+        let mut already_split = Vec::new();
         loop {
             let mut to_split = None;
             'splitting: for (i, (a, b, _count)) in self.molecules[index].bonds.iter().enumerate() {
+                if already_split.contains(&(*a, *b)) {
+                    continue;
+                }
+
                 let a_real = self.molecules[index].offset + *a;
                 let b_real = self.molecules[index].offset + *b;
 
                 if bond_crossing(&map.splitters, &a_real, &b_real, &offset) {
+                    already_split.push((*a, *b));
                     to_split = Some(i);
                     break 'splitting;
                 }
@@ -508,15 +514,37 @@ impl LocalState {
             if to_split.is_none() {
                 break;
             }
+            let to_split = to_split.unwrap();
+
+            // If it's a multiple bond, just reduce it (and give back electrons)
+            if self.molecules[index].bonds[to_split].2 > 1 {
+                let (a, b, _) = self.molecules[index].bonds[to_split];
+                let ai = self.molecules[index]
+                    .elements
+                    .iter()
+                    .position(|(_, pt, _)| *pt == a)
+                    .unwrap();
+                let bi = self.molecules[index]
+                    .elements
+                    .iter()
+                    .position(|(_, pt, _)| *pt == b)
+                    .unwrap();
+
+                self.molecules[index].elements[ai].2 += 1;
+                self.molecules[index].elements[bi].2 += 1;
+                self.molecules[index].bonds[to_split].2 -= 1;
+                continue;
+            }
+
+            // Otherwise, we have to actually split...
 
             // Otherwise, make that split
             // Create a new copy of the molecule to modify
-            let i = to_split.unwrap();
             let mut src = self.molecules[index].clone();
 
             // Add the count of the bond to the free electrons of both
             {
-                let (a, b, count) = src.bonds[i];
+                let (a, b, count) = src.bonds[to_split];
                 for (_, pt, free) in &mut src.elements {
                     if *pt == a || *pt == b {
                         *free += count;
@@ -525,7 +553,7 @@ impl LocalState {
             }
 
             // Remove the bond
-            src.bonds.remove(i);
+            src.bonds.remove(to_split);
 
             // Copy with removed/updated src to create the new molecule
             let mut dst = src.clone();
@@ -567,6 +595,11 @@ impl LocalState {
                         }
                     }
                 }
+            }
+
+            // If we actually keep all of the elements, we don't need to modify src/dst at all
+            if connected_elements.len() == src.elements.len() {
+                continue;
             }
 
             // Now remove the connected elements and bonds from the dst
@@ -893,7 +926,7 @@ x - h - x
         );
 
         assert!(state.try_move(&map, 0, Point(1, 0)));
-
+        
         // We should have moved just the N split from the two h
         assert_eq!(state.molecules.len(), 3);
         assert_eq!(state.molecules[0].elements.len(), 1);
@@ -989,6 +1022,24 @@ c - - -");
         assert!(state.try_move(&map, 0, Point(-1, 0)));
         assert_eq!(state.molecules[0].bonds.len(), 1);
         assert_eq!(state.molecules[0].bonds[0].2, 1);
+    }
+
+    #[test]
+    fn test_splitter_second_join() {
+        use super::*;
+
+        let (map, mut state) = Map::load(
+            "\
+v2
+- -
+ /
+o o
+   
+N n");
+
+        // Move one up, should break the o-o bond, but keep one molecule
+        assert!(state.try_move(&map, 0, Point(0, -1)));
+        assert_eq!(state.molecules.len(), 1);
     }
 }
 
@@ -1271,7 +1322,8 @@ mod test_solutions {
     test! {test_05_10, "05 - Green", "10 - Matchmaker.txt", "WWDDDWSASSSWAWWAA"}
     test! {test_05_11, "05 - Green", "11 - Cat's Cradle.txt", "DWWDAAASSWWDDDSSSAAA"}
 
-    // test! {test_06_01, "06 - Dark Green", "01 - Papers Please.txt", ""}
+    test! {test_06_01, "06 - Dark Green", "01 - Papers Please.txt", "DADDDDDDDASWWASAAA"}
+    // test! {test_06_02, "06 - Dark Green", "02 - Airplane.txt", "SSWWWAASDWDDDSAAWWSWDSSSADWDWDDSAAWASSASDAWWAWAASDDWDSSDSAWWWWDADSSSSS"} // Slow
 
     // test! {test_07_01, "07 - Dark Red", "01 - Plunge.txt", "WDSSWASAWWDWDSSADWAASDDSAWAWDSSDWDDD"}
     test! {test_07_02, "07 - Dark Red", "02 - Compass.txt", "SSDDASAAWADSDS"}
