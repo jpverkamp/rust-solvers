@@ -58,20 +58,20 @@ impl Map {
         let mut molecules = Vec::new();
 
         // Version 1 files are just the grid of elements
-        
+
         // Version 2 files start with v2 on the first line
         // After that, grid elements are spaced out with extra items in between, like:
-        // H - - 
+        // H - -
         //    /
-        // H - - 
+        // H - -
 
         let mut lines = input.lines().peekable();
-        
+
         // In v2, build a new input array as alternating lines
         let grid = if lines.peek().is_some_and(|l| l.starts_with("v2")) {
             lines.next(); // Skip the v2 line
             let mut new_input = String::new();
-            
+
             let mut y = 0;
             while let Some(line) = lines.next() {
                 y += 1;
@@ -89,7 +89,7 @@ impl Map {
                         match c {
                             '/' => splitters.push(Point((x / 2) as isize, (y / 2 - 1) as isize)),
                             ' ' => continue,
-                            _ => panic!("unknown character on splitter line: {}", c)
+                            _ => panic!("unknown character on splitter line: {}", c),
                         }
                     }
                 }
@@ -124,13 +124,11 @@ impl Map {
 
                         walls.push(false);
                     }
-                    Err(_) => {
-                        match c {
-                            ' ' | '-' => walls.push(false),
-                            'x' | 'X' | '#' => walls.push(true),
-                            _ => panic!("unknown character: {}", c),
-                        }
-                    }
+                    Err(_) => match c {
+                        ' ' | '-' => walls.push(false),
+                        'x' | 'X' | '#' => walls.push(true),
+                        _ => panic!("unknown character: {}", c),
+                    },
                 }
             }
         }
@@ -754,11 +752,13 @@ mod test_localstate {
     fn test_move_across_splitter() {
         use super::*;
 
-        let (map, mut state) = Map::load("\
+        let (map, mut state) = Map::load(
+            "\
 v2
 H - - -
    /
-h - - -");
+h - - -",
+        );
 
         // Move once, still together
         assert!(state.try_move(&map, 0, Point(1, 0)));
@@ -792,11 +792,13 @@ h - - -");
 
         use super::*;
 
-        let (map, mut state) = Map::load("\
+        let (map, mut state) = Map::load(
+            "\
 v2
 O h - - -
      /
-h - - - -");
+h - - - -",
+        );
 
         // Move twice, still together
         assert!(state.try_move(&map, 0, Point(1, 0)));
@@ -825,14 +827,16 @@ h - - - -");
     fn test_small_key() {
         use super::*;
 
-        let (map, mut state) = Map::load("\
+        let (map, mut state) = Map::load(
+            "\
 v2
 x - h - x 
    / /
 x - N - - 
    / /
 x - h - x 
-");
+",
+        );
 
         assert!(state.try_move(&map, 0, Point(1, 0)));
 
@@ -845,7 +849,6 @@ x - h - x
         assert_eq!(state.molecules[2].elements.len(), 1);
         assert_eq!(state.molecules[2].offset, Point(2, 2));
     }
-
 }
 
 // The step the primary molecule takes each tick
@@ -1087,20 +1090,26 @@ mod test_solutions {
     test! {test_03_01, "03 - Gray", "01 - Helium.txt", "WDDDDDSAAWASSDSSS"}
     test! {test_03_02, "03 - Gray", "02 - Tee.txt", "WWASWDDDSAAWASDSSADSSWWW"}
     test! {test_03_03, "03 - Gray", "03 - Freedom.txt", "AAWAWDD"}
-    test!{test_03_04, "03 - Gray", "04 - Against the Wall.txt", "WAASWAWWDSASDDSSSAWWSAAWWDDWWDDSSAAWAWASASDDDD"}
-    test!{test_03_05, "03 - Gray", "05 - Pathways.txt", "AWWDSASDSSSDDWWAASSAAWW"}
+    test! {test_03_04, "03 - Gray", "04 - Against the Wall.txt", "WAASWAWWDSASDDSSSAWWSAAWWDDWWDDSSAAWAWASASDDDD"}
+    test! {test_03_05, "03 - Gray", "05 - Pathways.txt", "AWWDSASDSSSDDWWAASSAAWW"}
     // test!{test_03_06, "03 - Gray", "06 - Three Doors.txt", "DAWWSAAWWAWDDSDSSAASDSDWWWSDDWSDSSAWWAAAAWWDD"} // Slow, takes about 4 minutes
-    test!{test_03_07, "03 - Gray", "07 - Cloud.txt", "DWWASDDSWWASSD"}
-    test!{test_03_08, "03 - Gray", "08 - Planning.txt", "WDSDSAASSAWDWASAAWDDDDSDDW"}
-    test!{test_03_09, "03 - Gray", "09 - Out of the Way.txt", "AWDDDSAWAAAWWDDDDSWAAAASSDDWSDSDDWAAADDWWAAADSSASAW"}
-    test!{test_03_10, "03 - Gray", "10 - Impasse.txt", "DWADDSASAAWADDSSWWDWWA"}
-    test!{test_03_11, "03 - Gray", "11 - Fetch.txt", "WDWASSSADDASWWWWDSAWASDSDAA"}
-    test!{test_03_12, "03 - Gray", "12 - Drill.txt", "AWWWWDSASSSDWDWAWWAASDSDASSDWAWWDSWWDDSAS"}
+    test! {test_03_07, "03 - Gray", "07 - Cloud.txt", "DWWASDDSWWASSD"}
+    test! {test_03_08, "03 - Gray", "08 - Planning.txt", "WDSDSAASSAWDWASAAWDDDDSDDW"}
+    test! {test_03_09, "03 - Gray", "09 - Out of the Way.txt", "AWDDDSAWAAAWWDDDDSWAAAASSDDWSDSDDWAAADDWWAAADSSASAW"}
+    test! {test_03_10, "03 - Gray", "10 - Impasse.txt", "DWADDSASAAWADDSSWWDWWA"}
+    test! {test_03_11, "03 - Gray", "11 - Fetch.txt", "WDWASSSADDASWWWWDSAWASDSDAA"}
+    test! {test_03_12, "03 - Gray", "12 - Drill.txt", "AWWWWDSASSSDWDWAWWAASDSDASSDWAWWDSWWDDSAS"}
 
     test! {test_04_01, "04 - Red", "01 - Split.txt", "DDWWDSSDDDAAWA"}
     test! {test_04_02, "04 - Red", "02 - Lock.txt", "DDWDSAWWWWAADDSSSA"}
-    test!{test_04_03, "04 - Red", "03 - Push Up.txt", "DAAWDSDWA"}
+    test! {test_04_03, "04 - Red", "03 - Push Up.txt", "DAAWDSDWA"}
     test! {test_04_04, "04 - Red", "04 - Out of Reach.txt", "WDDDDSAWDSAAWW"}
-    // test! {test_04_05, "04 - Red", "05 - Small Key.txt", "DAASDAWWDSDSAWWASWDDASDDD"}
-    // test! {test_04_06, "04 - Red", "06 - Anxiety.txt", "WAASAWSDWAWDSAWSSDWDWAWSSDWDSAAW"}
+    test! {test_04_05, "04 - Red", "05 - Small Key.txt", "ASDWDWASSAWSDWDDD"}
+    test! {test_04_06, "04 - Red", "06 - Anxiety.txt", "WAASAWDWWSDSDW"}
+    test! {test_04_07, "04 - Red", "07 - Wingman.txt", "WAWWSDDDSASDSAAAAWW"}
+    test! {test_04_08, "04 - Red", "08 - Wing.txt", "DDAAWWSDWWDAA"}
+    test! {test_04_09, "04 - Red", "09 - Anvil.txt", "SDSSDSAADWWWAASSDDDWWADSSAAAWSA"}
+    test! {test_04_10, "04 - Red", "10 - Cottage.txt", "SWWWWDDSDSAWWAAAASASDWWDDSSSS"}
+    test! {test_04_11, "04 - Red", "11 - Hanoi.txt", "SAAWDDDDSAAWAASDDDDWAAAASDDDDWAAAA"}
+    test! {test_04_12, "04 - Red", "12 - Trap.txt", "DSDWAASDWWASDSDDDDDWSAWWDSASAAA"}
 }

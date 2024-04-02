@@ -1,6 +1,12 @@
-xxxxxx
-x--xhx
-xo/--x
-x---hx
-x--xOx
-xxxxxx
+v2
+x x x x x x
+
+x - - x h x
+
+x o - - - x
+   /
+x - - - h x
+
+x - - x O x
+
+x x x x x x

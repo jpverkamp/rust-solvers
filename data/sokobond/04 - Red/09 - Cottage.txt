@@ -1,9 +1,0 @@
----xxx---
--xxx\xxx-
-xx-----xx
-x---n---x
-x--x-x--x
-x-h-O-h-x
-x--x-x--x
-x---h---x
-xxxxxxxxx

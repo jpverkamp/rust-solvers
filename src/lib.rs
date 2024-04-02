@@ -136,13 +136,13 @@ impl<GlobalState, LocalState: State<GlobalState, Step> + Debug, Step> Display
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
-            f, 
-            "Solver<time={}, checked={}, queue={}, invalid={}, timed={}>", 
+            f,
+            "Solver<time={}, checked={}, queue={}, invalid={}, timed={}>",
             self.time_spent,
-            self.states_checked, 
+            self.states_checked,
             self.to_check.len(),
-            self.states_invalidated, 
-            self.states_time_pruned, 
+            self.states_invalidated,
+            self.states_time_pruned,
         )
     }
 }
@@ -198,7 +198,8 @@ impl<GlobalState, LocalState: State<GlobalState, Step> + Debug, Step> Iterator
                 let estimated_distance =
                     current_distance + step_distance + next_state.heuristic(&self.global_state);
 
-                let best_next_distance = self.distances.get(&next_state).cloned().unwrap_or(i64::MAX);
+                let best_next_distance =
+                    self.distances.get(&next_state).cloned().unwrap_or(i64::MAX);
 
                 // If we've already found a better path, ignore this one
                 if estimated_distance >= best_next_distance {
