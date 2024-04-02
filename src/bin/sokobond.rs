@@ -151,7 +151,7 @@ impl Map {
             for (x, c) in line.chars().enumerate() {
                 let pt = Point(x as isize, y as isize);
 
-                match Element::try_from(c) {
+                match ElementKind::try_from(c) {
                     // A new element, convert it to a molecule
                     // Primaries are uppercase and put at the start of the list
                     // The rest are added to the end
@@ -214,7 +214,7 @@ impl Map {
 
 // Represents single elements
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
-enum Element {
+enum ElementKind {
     Hydrogen,
     Helium,
     Nitrogen,
@@ -222,11 +222,11 @@ enum Element {
     Oxygen,
 }
 
-impl TryFrom<char> for Element {
+impl TryFrom<char> for ElementKind {
     type Error = ();
 
     fn try_from(value: char) -> Result<Self, Self::Error> {
-        use Element::*;
+        use ElementKind::*;
 
         match value {
             'h' | 'H' => Ok(Hydrogen),
@@ -239,21 +239,21 @@ impl TryFrom<char> for Element {
     }
 }
 
-impl Into<char> for &Element {
+impl Into<char> for ElementKind {
     fn into(self) -> char {
         match self {
-            Element::Hydrogen => 'H',
-            Element::Helium => 'E',
-            Element::Nitrogen => 'N',
-            Element::Carbon => 'C',
-            Element::Oxygen => 'O',
+            ElementKind::Hydrogen => 'H',
+            ElementKind::Helium => 'E',
+            ElementKind::Nitrogen => 'N',
+            ElementKind::Carbon => 'C',
+            ElementKind::Oxygen => 'O',
         }
     }
 }
 
-impl Element {
+impl ElementKind {
     fn free_electrons(&self) -> usize {
-        use Element::*;
+        use ElementKind::*;
 
         match self {
             Hydrogen => 1,
@@ -265,41 +265,52 @@ impl Element {
     }
 }
 
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+struct Element {
+    kind: ElementKind,
+    offset: Point,
+    free_electrons: usize,
+}
+
 // Represent elements joined together into a molecule
 // Each element contains the Element, offset, and remaining free electrons
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 struct Molecule {
     offset: Point,
-    elements: Vec<(Element, Point, usize)>,
+    elements: Vec<Element>,
     bonds: Vec<(Point, Point, usize)>,
 }
 
 impl Molecule {
-    fn new(offset: Point, element: Element) -> Molecule {
+    fn new(offset: Point, element: ElementKind) -> Molecule {
         Molecule {
             offset,
-            elements: vec![(element, Point::ZERO, element.free_electrons())],
+            elements: vec![Element { 
+                kind: element,
+                offset: Point::ZERO,
+                free_electrons: element.free_electrons(),
+            }],
             bonds: Vec::new(),
         }
     }
 
     // Test for molecular helium
     fn is_helium(&self) -> bool {
-        self.elements.len() == 1 && self.elements[0].0 == Element::Helium
+        self.elements.len() == 1 && self.elements[0].kind == ElementKind::Helium
     }
 
     // How many free electrons in the hole molecule
     fn free_electrons(&self) -> usize {
         self.elements
             .iter()
-            .map(|(_, _, free)| *free)
+            .map(|e| e.free_electrons)
             .sum::<usize>()
     }
 
     // If the given molecule at an offset would intersect with a wall
     fn intersects_wall(&self, offset: Point, map: &Map) -> bool {
-        for (_, element_offset, _) in &self.elements {
-            let target = self.offset + *element_offset + offset;
+        for element in &self.elements {
+            let target = self.offset + element.offset + offset;
             if map.is_wall(target.0 as usize, target.1 as usize) {
                 return true;
             }
@@ -310,9 +321,9 @@ impl Molecule {
 
     // If the given molecule + an offset would intersect another molecule
     fn intersects(&self, offset: Point, other: &Molecule) -> bool {
-        for (_, element_offset, _) in &self.elements {
-            for (_, other_element_offset, _) in &other.elements {
-                if self.offset + *element_offset + offset == other.offset + *other_element_offset {
+        for element in &self.elements {
+            for other_element in &other.elements {
+                if self.offset + element.offset + offset == other.offset + other_element.offset {
                     return true;
                 }
             }
@@ -331,15 +342,15 @@ impl Molecule {
         let mut other = other.clone();
 
         // Go through each molecule pairwise
-        for (_, src_offset, src_free) in self.elements.iter_mut() {
+        for src in self.elements.iter_mut() {
             // Skip our elements that are no longer free
-            if *src_free == 0 {
+            if src.free_electrons == 0 {
                 continue;
             }
 
-            for (_, dst_offset, dst_free) in other.elements.iter_mut() {
-                let src_pt = self.offset + offset + *src_offset;
-                let dst_pt = other.offset + *dst_offset;
+            for dst in other.elements.iter_mut() {
+                let src_pt = self.offset + offset + src.offset;
+                let dst_pt = other.offset + dst.offset;
 
                 // Not adjacent
                 if src_pt.manhattan_distance(dst_pt) != 1 {
@@ -347,7 +358,7 @@ impl Molecule {
                 }
 
                 // Not enough free electrons
-                if *dst_free == 0 {
+                if dst.free_electrons == 0 {
                     continue;
                 }
 
@@ -355,24 +366,24 @@ impl Molecule {
                 bound = true;
 
                 self.bonds.push((
-                    offset + *src_offset,
-                    other.offset - self.offset + *dst_offset,
+                    offset + src.offset,
+                    other.offset - self.offset + dst.offset,
                     1,
                 ));
 
-                *src_free -= 1;
-                *dst_free -= 1;
+                src.free_electrons -= 1;
+                dst.free_electrons -= 1;
             }
         }
 
         // If we bound anything, add the other elements and bonds to our molecule
         if bound {
-            for (element, element_offset, free_electrons) in other.elements {
-                self.elements.push((
-                    element,
-                    other.offset - self.offset + element_offset,
-                    free_electrons,
-                ));
+            for element in other.elements {
+                self.elements.push(Element {
+                    kind: element.kind,
+                    offset: other.offset - self.offset + element.offset,
+                    free_electrons: element.free_electrons,
+                });
             }
 
             for (src, dst, count) in other.bonds {
@@ -396,7 +407,7 @@ mod test_molecule {
 
     #[test]
     fn test_wall_intersection_hit() {
-        let a = Molecule::new(Point::ZERO, Element::Hydrogen);
+        let a = Molecule::new(Point::ZERO, ElementKind::Hydrogen);
 
         let map = Map {
             width: 3,
@@ -413,8 +424,8 @@ mod test_molecule {
 
     #[test]
     fn test_molecule_intersection() {
-        let a = Molecule::new(Point::ZERO, Element::Hydrogen);
-        let b = Molecule::new(Point(1, 0), Element::Hydrogen);
+        let a = Molecule::new(Point::ZERO, ElementKind::Hydrogen);
+        let b = Molecule::new(Point(1, 0), ElementKind::Hydrogen);
 
         assert!(a.intersects(Point(1, 0), &b));
         assert!(!a.intersects(Point(0, 0), &b));
@@ -423,49 +434,49 @@ mod test_molecule {
 
     #[test]
     fn test_bond() {
-        let mut a = Molecule::new(Point::ZERO, Element::Hydrogen);
-        let b = Molecule::new(Point(1, 0), Element::Hydrogen);
+        let mut a = Molecule::new(Point::ZERO, ElementKind::Hydrogen);
+        let b = Molecule::new(Point(1, 0), ElementKind::Hydrogen);
 
         let bound = a.try_bond(Point::ZERO, &b);
 
         assert!(bound);
         assert_eq!(a.elements.len(), 2);
-        assert_eq!(a.elements[0].2, 0);
+        assert_eq!(a.elements[0].free_electrons, 0);
     }
 
     #[test]
     fn test_nobond_no_free() {
-        let mut a = Molecule::new(Point::ZERO, Element::Hydrogen);
-        let b = Molecule::new(Point(1, 0), Element::Helium);
+        let mut a = Molecule::new(Point::ZERO, ElementKind::Hydrogen);
+        let b = Molecule::new(Point(1, 0), ElementKind::Helium);
 
         let bound = a.try_bond(Point(1, 0), &b);
 
         assert!(!bound);
-        assert!(a.elements[0].2 == 1);
+        assert!(a.elements[0].free_electrons == 1);
     }
 
     #[test]
     fn test_nobond_too_far() {
-        let mut a = Molecule::new(Point::ZERO, Element::Hydrogen);
-        let b = Molecule::new(Point(2, 0), Element::Hydrogen);
+        let mut a = Molecule::new(Point::ZERO, ElementKind::Hydrogen);
+        let b = Molecule::new(Point(2, 0), ElementKind::Hydrogen);
 
         let bound = a.try_bond(Point(2, 0), &b);
 
         assert!(!bound);
-        assert!(a.elements[0].2 == 1);
+        assert!(a.elements[0].free_electrons == 1);
     }
 
     #[test]
     fn test_single_bond_o2_not_double() {
-        let mut a = Molecule::new(Point::ZERO, Element::Oxygen);
-        let b = Molecule::new(Point(1, 0), Element::Oxygen);
+        let mut a = Molecule::new(Point::ZERO, ElementKind::Oxygen);
+        let b = Molecule::new(Point(1, 0), ElementKind::Oxygen);
 
         let bound = a.try_bond(Point::ZERO, &b);
 
         assert!(bound);
         assert_eq!(a.elements.len(), 2);
-        assert_eq!(a.elements[0].2, 1);
-        assert_eq!(a.elements[1].2, 1);
+        assert_eq!(a.elements[0].free_electrons, 1);
+        assert_eq!(a.elements[1].free_electrons, 1);
     }
 }
 
@@ -549,21 +560,21 @@ impl LocalState {
             let el_a_index = self.molecules[index]
                 .elements
                 .iter()
-                .position(|(_, pt, _)| *pt == a)
+                .position(|el| el.offset == a)
                 .unwrap();
 
             let el_b_index = self.molecules[index]
                 .elements
                 .iter()
-                .position(|(_, pt, _)| *pt == b)
+                .position(|el| el.offset == b)
                 .unwrap();
             
             // Handle different modifier types
             match modifier.kind {
                 ModifierKind::Weaken => {
                     // Reduce the bond and give back electrons
-                    self.molecules[index].elements[el_a_index].2 += 1;
-                    self.molecules[index].elements[el_b_index].2 += 1;
+                    self.molecules[index].elements[el_a_index].free_electrons += 1;
+                    self.molecules[index].elements[el_b_index].free_electrons += 1;
                     self.molecules[index].bonds[bond_index].2 -= 1;
 
                     // If it was more than a single bond (originally), we're done now (no splitting)
@@ -586,8 +597,8 @@ impl LocalState {
                     while let Some(pt) = todo.pop() {
                         done.push(pt);
 
-                        for (i, (_, offset, _)) in src.elements.iter().enumerate() {
-                            if *offset == pt && !connected_elements.contains(&i) {
+                        for (i, element) in src.elements.iter().enumerate() {
+                            if element.offset == pt && !connected_elements.contains(&i) {
                                 connected_elements.push(i);
                             }
                         }
@@ -645,11 +656,11 @@ impl LocalState {
 
                     // Now update the offset in dst so that one of the elements is at 0,0
                     // Not strictly necessary, but I think it will make rotation easier later? 
-                    let new_zero = dst.elements[0].1;
+                    let new_zero = dst.elements[0].offset;
                     dst.offset = dst.offset + new_zero;
 
-                    for (_, element_offset, _) in &mut dst.elements {
-                        *element_offset = *element_offset - new_zero;
+                    for element in &mut dst.elements {
+                        element.offset = element.offset - new_zero;
                     }
                     for (src, dst, _) in &mut dst.bonds {
                         *src = *src - new_zero;
@@ -663,13 +674,13 @@ impl LocalState {
                 },
                 ModifierKind::Strengthen => {
                     // Verify we have enough free electrons
-                    if self.molecules[index].elements[el_a_index].2 == 0 || self.molecules[index].elements[el_b_index].2 == 0 {
+                    if self.molecules[index].elements[el_a_index].free_electrons == 0 || self.molecules[index].elements[el_b_index].free_electrons == 0 {
                         continue;
                     }
 
                     // If so, strengthen the bond and take the electrons
-                    self.molecules[index].elements[el_a_index].2 -= 1;
-                    self.molecules[index].elements[el_b_index].2 -= 1;
+                    self.molecules[index].elements[el_a_index].free_electrons -= 1;
+                    self.molecules[index].elements[el_b_index].free_electrons -= 1;
                     self.molecules[index].bonds[bond_index].2 += 1;
                 },
                 ModifierKind::Rotate => todo!(),
@@ -826,12 +837,12 @@ mod test_localstate {
 
         // First is OH with a free still on the O
         assert_eq!(state.molecules[0].offset, Point(1, 2));
-        assert_eq!(state.molecules[0].elements[0].2, 0);
-        assert_eq!(state.molecules[0].elements[1].2, 1);
+        assert_eq!(state.molecules[0].elements[0].free_electrons, 0);
+        assert_eq!(state.molecules[0].elements[1].free_electrons, 1);
 
         // Second is h with a free still open
         assert_eq!(state.molecules[1].offset, Point(1, 3));
-        assert_eq!(state.molecules[1].elements[0].2, 1);
+        assert_eq!(state.molecules[1].elements[0].free_electrons, 1);
     }
 
     #[test]
@@ -950,8 +961,8 @@ o - - -");
         // We should have moved the O and o together with a single bond
         assert_eq!(state.molecules.len(), 1);
         assert_eq!(state.molecules[0].elements.len(), 2);
-        assert_eq!(state.molecules[0].elements[0].2, 1);
-        assert_eq!(state.molecules[0].elements[1].2, 1);
+        assert_eq!(state.molecules[0].elements[0].free_electrons, 1);
+        assert_eq!(state.molecules[0].elements[1].free_electrons, 1);
         assert_eq!(state.molecules[0].bonds.len(), 1);
         assert_eq!(state.molecules[0].bonds[0].2, 1);
 
@@ -959,8 +970,8 @@ o - - -");
         assert!(state.try_move(&map, 0, Point(1, 0)));
         assert_eq!(state.molecules.len(), 1);
         assert_eq!(state.molecules[0].elements.len(), 2);
-        assert_eq!(state.molecules[0].elements[0].2, 0);
-        assert_eq!(state.molecules[0].elements[1].2, 0);
+        assert_eq!(state.molecules[0].elements[0].free_electrons, 0);
+        assert_eq!(state.molecules[0].elements[1].free_electrons, 0);
         assert_eq!(state.molecules[0].bonds.len(), 1);
         assert_eq!(state.molecules[0].bonds[0].2, 2);
     }
@@ -981,9 +992,9 @@ n - N");
         // Should result in one molecule with the right C/N double bonded and a single N/N bond
         assert_eq!(state.molecules.len(), 1);
         assert_eq!(state.molecules[0].elements.len(), 3);
-        assert_eq!(state.molecules[0].elements[0].2, 0); // N has 0/3 free left
-        assert_eq!(state.molecules[0].elements[1].2, 2); // c has 2/4 free left
-        assert_eq!(state.molecules[0].elements[2].2, 2); // Other n has 2/3 free left
+        assert_eq!(state.molecules[0].elements[0].free_electrons, 0); // N has 0/3 free left
+        assert_eq!(state.molecules[0].elements[1].free_electrons, 2); // c has 2/4 free left
+        assert_eq!(state.molecules[0].elements[2].free_electrons, 2); // Other n has 2/3 free left
         assert_eq!(state.molecules[0].bonds.len(), 2);
         assert_eq!(state.molecules[0].bonds[0].2, 2); // C/N double bond
         assert_eq!(state.molecules[0].bonds[1].2, 1); // N/N single bond
@@ -1135,9 +1146,9 @@ impl State<Map, Step> for LocalState {
 
         for (i, molecule) in self.molecules.iter().enumerate() {
             // Add the elements
-            for (element, offset, _) in &molecule.elements {
-                let offset = molecule.offset + *offset;
-                let mut c: char = element.into();
+            for element in &molecule.elements {
+                let offset = molecule.offset + element.offset;
+                let mut c: char = element.kind.into();
                 if i > 0 {
                     c = c.to_ascii_lowercase();
                 }
