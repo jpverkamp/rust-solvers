@@ -272,13 +272,20 @@ struct Element {
     free_electrons: usize,
 }
 
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+struct Bond {
+    a: Point,
+    b: Point,
+    count: usize,
+}
+
 // Represent elements joined together into a molecule
 // Each element contains the Element, offset, and remaining free electrons
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 struct Molecule {
     offset: Point,
     elements: Vec<Element>,
-    bonds: Vec<(Point, Point, usize)>,
+    bonds: Vec<Bond>,
 }
 
 impl Molecule {
@@ -365,11 +372,11 @@ impl Molecule {
                 // bond the two elements
                 bound = true;
 
-                self.bonds.push((
-                    offset + src.offset,
-                    other.offset - self.offset + dst.offset,
-                    1,
-                ));
+                self.bonds.push(Bond {
+                    a: offset + src.offset,
+                    b: other.offset - self.offset + dst.offset,
+                    count: 1, 
+                });
 
                 src.free_electrons -= 1;
                 dst.free_electrons -= 1;
@@ -386,12 +393,12 @@ impl Molecule {
                 });
             }
 
-            for (src, dst, count) in other.bonds {
-                self.bonds.push((
-                    other.offset - self.offset + src,
-                    other.offset - self.offset + dst,
-                    count,
-                ));
+            for bond in other.bonds {
+                self.bonds.push(Bond {
+                    a: other.offset - self.offset + bond.a,
+                    b: other.offset - self.offset + bond.b,
+                    count: bond.count
+            });
             }
 
             true
@@ -505,12 +512,12 @@ impl LocalState {
                     continue;
                 }
 
-                for (bond_index, (a, b, _count)) in self.molecules[index].bonds.iter().enumerate() {
-                    let real_a = *a + self.molecules[index].offset;
-                    let real_b = *b + self.molecules[index].offset;
+                for (bond_index, bond) in self.molecules[index].bonds.iter().enumerate() {
+                    let real_a = bond.a + self.molecules[index].offset;
+                    let real_b = bond.b + self.molecules[index].offset;
 
                     // Vertical bonds have the same x
-                    let is_vertical = a.0 == b.0;
+                    let is_vertical = bond.a.0 == bond.b.0;
 
                     // We'll hit a vertical splitter if the offset is horizontal and we're moving across it
                     // Ignore bonds that are moving the wrong way
@@ -555,18 +562,18 @@ impl LocalState {
             modifiers_applied.push(modifier);
 
             // Figure out which elements we're dealing with 
-            let (a, b, count) = self.molecules[index].bonds[bond_index];
+            let bond = self.molecules[index].bonds[bond_index];
 
             let el_a_index = self.molecules[index]
                 .elements
                 .iter()
-                .position(|el| el.offset == a)
+                .position(|el| el.offset == bond.a)
                 .unwrap();
 
             let el_b_index = self.molecules[index]
                 .elements
                 .iter()
-                .position(|el| el.offset == b)
+                .position(|el| el.offset == bond.b)
                 .unwrap();
             
             // Handle different modifier types
@@ -575,10 +582,10 @@ impl LocalState {
                     // Reduce the bond and give back electrons
                     self.molecules[index].elements[el_a_index].free_electrons += 1;
                     self.molecules[index].elements[el_b_index].free_electrons += 1;
-                    self.molecules[index].bonds[bond_index].2 -= 1;
+                    self.molecules[index].bonds[bond_index].count -= 1;
 
                     // If it was more than a single bond (originally), we're done now (no splitting)
-                    if count > 1 {
+                    if self.molecules[index].bonds[bond_index].count > 0 {
                         continue;
                     }
 
@@ -603,24 +610,24 @@ impl LocalState {
                             }
                         }
 
-                        for (i, (a, b, _)) in src.bonds.iter().enumerate() {
-                            if a == &pt {
+                        for (i, src_bond) in src.bonds.iter().enumerate() {
+                            if src_bond.a == pt {
                                 if !connected_bonds.contains(&i) {
                                     connected_bonds.push(i);
                                 }
 
-                                if !(todo.contains(b) || done.contains(b)) {
-                                    todo.push(*b);
+                                if !(todo.contains(&src_bond.b) || done.contains(&src_bond.b)) {
+                                    todo.push(src_bond.b);
                                 }
                             }
 
-                            if b == &pt {
+                            if src_bond.b == pt {
                                 if !connected_bonds.contains(&i) {
                                     connected_bonds.push(i);
                                 }
 
-                                if !(todo.contains(a) || done.contains(a)) {
-                                    todo.push(*a);
+                                if !(todo.contains(&src_bond.a) || done.contains(&src_bond.a)) {
+                                    todo.push(src_bond.a);
                                 }
                             }
                         }
@@ -662,9 +669,9 @@ impl LocalState {
                     for element in &mut dst.elements {
                         element.offset = element.offset - new_zero;
                     }
-                    for (src, dst, _) in &mut dst.bonds {
-                        *src = *src - new_zero;
-                        *dst = *dst - new_zero;
+                    for dst_bond in &mut dst.bonds {
+                        dst_bond.a = dst_bond.a - new_zero;
+                        dst_bond.b = dst_bond.b - new_zero;
                     }
 
                     // We now have two molecules, replace src and add dst
@@ -681,7 +688,7 @@ impl LocalState {
                     // If so, strengthen the bond and take the electrons
                     self.molecules[index].elements[el_a_index].free_electrons -= 1;
                     self.molecules[index].elements[el_b_index].free_electrons -= 1;
-                    self.molecules[index].bonds[bond_index].2 += 1;
+                    self.molecules[index].bonds[bond_index].count += 1;
                 },
                 ModifierKind::Rotate => todo!(),
             }
@@ -964,7 +971,7 @@ o - - -");
         assert_eq!(state.molecules[0].elements[0].free_electrons, 1);
         assert_eq!(state.molecules[0].elements[1].free_electrons, 1);
         assert_eq!(state.molecules[0].bonds.len(), 1);
-        assert_eq!(state.molecules[0].bonds[0].2, 1);
+        assert_eq!(state.molecules[0].bonds[0].count, 1);
 
         // After second move, we should have a double bond and no more free electrons
         assert!(state.try_move(&map, 0, Point(1, 0)));
@@ -973,7 +980,7 @@ o - - -");
         assert_eq!(state.molecules[0].elements[0].free_electrons, 0);
         assert_eq!(state.molecules[0].elements[1].free_electrons, 0);
         assert_eq!(state.molecules[0].bonds.len(), 1);
-        assert_eq!(state.molecules[0].bonds[0].2, 2);
+        assert_eq!(state.molecules[0].bonds[0].count, 2);
     }
 
     #[test]
@@ -996,8 +1003,8 @@ n - N");
         assert_eq!(state.molecules[0].elements[1].free_electrons, 2); // c has 2/4 free left
         assert_eq!(state.molecules[0].elements[2].free_electrons, 2); // Other n has 2/3 free left
         assert_eq!(state.molecules[0].bonds.len(), 2);
-        assert_eq!(state.molecules[0].bonds[0].2, 2); // C/N double bond
-        assert_eq!(state.molecules[0].bonds[1].2, 1); // N/N single bond
+        assert_eq!(state.molecules[0].bonds[0].count, 2); // C/N double bond
+        assert_eq!(state.molecules[0].bonds[1].count, 1); // N/N single bond
     }
 
     #[test]
@@ -1014,22 +1021,22 @@ c - - -");
         // First move double bond
         assert!(state.try_move(&map, 0, Point(1, 0)));
         assert_eq!(state.molecules[0].bonds.len(), 1);
-        assert_eq!(state.molecules[0].bonds[0].2, 2);
+        assert_eq!(state.molecules[0].bonds[0].count, 2);
 
         // Second move triple bond
         assert!(state.try_move(&map, 0, Point(1, 0)));
         assert_eq!(state.molecules[0].bonds.len(), 1);
-        assert_eq!(state.molecules[0].bonds[0].2, 3);
+        assert_eq!(state.molecules[0].bonds[0].count, 3);
 
         // Third move makes it a double again
         assert!(state.try_move(&map, 0, Point(1, 0)));
         assert_eq!(state.molecules[0].bonds.len(), 1);
-        assert_eq!(state.molecules[0].bonds[0].2, 2);
+        assert_eq!(state.molecules[0].bonds[0].count, 2);
 
         // Going back will make it a single
         assert!(state.try_move(&map, 0, Point(-1, 0)));
         assert_eq!(state.molecules[0].bonds.len(), 1);
-        assert_eq!(state.molecules[0].bonds[0].2, 1);
+        assert_eq!(state.molecules[0].bonds[0].count, 1);
     }
 
     #[test]
@@ -1156,28 +1163,28 @@ impl State<Map, Step> for LocalState {
             }
 
             // Add the bonds
-            for (src, dst, count) in &molecule.bonds {
-                let src = molecule.offset + *src;
-                let dst = molecule.offset + *dst;
-                assert!(src.manhattan_distance(dst) == 1);
+            for bond in &molecule.bonds {
+                let real_a = molecule.offset + bond.a;
+                let real_b = molecule.offset + bond.b;
+                assert!(real_a.manhattan_distance(real_b) == 1);
 
                 // Offset from src to dst
-                let dx = dst.0 - src.0;
-                let dy = dst.1 - src.1;
+                let dx = real_b.0 - real_a.0;
+                let dy = real_b.1 - real_a.1;
 
                 // Use abs to choose horizontal or vertical; count to choose single, double, or triple
-                let c = match (dx.abs(), dy.abs(), count) {
+                let c = match (dx.abs(), dy.abs(), bond.count) {
                     (1, 0, 1) => SINGLE_HORIZONTAL,
                     (0, 1, 1) => SINGLE_VERTICAL,
                     (1, 0, 2) => DOUBLE_HORIZONTAL,
                     (0, 1, 2) => DOUBLE_VERTICAL,
                     (1, 0, 3) => TRIPLE_HORIZONTAL,
                     (0, 1, 3) => TRIPLE_VERTICAL,
-                    _ => panic!("invalid bond in {molecule:?}: {src:?} {dst:?}"),
+                    _ => panic!("invalid bond in {molecule:?}: {real_a:?} {real_b:?}"),
                 };
 
                 // Place the bond on the offset grid
-                grid[(dy + 2 * src.1) as usize][(dx + 2 * src.0) as usize] = c;
+                grid[(dy + 2 * real_a.1) as usize][(dx + 2 * real_a.0) as usize] = c;
             }
         }
 
