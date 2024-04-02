@@ -13,13 +13,19 @@ const TRIPLE_VERTICAL: char = '⦀';
 
 // A point in 2D space
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
-struct Point(isize, isize);
+struct Point {
+    x: isize,
+    y: isize,
+}
 
 impl Add<Point> for Point {
     type Output = Point;
 
     fn add(self, rhs: Point) -> Self::Output {
-        Point(self.0 + rhs.0, self.1 + rhs.1)
+        Point {
+            x: self.x + rhs.x,
+            y: self.y + rhs.y,
+        }
     }
 }
 
@@ -27,15 +33,18 @@ impl Sub<Point> for Point {
     type Output = Point;
 
     fn sub(self, rhs: Point) -> Self::Output {
-        Point(self.0 - rhs.0, self.1 - rhs.1)
+        Point {
+            x: self.x - rhs.x,
+            y: self.y - rhs.y,
+        }
     }
 }
 
 impl Point {
-    const ZERO: Point = Point(0, 0);
+    const ZERO: Point = Point { x: 0, y: 0 };
 
     fn manhattan_distance(&self, other: Point) -> isize {
-        (self.0 - other.0).abs() + (self.1 - other.1).abs()
+        (self.x - other.x).abs() + (self.y - other.y).abs()
     }
 }
 
@@ -44,7 +53,7 @@ impl Point {
 enum ModifierKind {
     Weaken,
     Strengthen,
-    Rotate
+    Rotate,
 }
 
 impl From<char> for ModifierKind {
@@ -128,12 +137,13 @@ impl Map {
 
                         let x = x / 2;
                         let y = y / 2 - 1;
-                        modifiers.push(
-                            Modifier {
-                                location: Point(x as isize, y as isize),
-                                kind: ModifierKind::from(c),
-                            }
-                        );
+                        modifiers.push(Modifier {
+                            location: Point {
+                                x: x as isize,
+                                y: y as isize,
+                            },
+                            kind: ModifierKind::from(c),
+                        });
                     }
                 }
             }
@@ -149,7 +159,10 @@ impl Map {
             height += 1;
 
             for (x, c) in line.chars().enumerate() {
-                let pt = Point(x as isize, y as isize);
+                let pt = Point {
+                    x: x as isize,
+                    y: y as isize,
+                };
 
                 match ElementKind::try_from(c) {
                     // A new element, convert it to a molecule
@@ -292,7 +305,7 @@ impl Molecule {
     fn new(offset: Point, element: ElementKind) -> Molecule {
         Molecule {
             offset,
-            elements: vec![Element { 
+            elements: vec![Element {
                 kind: element,
                 offset: Point::ZERO,
                 free_electrons: element.free_electrons(),
@@ -318,7 +331,7 @@ impl Molecule {
     fn intersects_wall(&self, offset: Point, map: &Map) -> bool {
         for element in &self.elements {
             let target = self.offset + element.offset + offset;
-            if map.is_wall(target.0 as usize, target.1 as usize) {
+            if map.is_wall(target.x as usize, target.y as usize) {
                 return true;
             }
         }
@@ -375,7 +388,7 @@ impl Molecule {
                 self.bonds.push(Bond {
                     a: offset + src.offset,
                     b: other.offset - self.offset + dst.offset,
-                    count: 1, 
+                    count: 1,
                 });
 
                 src.free_electrons -= 1;
@@ -397,8 +410,8 @@ impl Molecule {
                 self.bonds.push(Bond {
                     a: other.offset - self.offset + bond.a,
                     b: other.offset - self.offset + bond.b,
-                    count: bond.count
-            });
+                    count: bond.count,
+                });
             }
 
             true
@@ -425,24 +438,24 @@ mod test_molecule {
             modifiers: vec![],
         };
 
-        assert!(a.intersects_wall(Point(1, 0), &map));
-        assert!(!a.intersects_wall(Point(1, 1), &map));
+        assert!(a.intersects_wall(Point { x: 1, y: 0 }, &map));
+        assert!(!a.intersects_wall(Point { x: 1, y: 1 }, &map));
     }
 
     #[test]
     fn test_molecule_intersection() {
         let a = Molecule::new(Point::ZERO, ElementKind::Hydrogen);
-        let b = Molecule::new(Point(1, 0), ElementKind::Hydrogen);
+        let b = Molecule::new(Point { x: 1, y: 0 }, ElementKind::Hydrogen);
 
-        assert!(a.intersects(Point(1, 0), &b));
-        assert!(!a.intersects(Point(0, 0), &b));
-        assert!(!a.intersects(Point(0, 1), &b));
+        assert!(a.intersects(Point { x: 1, y: 0 }, &b));
+        assert!(!a.intersects(Point { x: 0, y: 0 }, &b));
+        assert!(!a.intersects(Point { x: 0, y: 1 }, &b));
     }
 
     #[test]
     fn test_bond() {
         let mut a = Molecule::new(Point::ZERO, ElementKind::Hydrogen);
-        let b = Molecule::new(Point(1, 0), ElementKind::Hydrogen);
+        let b = Molecule::new(Point { x: 1, y: 0 }, ElementKind::Hydrogen);
 
         let bound = a.try_bond(Point::ZERO, &b);
 
@@ -454,9 +467,9 @@ mod test_molecule {
     #[test]
     fn test_nobond_no_free() {
         let mut a = Molecule::new(Point::ZERO, ElementKind::Hydrogen);
-        let b = Molecule::new(Point(1, 0), ElementKind::Helium);
+        let b = Molecule::new(Point { x: 1, y: 0 }, ElementKind::Helium);
 
-        let bound = a.try_bond(Point(1, 0), &b);
+        let bound = a.try_bond(Point { x: 1, y: 0 }, &b);
 
         assert!(!bound);
         assert!(a.elements[0].free_electrons == 1);
@@ -465,9 +478,9 @@ mod test_molecule {
     #[test]
     fn test_nobond_too_far() {
         let mut a = Molecule::new(Point::ZERO, ElementKind::Hydrogen);
-        let b = Molecule::new(Point(2, 0), ElementKind::Hydrogen);
+        let b = Molecule::new(Point { x: 2, y: 0 }, ElementKind::Hydrogen);
 
-        let bound = a.try_bond(Point(2, 0), &b);
+        let bound = a.try_bond(Point { x: 2, y: 0 }, &b);
 
         assert!(!bound);
         assert!(a.elements[0].free_electrons == 1);
@@ -476,7 +489,7 @@ mod test_molecule {
     #[test]
     fn test_single_bond_o2_not_double() {
         let mut a = Molecule::new(Point::ZERO, ElementKind::Oxygen);
-        let b = Molecule::new(Point(1, 0), ElementKind::Oxygen);
+        let b = Molecule::new(Point { x: 1, y: 0 }, ElementKind::Oxygen);
 
         let bound = a.try_bond(Point::ZERO, &b);
 
@@ -517,25 +530,31 @@ impl LocalState {
                     let real_b = bond.b + self.molecules[index].offset;
 
                     // Vertical bonds have the same x
-                    let is_vertical = bond.a.0 == bond.b.0;
+                    let is_vertical = bond.a.x == bond.b.x;
 
                     // We'll hit a vertical splitter if the offset is horizontal and we're moving across it
                     // Ignore bonds that are moving the wrong way
-                    if is_vertical && offset.0 == 0 || !is_vertical && offset.1 == 0 {
+                    if is_vertical && offset.x == 0 || !is_vertical && offset.y == 0 {
                         continue;
                     }
 
                     // Moving 'positive' is down or right
-                    let is_positive = offset.0 > 0 || offset.1 > 0;
+                    let is_positive = offset.x > 0 || offset.y > 0;
 
                     // Because either x or y is the same for all bonds, min is top/left and max is bottom/right
                     // This will always match the splitter if we're moving across it right or down
-                    let pre_min = Point(real_a.0.min(real_b.0), real_a.1.min(real_b.1));
+                    let pre_min = Point {
+                        x: real_a.x.min(real_b.x),
+                        y: real_a.y.min(real_b.y),
+                    };
 
                     // The post point is the one after we've moved
                     let post_a = real_a + offset;
                     let post_b = real_b + offset;
-                    let post_min = Point(post_a.0.min(post_b.0), post_a.1.min(post_b.1));
+                    let post_min = Point {
+                        x: post_a.x.min(post_b.x),
+                        y: post_a.y.min(post_b.y),
+                    };
 
                     // If we're moving positive, the min (top left) will equal the splitter
                     if is_positive && modifier.location != pre_min {
@@ -561,7 +580,7 @@ impl LocalState {
             let (bond_index, modifier) = bond_to_modify.unwrap();
             modifiers_applied.push(modifier);
 
-            // Figure out which elements we're dealing with 
+            // Figure out which elements we're dealing with
             let bond = self.molecules[index].bonds[bond_index];
 
             let el_a_index = self.molecules[index]
@@ -575,7 +594,7 @@ impl LocalState {
                 .iter()
                 .position(|el| el.offset == bond.b)
                 .unwrap();
-            
+
             // Handle different modifier types
             match modifier.kind {
                 ModifierKind::Weaken => {
@@ -638,7 +657,7 @@ impl LocalState {
                         continue;
                     }
 
-                    // Otherwise, we're going to create a second molecule 
+                    // Otherwise, we're going to create a second molecule
                     // This is basically a partition (src gets connected, dst gets everything else)
                     let mut dst = src.clone();
                     connected_elements.sort();
@@ -662,7 +681,7 @@ impl LocalState {
                     }
 
                     // Now update the offset in dst so that one of the elements is at 0,0
-                    // Not strictly necessary, but I think it will make rotation easier later? 
+                    // Not strictly necessary, but I think it will make rotation easier later?
                     let new_zero = dst.elements[0].offset;
                     dst.offset = dst.offset + new_zero;
 
@@ -677,11 +696,12 @@ impl LocalState {
                     // We now have two molecules, replace src and add dst
                     self.molecules[index] = src;
                     self.molecules.push(dst);
-
-                },
+                }
                 ModifierKind::Strengthen => {
                     // Verify we have enough free electrons
-                    if self.molecules[index].elements[el_a_index].free_electrons == 0 || self.molecules[index].elements[el_b_index].free_electrons == 0 {
+                    if self.molecules[index].elements[el_a_index].free_electrons == 0
+                        || self.molecules[index].elements[el_b_index].free_electrons == 0
+                    {
                         continue;
                     }
 
@@ -689,7 +709,7 @@ impl LocalState {
                     self.molecules[index].elements[el_a_index].free_electrons -= 1;
                     self.molecules[index].elements[el_b_index].free_electrons -= 1;
                     self.molecules[index].bonds[bond_index].count += 1;
-                },
+                }
                 ModifierKind::Rotate => todo!(),
             }
         }
@@ -768,8 +788,8 @@ mod test_localstate {
 
         let (map, mut state) = Map::load("H-#");
 
-        assert!(state.try_move(&map, 0, Point(1, 0)));
-        assert_eq!(state.molecules[0].offset, Point(1, 0));
+        assert!(state.try_move(&map, 0, Point { x: 1, y: 0 }));
+        assert_eq!(state.molecules[0].offset, Point { x: 1, y: 0 });
     }
 
     #[test]
@@ -778,7 +798,7 @@ mod test_localstate {
 
         let (map, mut state) = Map::load("-H#");
 
-        assert!(!state.try_move(&map, 0, Point(1, 0)));
+        assert!(!state.try_move(&map, 0, Point { x: 1, y: 0 }));
     }
 
     #[test]
@@ -787,10 +807,10 @@ mod test_localstate {
 
         let (map, mut state) = Map::load("Ee-#");
 
-        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert!(state.try_move(&map, 0, Point { x: 1, y: 0 }));
         assert_eq!(state.molecules.len(), 2);
-        assert_eq!(state.molecules[0].offset, Point(1, 0));
-        assert_eq!(state.molecules[1].offset, Point(2, 0));
+        assert_eq!(state.molecules[0].offset, Point { x: 1, y: 0 });
+        assert_eq!(state.molecules[1].offset, Point { x: 2, y: 0 });
     }
 
     #[test]
@@ -799,9 +819,9 @@ mod test_localstate {
 
         let (map, mut state) = Map::load("H-h#");
 
-        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert!(state.try_move(&map, 0, Point { x: 1, y: 0 }));
         assert_eq!(state.molecules.len(), 1);
-        assert_eq!(state.molecules[0].offset, Point(1, 0));
+        assert_eq!(state.molecules[0].offset, Point { x: 1, y: 0 });
         assert_eq!(state.molecules[0].elements.len(), 2);
     }
 
@@ -811,9 +831,9 @@ mod test_localstate {
 
         let (map, mut state) = Map::load("Hh-#");
 
-        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert!(state.try_move(&map, 0, Point { x: 1, y: 0 }));
         assert_eq!(state.molecules.len(), 1);
-        assert_eq!(state.molecules[0].offset, Point(1, 0));
+        assert_eq!(state.molecules[0].offset, Point { x: 1, y: 0 });
         assert_eq!(state.molecules[0].elements.len(), 2);
     }
 
@@ -823,9 +843,9 @@ mod test_localstate {
 
         let (map, mut state) = Map::load("Ee#");
 
-        assert!(!state.try_move(&map, 0, Point(1, 0)));
-        assert_eq!(state.molecules[0].offset, Point(0, 0));
-        assert_eq!(state.molecules[1].offset, Point(1, 0));
+        assert!(!state.try_move(&map, 0, Point { x: 1, y: 0 }));
+        assert_eq!(state.molecules[0].offset, Point { x: 0, y: 0 });
+        assert_eq!(state.molecules[1].offset, Point { x: 1, y: 0 });
     }
 
     #[test]
@@ -834,8 +854,8 @@ mod test_localstate {
 
         let (map, mut state) = Map::load("-H-\no--\n-h-\n---");
 
-        assert!(state.try_move(&map, 0, Point(0, 1)));
-        assert!(state.try_move(&map, 0, Point(0, 1)));
+        assert!(state.try_move(&map, 0, Point { x: 0, y: 1 }));
+        assert!(state.try_move(&map, 0, Point { x: 0, y: 1 }));
 
         println!("{}", state.stringify(&map));
 
@@ -843,12 +863,12 @@ mod test_localstate {
         assert_eq!(state.molecules.len(), 2);
 
         // First is OH with a free still on the O
-        assert_eq!(state.molecules[0].offset, Point(1, 2));
+        assert_eq!(state.molecules[0].offset, Point { x: 1, y: 2 });
         assert_eq!(state.molecules[0].elements[0].free_electrons, 0);
         assert_eq!(state.molecules[0].elements[1].free_electrons, 1);
 
         // Second is h with a free still open
-        assert_eq!(state.molecules[1].offset, Point(1, 3));
+        assert_eq!(state.molecules[1].offset, Point { x: 1, y: 3 });
         assert_eq!(state.molecules[1].elements[0].free_electrons, 1);
     }
 
@@ -865,26 +885,26 @@ h - - -",
         );
 
         // Move once, still together
-        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert!(state.try_move(&map, 0, Point { x: 1, y: 0 }));
         assert_eq!(state.molecules.len(), 1);
         assert_eq!(state.molecules[0].elements.len(), 2);
 
         // Move again, now we're split
-        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert!(state.try_move(&map, 0, Point { x: 1, y: 0 }));
         println!("{}", state.stringify(&map));
         assert_eq!(state.molecules.len(), 2);
         assert_eq!(state.molecules[0].elements.len(), 1);
         assert_eq!(state.molecules[1].elements.len(), 1);
 
         // Molecule 0 is the one that moved
-        assert_eq!(state.molecules[0].offset, Point(2, 0));
-        assert_eq!(state.molecules[1].offset, Point(1, 1));
+        assert_eq!(state.molecules[0].offset, Point { x: 2, y: 0 });
+        assert_eq!(state.molecules[1].offset, Point { x: 1, y: 1 });
 
         // Move once more, doesn't rejoin or anything
-        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert!(state.try_move(&map, 0, Point { x: 1, y: 0 }));
         assert_eq!(state.molecules.len(), 2);
-        assert_eq!(state.molecules[0].offset, Point(3, 0));
-        assert_eq!(state.molecules[1].offset, Point(1, 1));
+        assert_eq!(state.molecules[0].offset, Point { x: 3, y: 0 });
+        assert_eq!(state.molecules[1].offset, Point { x: 1, y: 1 });
     }
 
     #[test]
@@ -905,26 +925,26 @@ h - - - -",
         );
 
         // Move twice, still together
-        assert!(state.try_move(&map, 0, Point(1, 0)));
-        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert!(state.try_move(&map, 0, Point { x: 1, y: 0 }));
+        assert!(state.try_move(&map, 0, Point { x: 1, y: 0 }));
         assert_eq!(state.molecules.len(), 1);
         assert_eq!(state.molecules[0].elements.len(), 3);
 
         // Move again, now we're split
-        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert!(state.try_move(&map, 0, Point { x: 1, y: 0 }));
         assert_eq!(state.molecules.len(), 2);
         assert_eq!(state.molecules[0].elements.len(), 2);
         assert_eq!(state.molecules[1].elements.len(), 1);
 
         // Molecule 0 is the one that moved
-        assert_eq!(state.molecules[0].offset, Point(3, 0));
-        assert_eq!(state.molecules[1].offset, Point(2, 1));
+        assert_eq!(state.molecules[0].offset, Point { x: 3, y: 0 });
+        assert_eq!(state.molecules[1].offset, Point { x: 2, y: 1 });
 
         // Move down, rejoin
-        assert!(state.try_move(&map, 0, Point(0, 1)));
+        assert!(state.try_move(&map, 0, Point { x: 0, y: 1 }));
         assert_eq!(state.molecules.len(), 1);
         assert_eq!(state.molecules[0].elements.len(), 3);
-        assert_eq!(state.molecules[0].offset, Point(3, 1));
+        assert_eq!(state.molecules[0].offset, Point { x: 3, y: 1 });
     }
 
     #[test]
@@ -942,12 +962,12 @@ x - h - x
 ",
         );
 
-        assert!(state.try_move(&map, 0, Point(1, 0)));
-        
+        assert!(state.try_move(&map, 0, Point { x: 1, y: 0 }));
+
         // We should have moved just the N split from the two h
         assert_eq!(state.molecules.len(), 3);
         assert_eq!(state.molecules[0].elements.len(), 1);
-        assert_eq!(state.molecules[0].offset, Point(3, 1));
+        assert_eq!(state.molecules[0].offset, Point { x: 3, y: 1 });
         assert_eq!(state.molecules[1].elements.len(), 1);
         assert_eq!(state.molecules[2].elements.len(), 1);
     }
@@ -961,9 +981,10 @@ x - h - x
 v2
 O - - -
    + 
-o - - -");
+o - - -",
+        );
 
-        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert!(state.try_move(&map, 0, Point { x: 1, y: 0 }));
 
         // We should have moved the O and o together with a single bond
         assert_eq!(state.molecules.len(), 1);
@@ -974,7 +995,7 @@ o - - -");
         assert_eq!(state.molecules[0].bonds[0].count, 1);
 
         // After second move, we should have a double bond and no more free electrons
-        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert!(state.try_move(&map, 0, Point { x: 1, y: 0 }));
         assert_eq!(state.molecules.len(), 1);
         assert_eq!(state.molecules[0].elements.len(), 2);
         assert_eq!(state.molecules[0].elements[0].free_electrons, 0);
@@ -992,9 +1013,10 @@ o - - -");
 v2
 - - c
    + 
-n - N");
+n - N",
+        );
 
-        assert!(state.try_move(&map, 0, Point(-1, 0)));
+        assert!(state.try_move(&map, 0, Point { x: -1, y: 0 }));
 
         // Should result in one molecule with the right C/N double bonded and a single N/N bond
         assert_eq!(state.molecules.len(), 1);
@@ -1016,25 +1038,26 @@ n - N");
 v2
 C - - -
  + + /
-c - - -");
+c - - -",
+        );
 
         // First move double bond
-        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert!(state.try_move(&map, 0, Point { x: 1, y: 0 }));
         assert_eq!(state.molecules[0].bonds.len(), 1);
         assert_eq!(state.molecules[0].bonds[0].count, 2);
 
         // Second move triple bond
-        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert!(state.try_move(&map, 0, Point { x: 1, y: 0 }));
         assert_eq!(state.molecules[0].bonds.len(), 1);
         assert_eq!(state.molecules[0].bonds[0].count, 3);
 
         // Third move makes it a double again
-        assert!(state.try_move(&map, 0, Point(1, 0)));
+        assert!(state.try_move(&map, 0, Point { x: 1, y: 0 }));
         assert_eq!(state.molecules[0].bonds.len(), 1);
         assert_eq!(state.molecules[0].bonds[0].count, 2);
 
         // Going back will make it a single
-        assert!(state.try_move(&map, 0, Point(-1, 0)));
+        assert!(state.try_move(&map, 0, Point { x: -1, y: 0 }));
         assert_eq!(state.molecules[0].bonds.len(), 1);
         assert_eq!(state.molecules[0].bonds[0].count, 1);
     }
@@ -1050,10 +1073,11 @@ v2
  /
 o o
    
-N n");
+N n",
+        );
 
         // Move one up, should break the o-o bond, but keep one molecule
-        assert!(state.try_move(&map, 0, Point(0, -1)));
+        assert!(state.try_move(&map, 0, Point { x: 0, y: -1 }));
         assert_eq!(state.molecules.len(), 1);
     }
 }
@@ -1070,10 +1094,10 @@ enum Step {
 impl Into<Point> for Step {
     fn into(self) -> Point {
         match self {
-            Step::North => Point(0, -1),
-            Step::South => Point(0, 1),
-            Step::East => Point(1, 0),
-            Step::West => Point(-1, 0),
+            Step::North => Point { x: 0, y: -1 },
+            Step::South => Point { x: 0, y: 1 },
+            Step::East => Point { x: 1, y: 0 },
+            Step::West => Point { x: -1, y: 0 },
         }
     }
 }
@@ -1159,7 +1183,7 @@ impl State<Map, Step> for LocalState {
                 if i > 0 {
                     c = c.to_ascii_lowercase();
                 }
-                grid[2 * offset.1 as usize][2 * offset.0 as usize] = c;
+                grid[2 * offset.y as usize][2 * offset.x as usize] = c;
             }
 
             // Add the bonds
@@ -1169,8 +1193,8 @@ impl State<Map, Step> for LocalState {
                 assert!(real_a.manhattan_distance(real_b) == 1);
 
                 // Offset from src to dst
-                let dx = real_b.0 - real_a.0;
-                let dy = real_b.1 - real_a.1;
+                let dx = real_b.x - real_a.x;
+                let dy = real_b.y - real_a.y;
 
                 // Use abs to choose horizontal or vertical; count to choose single, double, or triple
                 let c = match (dx.abs(), dy.abs(), bond.count) {
@@ -1184,14 +1208,14 @@ impl State<Map, Step> for LocalState {
                 };
 
                 // Place the bond on the offset grid
-                grid[(dy + 2 * real_a.1) as usize][(dx + 2 * real_a.0) as usize] = c;
+                grid[(dy + 2 * real_a.y) as usize][(dx + 2 * real_a.x) as usize] = c;
             }
         }
 
         // Add splitters
         for modifier in &map.modifiers {
             let c: char = modifier.kind.into();
-            grid[1 + 2 * modifier.location.1 as usize][1 + 2 * modifier.location.0 as usize] = c;
+            grid[1 + 2 * modifier.location.y as usize][1 + 2 * modifier.location.x as usize] = c;
         }
 
         let mut output = String::new();
@@ -1300,7 +1324,7 @@ mod test_solutions {
     test! {test_03_03, "03 - Gray", "03 - Freedom.txt", "AAWAWDD"}
     test! {test_03_04, "03 - Gray", "04 - Against the Wall.txt", "WAASWAWWDSASDDSSSAWWSAAWWDDWWDDSSAAWAWASASDDDD"}
     test! {test_03_05, "03 - Gray", "05 - Pathways.txt", "AWWDSASDSSSDDWWAASSAAWW"}
-    test!{test_03_06, "03 - Gray", "06 - Three Doors.txt", "DAWWSAAWWAWDDSDSSAASDSDWWWSDDWSDSSAWWAAAAWWDD"}
+    test! {test_03_06, "03 - Gray", "06 - Three Doors.txt", "DAWWSAAWWAWDDSDSSAASDSDWWWSDDWSDSSAWWAAAAWWDD"}
     test! {test_03_07, "03 - Gray", "07 - Cloud.txt", "DWWASDDSWWASSD"}
     test! {test_03_08, "03 - Gray", "08 - Planning.txt", "WDSDSAASSAWDWASAAWDDDDSDDW"}
     test! {test_03_09, "03 - Gray", "09 - Out of the Way.txt", "AWDDDSAWAAAWWDDDDSWAAAASSDDWSDSDDWAAADDWWAAADSSASAW"}
