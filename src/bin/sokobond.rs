@@ -12,7 +12,7 @@ const TRIPLE_HORIZONTAL: char = '≡';
 const TRIPLE_VERTICAL: char = '⦀';
 
 // A point in 2D space
-#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
 struct Point {
     x: isize,
     y: isize,
@@ -49,7 +49,7 @@ impl Point {
 }
 
 // Possible kinds of map modifiers
-#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
 enum ModifierKind {
     Weaken,
     Strengthen,
@@ -77,10 +77,10 @@ impl Into<char> for ModifierKind {
     }
 }
 
-#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
 struct Modifier {
-    location: Point,
     kind: ModifierKind,
+    location: Point,
 }
 
 // Global state: a set of walls
@@ -204,6 +204,9 @@ impl Map {
             }
             break;
         }
+
+        // Modifiers have to be applied in a specific order: weaken, strengthen, rotate(?)
+        modifiers.sort_by_key(|m| m.kind);
 
         (
             Map {
@@ -547,8 +550,8 @@ impl LocalState {
         let mut modifiers_applied = Vec::new();
         loop {
             let mut bond_to_modify = None;
-
-            for modifier in map.modifiers.iter() {
+            
+            'find_bond: for modifier in map.modifiers.iter() {
                 if modifiers_applied.contains(&modifier) {
                     continue;
                 }
@@ -596,6 +599,7 @@ impl LocalState {
 
                     // We have a bond to try to modify
                     bond_to_modify = Some((bond_index, modifier));
+                    break 'find_bond;
                 }
             }
 
@@ -1109,6 +1113,61 @@ N n",
         assert!(state.try_move(&map, 0, Point { x: 0, y: -1 }));
         assert_eq!(state.molecules.len(), 1);
     }
+
+    #[test]
+    fn test_split_join() {
+        use super::*;
+
+        let (map, mut state) = Map::load(
+            "\
+v2
+C n n
+ + /
+- - -");
+        
+        // Verify that we have one molecule with two single bonds
+        assert_eq!(state.molecules.len(), 1);
+        assert_eq!(state.molecules[0].bonds.len(), 2);
+        assert_eq!(state.molecules[0].bonds[0].count, 1);
+        assert_eq!(state.molecules[0].bonds[1].count, 1);
+
+        // Move down one, should double the C/N bond and split (plus leave) the other N
+        assert!(state.try_move(&map, 0, Point { x: 0, y: 1 }));
+        assert_eq!(state.molecules.len(), 2);
+        assert_eq!(state.molecules[0].offset, Point { x: 0, y: 1 });
+        assert_eq!(state.molecules[0].bonds.len(), 1);
+        assert_eq!(state.molecules[0].bonds[0].count, 2);
+        assert_eq!(state.molecules[1].offset, Point { x: 2, y: 0 });
+        assert_eq!(state.molecules[1].bonds.len(), 0);
+    }
+    
+    #[test]
+    fn test_join_split() {
+        use super::*;
+
+        let (map, mut state) = Map::load(
+            "\
+v2
+C n n
+ / +
+- - -");
+
+        // Verify that we have one molecule with two single bonds
+        assert_eq!(state.molecules.len(), 1);
+        assert_eq!(state.molecules[0].bonds.len(), 2);
+        assert_eq!(state.molecules[0].bonds[0].count, 1);
+        assert_eq!(state.molecules[0].bonds[1].count, 1);
+
+        // Move down one, only the C should move leaving the N/N where it was
+        assert!(state.try_move(&map, 0, Point { x: 0, y: 1 }));
+        assert_eq!(state.molecules.len(), 2);
+        assert_eq!(state.molecules[0].offset, Point { x: 0, y: 1 });
+        assert_eq!(state.molecules[0].elements.len(), 1);
+        assert_eq!(state.molecules[0].bonds.len(), 0);
+        assert_eq!(state.molecules[1].offset, Point { x: 1, y: 0 });
+        assert_eq!(state.molecules[1].bonds.len(), 1);
+        assert_eq!(state.molecules[1].bonds[0].count, 1);
+    }
 }
 
 // The step the primary molecule takes each tick
@@ -1365,14 +1424,14 @@ mod test_solutions {
     test! {test_04_02, "04 - Red", "02 - Lock.txt", "DDWDSAWWWWAADDSSSA"}
     test! {test_04_03, "04 - Red", "03 - Push Up.txt", "DAAWDSDWA"}
     test! {test_04_04, "04 - Red", "04 - Out of Reach.txt", "WDDDDSAWDSAAWW"}
-    test! {test_04_05, "04 - Red", "05 - Small Key.txt", "DSAWAWDSSDWSAWDDD"}
+    test! {test_04_05, "04 - Red", "05 - Small Key.txt", "ASDWDWASSAWSDWDDD"}
     test! {test_04_06, "04 - Red", "06 - Anxiety.txt", "WAASAWDWWSDSDW"}
     test! {test_04_07, "04 - Red", "07 - Wingman.txt", "WAWWSDDDSASDSAAAAWW"}
-    test! {test_04_08, "04 - Red", "08 - Wing.txt", "WWSSDDAWDDWSS"}
+    test! {test_04_08, "04 - Red", "08 - Wing.txt", "DDAAWWSDWWDAA"}
     test! {test_04_09, "04 - Red", "09 - Anvil.txt", "SDSSDSAADWWWAASSDDDWWADSSAAAWSA"}
-    test! {test_04_10, "04 - Red", "10 - Cottage.txt", "SWWWWAASASDWWDDDDSDSAWWAASSSS"}
+    test! {test_04_10, "04 - Red", "10 - Cottage.txt", "SWWWWDDSDSAWWAAAASASDWWDDSSSS"}
     test! {test_04_11, "04 - Red", "11 - Hanoi.txt", "SAAWDDDDSAAWAASDDDDWAAAASDDDDWAAAA"}
-    test! {test_04_12, "04 - Red", "12 - Trap.txt", "DSDWAASDWWASDSDDDDDWSWSAWWDSASAAA"}
+    test! {test_04_12, "04 - Red", "12 - Trap.txt", "DSDWAASDWWASDSDDDDDWSAWWDSASAAA"}
 
     test! {test_05_01, "05 - Green", "01 - Breathe.txt", "WWDSDSWAW"}
     test! {test_05_02, "05 - Green", "02 - Doubling.txt", "WAWWASSDW"}
