@@ -535,13 +535,13 @@ impl LocalState {
             // Figure out which elements we're dealing with 
             let (a, b, count) = self.molecules[index].bonds[bond_index];
 
-            let ai = self.molecules[index]
+            let el_a_index = self.molecules[index]
                 .elements
                 .iter()
                 .position(|(_, pt, _)| *pt == a)
                 .unwrap();
 
-            let bi = self.molecules[index]
+            let el_b_index = self.molecules[index]
                 .elements
                 .iter()
                 .position(|(_, pt, _)| *pt == b)
@@ -551,14 +551,15 @@ impl LocalState {
             match modifier.1 {
                 Modifier::Weaken => {
                     // Reduce the bond and give back electrons
-                    self.molecules[index].elements[ai].2 += 1;
-                    self.molecules[index].elements[bi].2 += 1;
+                    self.molecules[index].elements[el_a_index].2 += 1;
+                    self.molecules[index].elements[el_b_index].2 += 1;
                     self.molecules[index].bonds[bond_index].2 -= 1;
 
                     // If it was more than a single bond (originally), we're done now (no splitting)
                     if count > 1 {
                         continue;
                     }
+
                     // We're going to modify the molecule, clone it and we'll put the new one in later
                     let mut src = self.molecules[index].clone();
                     src.bonds.remove(bond_index);
@@ -651,13 +652,13 @@ impl LocalState {
                 },
                 Modifier::Strengthen => {
                     // Verify we have enough free electrons
-                    if self.molecules[index].elements[ai].2 == 0 || self.molecules[index].elements[bi].2 == 0 {
+                    if self.molecules[index].elements[el_a_index].2 == 0 || self.molecules[index].elements[el_b_index].2 == 0 {
                         continue;
                     }
 
                     // If so, strengthen the bond and take the electrons
-                    self.molecules[index].elements[ai].2 -= 1;
-                    self.molecules[index].elements[bi].2 -= 1;
+                    self.molecules[index].elements[el_a_index].2 -= 1;
+                    self.molecules[index].elements[el_b_index].2 -= 1;
                     self.molecules[index].bonds[bond_index].2 += 1;
                 },
                 Modifier::Rotate => todo!(),
@@ -1268,14 +1269,14 @@ mod test_solutions {
     test! {test_03_01, "03 - Gray", "01 - Helium.txt", "WDDDDDSAAWASSDSSS"}
     test! {test_03_02, "03 - Gray", "02 - Tee.txt", "WWASWDDDSAAWASDSSADSSWWW"}
     test! {test_03_03, "03 - Gray", "03 - Freedom.txt", "AAWAWDD"}
-    // test! {test_03_04, "03 - Gray", "04 - Against the Wall.txt", "WAASWAWWDSASDDSSSAWWSAAWWDDWWDDSSAAWAWASASDDDD"}
+    test! {test_03_04, "03 - Gray", "04 - Against the Wall.txt", "WAASWAWWDSASDDSSSAWWSAAWWDDWWDDSSAAWAWASASDDDD"}
     test! {test_03_05, "03 - Gray", "05 - Pathways.txt", "AWWDSASDSSSDDWWAASSAAWW"}
-    // test!{test_03_06, "03 - Gray", "06 - Three Doors.txt", "DAWWSAAWWAWDDSDSSAASDSDWWWSDDWSDSSAWWAAAAWWDD"} // Slow, takes about 4 minutes
+    test!{test_03_06, "03 - Gray", "06 - Three Doors.txt", "DAWWSAAWWAWDDSDSSAASDSDWWWSDDWSDSSAWWAAAAWWDD"}
     test! {test_03_07, "03 - Gray", "07 - Cloud.txt", "DWWASDDSWWASSD"}
-    // test! {test_03_08, "03 - Gray", "08sd - Planning.txt", "WDSDSAASSAWDWASAAWDDDDSDDW"}
-    // test! {test_03_09, "03 - Gray", "09 - Out of the Way.txt", "AWDDDSAWAAAWWDDDDSWAAAASSDDWSDSDDWAAADDWWAAADSSASAW"}
-    // test! {test_03_10, "03 - Gray", "10 - Impasse.txt", "DWADDSASAAWADDSSWWDWWA"}
-    // test! {test_03_11, "03 - Gray", "11 - Fetch.txt", "WDWASSSADDASWWWWDSAWASDSDAA"}
+    test! {test_03_08, "03 - Gray", "08 - Planning.txt", "WDSDSAASSAWDWASAAWDDDDSDDW"}
+    test! {test_03_09, "03 - Gray", "09 - Out of the Way.txt", "AWDDDSAWAAAWWDDDDSWAAAASSDDWSDSDDWAAADDWWAAADSSASAW"}
+    test! {test_03_10, "03 - Gray", "10 - Impasse.txt", "DWADDSASAAWADDSSWWDWWA"}
+    test! {test_03_11, "03 - Gray", "11 - Fetch.txt", "WDWASSSADDASWWWWDSAWASDSDAA"}
     test! {test_03_12, "03 - Gray", "12 - Drill.txt", "AWWWWDSASSSDWDWAWWAASDSDASSDWAWWDSWWDDSAS"}
 
     test! {test_04_01, "04 - Red", "01 - Split.txt", "DDWWDSSDDDAAWA"}
@@ -1304,10 +1305,10 @@ mod test_solutions {
     test! {test_05_11, "05 - Green", "11 - Cat's Cradle.txt", "DWWDAAASSWWDDDSSSAAA"}
 
     test! {test_06_01, "06 - Dark Green", "01 - Papers Please.txt", "DADDDDDDDASWWASAAA"}
-    // test! {test_06_02, "06 - Dark Green", "02 - Airplane.txt", "SSWWWAASDWDDDSAAWWSWDSSSADWDWDDSAAWASSASDAWWAWAASDDWDSSDSAWWWWDADSSSSS"} // Slow
+    test! {test_06_02, "06 - Dark Green", "02 - Airplane.txt", "SSWWWAASDDDWDSAAWWSWDSSSADWWDDDSAAWASSASDAWWAWAASDDWDSSDSAWWWWDADSSSSS"} // Slow
     test! {test_06_03, "06 - Dark Green", "03 - Mine Field.txt", "SDDDDSSSAWAWAWDSAAWWSDSDSDSAAAAAA"}
-    // test! {test_06_04, "06 - Dark Green", "04 - Workshop.txt", ""} // Doesn't currently solve
+    test! {test_06_04, "06 - Dark Green", "04 - Workshop.txt", ""}
 
-    // test! {test_07_01, "07 - Dark Red", "01 - Plunge.txt", "WDSSWASAWWDWDSSADWAASDDSAWAWDSSDWDDD"}
+    test! {test_07_01, "07 - Dark Red", "01 - Plunge.txt", "WDSSWASAWWDWDSSADWAASDDSAWAWDSSDWDDD"}
     test! {test_07_02, "07 - Dark Red", "02 - Compass.txt", "SSDDASAAWADSDS"}
 }
