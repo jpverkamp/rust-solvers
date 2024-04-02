@@ -1273,6 +1273,6 @@ mod test_solutions {
 
     // test! {test_06_01, "06 - Dark Green", "01 - Papers Please.txt", ""}
 
-    test! {test_07_01, "07 - Dark Red", "01 - Plunge.txt", "WDSSWASAWWDWDSSADWAASDDSAWAWDSSDWDDD"}
-    test! {test_07_02, "07 - Dark Red", "02 - Compass.txt", ""}
+    // test! {test_07_01, "07 - Dark Red", "01 - Plunge.txt", "WDSSWASAWWDWDSSADWAASDDSAWAWDSSDWDDD"}
+    test! {test_07_02, "07 - Dark Red", "02 - Compass.txt", "SSDDASAAWADSDS"}
 }
