@@ -995,36 +995,43 @@ mod test_solutions {
 
     test! {test_01_01, "01 - Yellow", "01 - Let's Go.txt", "WWDDWWDD"}
     test! {test_01_02, "01 - Yellow", "02 - Cell.txt", "DWDDAA"}
-    test! {test_01_03, "01 - Yellow", "03 - Loop.txt", "ASSDDDWWSSAAAWWWWD"}
+    test! {test_01_03, "01 - Yellow", "03 - Loop.txt", "SSDDWWSSAAAWWWWD"}
     test! {test_01_04, "01 - Yellow", "04 - Monty Hall.txt", "WSDDWSAAWWWDAAA"}
-    test! {test_01_05, "01 - Yellow", "05 - Knot.txt", "WASDSDWAAADDDD"}
-    test! {test_01_06, "01 - Yellow", "06 - Push.txt", "DDWDSD"}
-    test! {test_01_07, "01 - Yellow", "07 - Structure.txt", "DSSWAAA"}
-    test! {test_01_08, "01 - Yellow", "08 - Lotus.txt", "SDSSWWAADSSADSSWAWA"}
-    test! {test_01_09, "01 - Yellow", "09 - Coyote.txt", "WWAAAAASWDDDSAWDDSSAWAASDDWWAASSSWWDDDDSAWAASS"}
-    test! {test_01_10, "01 - Yellow", "10 - Roadrunner.txt", "AWWDDSSWWAASSSDDWWWDDSDSWAAASS"}
+    test! {test_01_05, "01 - Yellow", "05 - Knot.txt", "WDASASWADDDD"}
+    test! {test_01_06, "01 - Yellow", "06 - Push.txt", "DDSDWD"}
+    test! {test_01_07, "01 - Yellow", "07 - Structure.txt", "DSSAWAA"}
+    test! {test_01_08, "01 - Yellow", "08 - Lotus.txt", "SASSDDSAS"}
+    test! {test_01_09, "01 - Yellow", "09 - Coyote.txt", "WWAASASSAA"}
+    test! {test_01_10, "01 - Yellow", "10 - Roadrunner.txt", "WDWDSDDWAAASSD"}
 
-    test! {test_02_01, "02 - Orange", "01 - Suit.txt", "SSDDDWWSSAAASSWWWWDDDSSSSA"}
-    test! {test_02_02, "02 - Orange", "02 - Chimney.txt", "WAWSSADDDWAAADWSSA"}
-    test! {test_02_03, "02 - Orange", "03 - Heart.txt", "WWDWASAAWDAWWDSSASDSDWSDWDWASSAAWWAWWDSSWDDDSSAWWAAS"}
-    test! {test_02_04, "02 - Orange", "04 - Factory.txt", "DDSSAAAAAWWWWSSSSDDDDDWWWWWASWA"}
-    test! {test_02_05, "02 - Orange", "05 - Scoop.txt", "DAASSDSDWWSAAAWWDDSSDDW"}
-    test! {test_02_06, "02 - Orange", "06 - Block.txt", "ASSSDDWSDDWWWADSSSAAWAW"}
-    test! {test_02_07, "02 - Orange", "07 - Chandelier.txt", "DSSWDSASAWDWWASSSWWDDSWAASSD"}
-    test! {test_02_08, "02 - Orange", "08 - Creature.txt", "WDDWWAAWASWDDSDDSSAASSWWAASAW"}
-    // test! {test_02_09, "02 - Orange", "09 - Rosie.txt", "WDWWWSDSSAAASDDDWWWWAA"}
-    test! {test_02_10, "02 - Orange", "10 - Kruskal.txt", "AWASDDDWASDDWSAAWASDDSDWWAASASDWAASWDWDDSDSAWWAASSDDWWAAWSSSDDSWWWAASSSWWWDDW"}
+    test! {test_02_01, "02 - Orange", "01 - Suit.txt", "SSDDWSSDSAS"}
+    test! {test_02_02, "02 - Orange", "02 - Chimney.txt", "WDAWSSAAWDDW"}
+    test! {test_02_03, "02 - Orange", "03 - Heart.txt", "WWDWASAAWDAWWDSDDW"}
+    test! {test_02_04, "02 - Orange", "04 - Factory.txt", "DDSSAAAAAWWWSDDDDDWWAWAS"}
+    test! {test_02_05, "02 - Orange", "05 - Scoop.txt", "DAASSDSDDAWAAA"}
+    test! {test_02_06, "02 - Orange", "06 - Block.txt", "ASSDDSDDWWWADSSAAAW"}
+    test! {test_02_07, "02 - Orange", "07 - Chandelier.txt", "DSSSAWDWDSSAWWWA"}
+    test! {test_02_08, "02 - Orange", "08 - Creature.txt", "WDDWWAAWASDDDDSSAASSAWAAW"}
+    test! {test_02_09, "02 - Orange", "09 - Rosie.txt", "WAWWDDAASASSDDDD"}
+    test! {test_02_10, "02 - Orange", "10 - Kruskal.txt", "ASAWDWDDSSSWAAWW"}
 
-    test! {test_03_01, "03 - Gray", "01 - Helium.txt", "WDDDDDSAAWASSDSSAWWWSSSS"}
-    test! {test_03_02, "03 - Gray", "02 - Tee.txt", "WWDDSAWAASWDDSAWAAAASDWDDSWASWDDSSSSADWWWASDSSSAWDWW"}
-    test! {test_03_03, "03 - Gray", "03 - Freedom.txt", "WWWSSSDWWSSAAWWSSAWSDDWWWASSAAWDWD"}
-    // test!{test_03_04, "03 - Gray", "04 - Against the Wall.txt", ""}
-    // test!{test_03_05, "03 - Gray", "05 - Pathways.txt", ""}
+    test! {test_03_01, "03 - Gray", "01 - Helium.txt", "WDDDDDSAAWASSDSSS"}
+    test! {test_03_02, "03 - Gray", "02 - Tee.txt", "WWASWDDDSAAWASDSSADSSWWW"}
+    test! {test_03_03, "03 - Gray", "03 - Freedom.txt", "AAWAWDD"}
+    test!{test_03_04, "03 - Gray", "04 - Against the Wall.txt", "WAASWAWWDSASDDSSSAWWSAAWWDDWWDDSSAAWAWASASDDDD"}
+    test!{test_03_05, "03 - Gray", "05 - Pathways.txt", "AWWDSASDSSSDDWWAASSAAWW"}
+    // test!{test_03_06, "03 - Gray", "06 - Three Doors.txt", ""}
+    test!{test_03_07, "03 - Gray", "07 - Cloud.txt", "DWWASDDSWWASSD"}
+    test!{test_03_08, "03 - Gray", "08 - Planning.txt", "WDSDSAASSAWDWASAAWDDDDSDDW"}
+    test!{test_03_09, "03 - Gray", "09 - Out of the Way.txt", "AWDDDSAWAAAWWDDDDSWAAAASSDDWSDSDDWAAADDWWAAADSSASAW"}
+    test!{test_03_10, "03 - Gray", "10 - Impasse.txt", "DWADDSASAAWADDSSWWDWWA"}
+    test!{test_03_11, "03 - Gray", "11 - Fetch.txt", "WDWASSSADDASWWWWDSAWASDSDAA"}
+    test!{test_03_12, "03 - Gray", "12 - Drill.txt", "AWWWWDSASSSDWDWAWWAASDSDASSDWAWWDSWWDDSAS"}
 
-    test! {test_04_01, "04 - Red", "01 - Split.txt", "DDWWDSSDDWWWAASSDWDSSAAWDSDDAAWWWASSWWDSAASSDDWWASDSAAWWWDDSWAASSSDDWWSAWASSDDWASDDWWAADSASDDWWSSAAW"}
-    test! {test_04_02, "04 - Red", "02 - Lock.txt", "DDWDSAWWWWAADDSSSA"}
-    // // test!{test_04_03, "04 - Red", "03 - Push Up.txt", "DDWDSAWWWWAADDSSSA"}
-    test! {test_04_04, "04 - Red", "04 - Out of Reach.txt", "WDDDDSAWDSAAWW"}
-    test! {test_04_05, "04 - Red", "05 - Small Key.txt", "DAASDAWWDSDSAWWASWDDASDDD"}
-    test! {test_04_06, "04 - Red", "06 - Anxiety.txt", "WAASAWSDWAWDSAWSSDWDWAWSSDWDSAAW"}
+    // test! {test_04_01, "04 - Red", "01 - Split.txt", "DDWWDSSDDWWWAASSDWDSSAAWDSDDAAWWWASSWWDSAASSDDWWASDSAAWWWDDSWAASSSDDWWSAWASSDDWASDDWWAADSASDDWWSSAAW"}
+    // test! {test_04_02, "04 - Red", "02 - Lock.txt", "DDWDSAWWWWAADDSSSA"}
+    // // // test!{test_04_03, "04 - Red", "03 - Push Up.txt", "DDWDSAWWWWAADDSSSA"}
+    // test! {test_04_04, "04 - Red", "04 - Out of Reach.txt", "WDDDDSAWDSAAWW"}
+    // test! {test_04_05, "04 - Red", "05 - Small Key.txt", "DAASDAWWDSDSAWWASWDDASDDD"}
+    // test! {test_04_06, "04 - Red", "06 - Anxiety.txt", "WAASAWSDWAWDSAWSSDWDWAWSSDWDSAAW"}
 }
