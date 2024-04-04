@@ -766,29 +766,7 @@ impl LocalState {
 
                     // We now have two molecules, replace src and add dst
                     self.molecules[index] = src;
-                    // self.molecules.push(dst);
-
-                    // The original code is better (.push) but causes a bug in Dark Red/Around
-                    /*
-                    X h -
-                    /|
-                    - h H
-
-                    Move left, the bond is broken so the moving H can bond to either one, we choose:
-
-                    X h -
-                    /
-                    H-H -
-
-                    But the game expects:
-
-                    X H -
-                    /|
-                    h H -
-
-                    This is happening because the split molecule goes to the end of the list so is lower priority for the bond
-                    */
-                    self.molecules.insert(index + 1, dst);
+                    self.molecules.push(dst);
                 }
                 ModifierKind::Strengthen => {
                     // Verify we have enough free electrons
