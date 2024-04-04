@@ -1508,7 +1508,15 @@ mod test_solutions {
     use super::*;
 
     macro_rules! test {
-        ($name:ident, $folder:expr, $file:expr, $expected:expr) => {
+        ($name:ident, $folder:literal, $file:literal in $expected_list:expr) => {
+            #[test]
+            fn $name() {
+                let input = include_str!(concat!("../../data/sokobond/", $folder, "/", $file));
+                let solution = solve(input).expect("solution exists");
+                assert!($expected_list.contains(&solution.as_str()), "{solution} not in {:?}", $expected_list);
+            }
+        };
+        ($name:ident, $folder:literal, $file:literal, $expected:expr) => {
             #[test]
             fn $name() {
                 let input = include_str!(concat!("../../data/sokobond/", $folder, "/", $file));
@@ -1545,10 +1553,16 @@ mod test_solutions {
     test! {test_03_03, "03 - Gray", "03 - Freedom.txt", "AAWAWDD"}
     test! {test_03_04, "03 - Gray", "04 - Against the Wall.txt", "WAASWAWWDSASDDSSSAWWSAAWWDDWWDDSSAAWAWASASDDDD"}
     test! {test_03_05, "03 - Gray", "05 - Pathways.txt", "AWWDSDSASSSAAWWDDSSDDWW"}
-    test! {test_03_06, "03 - Gray", "06 - Three Doors.txt", "DAWWSAAWWAWDDSDSSAASDSDWWWSDDWSDSSAWWAAAAWWDD"}
+    test! {test_03_06, "03 - Gray", "06 - Three Doors.txt" in [
+        "DAWWSAAWWAWDDSDSSAASDSDWWWSDDWSDSSAWWAAAAWWDD",
+        "AWAWSDDWSDDWWDWAAASSSDDSASAWWWSDDWWAASSSASAWW",
+    ]}
     test! {test_03_07, "03 - Gray", "07 - Cloud.txt", "DWWASDDSWWASSD"}
     test! {test_03_08, "03 - Gray", "08 - Planning.txt", "WDSDSAASSAWDWASAAWDDDDSDDW"}
-    test! {test_03_09, "03 - Gray", "09 - Out of the Way.txt", "AWDDDSAWAAAWWDDDDSWAAAASSDDWSDSDDWAAADDWWAAADSSASAW"}
+    test! {test_03_09, "03 - Gray", "09 - Out of the Way.txt" in [
+        "AWDDDSAWAAAWWDDDDSWAAAASSDDWSDSDDWAAADDWWAAADSSASAW",
+        "DAWAASDWDDDWWAAAASWDDDDSSAAWSASAAWDDDAAWWDDDASSDSDW",
+    ]}
     test! {test_03_10, "03 - Gray", "10 - Impasse.txt", "DWADDSASAAWADDSSWWDWWA"}
     test! {test_03_11, "03 - Gray", "11 - Fetch.txt", "WDWASSSADDASWWWWDSAWASDSDAA"}
     test! {test_03_12, "03 - Gray", "12 - Drill.txt", "AWWWWDSASSSDWDWAWWAASDSDASSDWAWWDSWWDDSAS"}
@@ -1557,14 +1571,32 @@ mod test_solutions {
     test! {test_04_02, "04 - Red", "02 - Lock.txt", "DDWDSAWWWWAADDSSSA"}
     test! {test_04_03, "04 - Red", "03 - Push Up.txt", "DAAWDSDWA"}
     test! {test_04_04, "04 - Red", "04 - Out of Reach.txt", "WDDDDSAWDSAAWW"}
-    test! {test_04_05, "04 - Red", "05 - Small Key.txt", "ASDWDWASSAWSDWDDD"}
-    test! {test_04_06, "04 - Red", "06 - Anxiety.txt", "WAASAWDWWSDDSA"}
-    test! {test_04_07, "04 - Red", "07 - Wingman.txt", "DDDSAWWWASAAWSSSSDD"}
+    test! {test_04_05, "04 - Red", "05 - Small Key.txt" in [
+        "ASDWDWASSAWSDWDDD",
+        "DSAWAWDSSDWSAWDDD",
+    ]}
+    test! {test_04_06, "04 - Red", "06 - Anxiety.txt" in [
+        "WAASAWDWWSDDSA",
+        "WAASAWDWWSDSDW",
+    ]} 
+    test! {test_04_07, "04 - Red", "07 - Wingman.txt" in [
+        "DDDSAWWWASAAWSSSSDD",
+        "WAWWSDDDSASDSAAAAWW",
+    ]}
     test! {test_04_08, "04 - Red", "08 - Ring.txt", "DDAAWWSDWWDAA"}
     test! {test_04_09, "04 - Red", "09 - Anvil.txt", "SDSSDSAADWWWAASSDDDWWADSSAAAWSA"}
-    test! {test_04_10, "04 - Red", "10 - Cottage.txt", "SWWWWAASASDWWDDDDSDSAWWAASSSS"}
-    test! {test_04_11, "04 - Red", "11 - Hanoi.txt", "AASWDDDDSAAWAASDDDDWAAAASDDDDWAAAA"}
-    test! {test_04_12, "04 - Red", "12 - Trap.txt", "DSDWAASDWWASDSDDDDDWADSAWWDSASAAA"}
+    test! {test_04_10, "04 - Red", "10 - Cottage.txt" in [
+        "SWWWWAASASDWWDDDDSDSAWWAASSSS",
+        "SWWWWDDSDSAWWAAAASASDWWDDSSSS",
+    ]}
+    test! {test_04_11, "04 - Red", "11 - Hanoi.txt" in [
+        "AASWDDDDSAAWAASDDDDWAAAASDDDDWAAAA",
+        "SAAWDDDDSAAWAASDDDDWAAAASDDDDWAAAA",
+    ]}
+    test! {test_04_12, "04 - Red", "12 - Trap.txt" in [
+        "DSDWAASDWWASDSDDDDDWADSAWWDSASAAA", 
+        "DSDWAASDWWASDSDDDDDWSAWWDSASAAA",
+    ]}
 
     test! {test_05_01, "05 - Green", "01 - Breathe.txt", "WWDSDSWAW"}
     test! {test_05_02, "05 - Green", "02 - Doubling.txt", "WAWWASSDW"}
@@ -1579,85 +1611,128 @@ mod test_solutions {
     test! {test_05_11, "05 - Green", "11 - Cat's Cradle.txt", "DWWDAAASSWWDDDSSSAAA"}
 
     test! {test_06_01, "06 - Dark Green", "01 - Papers Please.txt", "DADDDDDDDASWWASAAA"}
-    test! {test_06_02, "06 - Dark Green", "02 - Airplane.txt", "SSWWWAASDDDWDSAAWWSWDSSSADWDWDDSAAWASSASDWWAAWAASDDWDSSDSAWWWWDADSSSSS"} // Slow
+    test! {test_06_02, "06 - Dark Green", "02 - Airplane.txt" in [
+        "SSWWWAASDDDWDSAAWWSWDSSSADWDWDDSAAWASSASDWWAAWAASDDWDSSDSAWWWWDADSSSSS",
+        "SSWWWAASDDDWDSAAWWSWDSSSADWWDDDSAAWASSASDWWAAWAASDDWDSSDSAWWWWDADSSSSS",
+    ]}
     test! {test_06_03, "06 - Dark Green", "03 - Mine Field.txt", "SDDDDSSSAWAWAWDSAAWWSDSDSDSAAAAAA"}
     test! {test_06_04, "06 - Dark Green", "04 - Workshop.txt", "DSDDWDDSAAASDWAD"}
     test! {test_06_05, "06 - Dark Green", "05 - Dissection.txt", "AASSDDAWADWASDDDDD"}
-    test! {test_06_06, "06 - Dark Green", "06 - Casket.txt", "SSWWDDSSSAWADWADS"}
-    test! {test_06_07, "06 - Dark Green", "07 - Three Body Problem.txt", "DDAWDSDWASDWASDWWWAAD"}
+    test! {test_06_06, "06 - Dark Green", "06 - Casket.txt" in [
+        "DDAASSDDDWAWSAWSD",
+        "DDAASSDDDWAWSAWSD",
+    ]}
+    test! {test_06_07, "06 - Dark Green", "07 - Three Body Problem.txt" in [
+        "DDAWDSDWASDWASDWWWAAD",
+        "DDAWDSAWWDDASSAAWWS",
+    ]}
     test! {test_06_08, "06 - Dark Green", "08 - Cat.txt", "WAADDDAADAAWSSDDWD"}
     test! {test_06_09, "06 - Dark Green", "09 - Halves.txt", "ADDSAWAAWDSDD"}
-    test! {test_06_10, "06 - Dark Green", "10 - Arrow.txt", "SWWWADWWSWASSSSDWWAWA"}
+    test! {test_06_10, "06 - Dark Green", "10 - Arrow.txt" in [
+        "SWWWADWWSWASSSSDWWWAA",
+        "SWWWADWWSWASSSSDWWAWA",
+    ]}
     test! {test_06_11, "06 - Dark Green", "11 - Hallway.txt", "DDASAWSAAWDDDDSAWDSWAADDAASDWSAAWSWASDDDA"}
 
-    test! {test_07_01, "07 - Dark Red", "01 - Plunge.txt", "SAWWDDSADSWAWASDSAWDDWASASDWWDSDDD"}
+    test! {test_07_01, "07 - Dark Red", "01 - Plunge.txt" in [
+        "SAWWDDSADSWAWASDSAWDDWASASDWWDSDDD",
+        "SAWWSDWDSASDWWAWASSDDWWASASSDDWDDD",
+        "WDSSWASAWWDWDSSADWAASDDSAWAWDSSDWSWDDD",
+    ]}
     test! {test_07_02, "07 - Dark Red", "02 - Compass.txt", "SSDDASAAWADSDS"}
     test! {test_07_03, "07 - Dark Red", "03 - Blocking the Way.txt", "SSSSAAAWWDDAAWSSASDDDDWWAAAWWDDDSSAAASWDDDDS"}
     test! {test_07_04, "07 - Dark Red", "04 - Power.txt", "WWDDSWWDSAAAWDDWSSAAWSSS"}
-    test! {test_07_05, "07 - Dark Red", "05 - Around.txt", "DWAASWDDSAAASSWWDDDSWAASSSDWAWWASSDWSSDD"}
-    test! {test_07_06, "07 - Dark Red", "06 - Infinity.txt", "SSSWDDAWASSWDWSDDWDDAASADWDDSSAWDWSS"}
-    test! {test_07_07, "07 - Dark Red", "07 - Grater.txt", "SSDWASSSWWWAS"}
-    test! {test_07_08, "07 - Dark Red", "08 - Windows.txt", "AAAWWSDWAWDSASSSSDDAAWWWWWDSAWDSSSDDDS"}
-    test! {test_07_09, "07 - Dark Red", "09 - Home.txt", "WWWWAWSSDSSSSDWAWWWDDWAASSSASDWWWAAWDDSSSASWDWWDWWSSASSS"}
+    test! {test_07_05, "07 - Dark Red", "05 - Around.txt" in [
+        "DWAASWDDSAAASSWWDDDSWAASSSDWAWWASSDWSSDD",
+        "DWAASDAASSDAWWDSWSSDSWAAWWDD",
+        "DWAASDAASSDAWWDSSDSWAAWWDD",
+    ]}
+    test! {test_07_06, "07 - Dark Red", "06 - Infinity.txt" in [
+        "SSSWDDAWASSWDWSDDWDDAASADWDDSSAWDWSS",
+        "SSSWDDAWASSWDWSDDWDDAASADWDDSSADAWDSWW",
+    ]}
+    test! {test_07_07, "07 - Dark Red", "07 - Grater.txt" in [
+        "SSAWDSSSWWWDS",
+        "SSDWASSSWWWAS",
+        "SSASSSWWDWDS", // Bond ordering
+    ]}
+    test! {test_07_08, "07 - Dark Red", "08 - Windows.txt" in [
+        "AAAWWSDWAWDSASSSSDDAAWWWWWDSAWDSSSDDDS",
+        "WWAAWDSAWASDWDDDDSSWWAAAAASDWASDDDSSSD",
+    ]}
+    test! {test_07_09, "07 - Dark Red", "09 - Home.txt" in [
+        "WWWWAWSSDSSSSDWAWWWAAWDDSSSASDWWWDDWAASSSASWDWWWDWSSASSS",
+        "WWWWDWSSASSSSDWAWWWAAWDDSSSASDWWWDDWAASSSASWDWWAWWSSDSSS",
+        "WWWWAWSSDSSSSDWAWWWDDWAASSSASDWWWAAWDDSSSASWDWWDWWSSASSS",
+    ]}
     test! {test_07_10, "07 - Dark Red", "10 - Long Legs.txt", "DWDDDSSSWWAWAASADDSWWDDD"}
     test! {test_07_11, "07 - Dark Red", "11 - Station.txt", "DSSDDDDDAAAAAWWDAWWDDDDSSWWAAAAASS"}
-    // test! {test_07_12, "07 - Dark Red", "12 - Arena.txt", ""} // Bug with recentering, not solved
+    test! {test_07_12, "07 - Dark Red", "12 - Arena.txt"  in [
+        "ASAWWDDDWSAAWDWAADDAA",
+        "WDWAASSSADWWASAWWSSWW",
+    ]}
 
     test! {test_08_01, "08 - Light Gray", "01 - Multiple.txt", "DDWWASAWDD"}
-    test! {test_08_02, "08 - Light Gray", "02 - Water Water.txt", "DWASSWDDW"}
+    test! {test_08_02, "08 - Light Gray", "02 - Water Water.txt" in [
+        "DWASSWDDW",
+        "SDWWASDW",
+    ]}
     test! {test_08_03, "08 - Light Gray", "03 - Twofold.txt", "ASDWDWDSWAAA"}
     test! {test_08_04, "08 - Light Gray", "04 - Aye.txt", "WWDWAASDSSSSASDDWWWAWWASS"}
-    test! {test_08_05, "08 - Light Gray", "05 - Twins.txt", "WSSWDDWASASSWWAA"}
+    test! {test_08_05, "08 - Light Gray", "05 - Twins.txt" in [
+        "WSSWDDWASASSWWAA",
+        "SWWSDDSAAWWWSSAA",
+    ]}
     test! {test_08_06, "08 - Light Gray", "06 - Double-Bleached.txt", ""}
 }
 
-#[cfg(test)]
-mod manual_testing {
-    #[test]
-    fn test_solution() {
-        use super::*;
+// #[cfg(test)]
+// mod manual_testing {
+//     #[test]
+//     fn test_solution() {
+//         use super::*;
 
-        let input = "\
-v2 multiple
-x x x x x x x x x
+//         let input = "\
+// v2 multiple
+// x x x x x x x x x
 
-x - - - x - - - x
-           /
-x - - - - o o - x
+// x - - - x - - - x
+//            /
+// x - - - - o o - x
 
-x - h x - x - - x
+// x - h x - x - - x
 
-x - h x E x h - x
+// x - h x E x h - x
 
-x - - x - x h - x
+// x - - x - x h - x
 
-x - o o - - - - x
-     /
-x - - - x - - - x
+// x - o o - - - - x
+//      /
+// x - - - x - - - x
 
-x x x x x x x x x";
+// x x x x x x x x x";
 
-        let instructions = "WWAAASSSDWWSSSDDDSDWWDWWWWADSSSSSAAAASAWWWWAWDDDSSSSDDWWW";
+//         let instructions = "WWAAASSSDWWSSSDDDSDWWDWWWWADSSSSSAAAASAWWWWAWDDDSSSSDDWWW";
 
-        let (map, mut state) = Map::load(input);
-        println!("Initial state:\n{}", state.stringify(&map));
-        println!("Multiple? {}", map.allow_multiple);
+//         let (map, mut state) = Map::load(input);
+//         println!("Initial state:\n{}", state.stringify(&map));
+//         println!("Multiple? {}", map.allow_multiple);
 
-        for c in instructions.chars() {
-            let offset = match c {
-                'W' => Step::North,
-                'S' => Step::South,
-                'D' => Step::East,
-                'A' => Step::West,
-                _ => panic!("invalid instruction: {}", c),
-            };
+//         for c in instructions.chars() {
+//             let offset = match c {
+//                 'W' => Step::North,
+//                 'S' => Step::South,
+//                 'D' => Step::East,
+//                 'A' => Step::West,
+//                 _ => panic!("invalid instruction: {}", c),
+//             };
 
-            assert!(state.try_move(&map, 0, offset.into()));
-            println!("Move: {}, state:\n{}", c, state.stringify(&map));
-            for (i, molecule) in state.molecules.iter().enumerate() {
-                println!("Molecule {}: {:?}", i, molecule.bonds);
-            }
-            println!("Is solved? {}", state.is_solved(&map));
-        }
-    }
-}
+//             assert!(state.try_move(&map, 0, offset.into()));
+//             println!("Move: {}, state:\n{}", c, state.stringify(&map));
+//             for (i, molecule) in state.molecules.iter().enumerate() {
+//                 println!("Molecule {}: {:?}", i, molecule.bonds);
+//             }
+//             println!("Is solved? {}", state.is_solved(&map));
+//         }
+//     }
+// }

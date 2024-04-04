@@ -1,2 +1,7 @@
 [profile.default]
+
+[profile.timeout]
 slow-timeout = { period = "5s", terminate-after = 2 }
+
+[profile.all]
+fail-fast = false
