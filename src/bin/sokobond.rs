@@ -425,11 +425,6 @@ impl Molecule {
 
         // Go through each molecule pairwise
         for a in self.elements.iter_mut() {
-            // Skip our elements that are no longer free
-            if a.free_electrons == 0 {
-                continue;
-            }
-
             for b in other.elements.iter_mut() {
                 let real_a = self.offset + offset + a.offset;
                 let real_b = other.offset + b.offset;
@@ -440,7 +435,7 @@ impl Molecule {
                 }
 
                 // Not enough free electrons
-                if b.free_electrons == 0 {
+                if a.free_electrons == 0 || b.free_electrons == 0 {
                     continue;
                 }
 
