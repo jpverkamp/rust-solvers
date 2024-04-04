@@ -190,20 +190,27 @@ impl Map {
         }
 
         // Try to bond each original pair of molecules
-        'settled: loop {
+        'bonding: loop {
             for i in 0..molecules.len() {
-                for j in (i + 1)..molecules.len() {
-                    let mut primary = molecules[i].clone();
+                for j in 0..molecules.len() {
+                    if i == j {
+                        continue;
+                    }
 
+                    let mut primary = molecules[i].clone();
                     if primary.try_bond(Point::ZERO, &molecules[j]) {
                         molecules[i] = primary;
-                        molecules.remove(j);
-                        continue 'settled;
+                        molecules[j].active = false;
+                        continue 'bonding;
                     }
                 }
             }
-            break;
+
+            break 'bonding;
         }
+
+        // Remove molecules marked inactive
+        molecules.retain(|m| m.active);
 
         // Modifiers have to be applied in a specific order: weaken, strengthen, rotate(?)
         modifiers.sort_by_key(|m| m.kind);
@@ -327,6 +334,7 @@ struct Bond {
 // Each element contains the Element, offset, and remaining free electrons
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 struct Molecule {
+    active: bool,
     offset: Point,
     elements: Vec<Element>,
     bonds: Vec<Bond>,
@@ -335,6 +343,7 @@ struct Molecule {
 impl Molecule {
     fn new(offset: Point, element: ElementKind) -> Molecule {
         Molecule {
+            active: true,
             offset,
             elements: vec![Element {
                 kind: element,
@@ -360,6 +369,10 @@ impl Molecule {
 
     // If the given molecule at an offset would intersect with a wall
     fn intersects_wall(&self, offset: Point, map: &Map) -> bool {
+        if !self.active {
+            return false;
+        }
+
         for element in &self.elements {
             let target = self.offset + element.offset + offset;
             if map.is_wall(target.x as usize, target.y as usize) {
@@ -372,6 +385,10 @@ impl Molecule {
 
     // If the given molecule + an offset would intersect another molecule
     fn intersects(&self, offset: Point, other: &Molecule) -> bool {
+        if !self.active || !other.active {
+            return false;
+        }
+
         for element in &self.elements {
             for other_element in &other.elements {
                 if self.offset + element.offset + offset == other.offset + other_element.offset {
@@ -387,6 +404,10 @@ impl Molecule {
     // Offset is between the centers of the molecules
     // Updates and returns true if successful
     fn try_bond(&mut self, offset: Point, other: &Molecule) -> bool {
+        if !self.active || !other.active {
+            return false;
+        }
+
         let mut bound = false;
 
         // Make local mutable copies
@@ -542,15 +563,27 @@ impl LocalState {
     // Will also move all other touching molecules out of the way
     // Returns the new state if successful
     fn try_move(&mut self, map: &Map, index: usize, offset: Point) -> bool {
+        self.__try_move_recursive__(map, index, offset, true)
+    }
+
+    fn __try_move_recursive__(
+        &mut self,
+        map: &Map,
+        index: usize,
+        offset: Point,
+        first: bool,
+    ) -> bool {
         if index > self.molecules.len() {
             return false;
         }
+
+        let original_molecules = self.molecules.clone();
 
         // Collect all map modifiers that we are trying to cross (this may take multiple passes)
         let mut modifiers_applied = Vec::new();
         loop {
             let mut bond_to_modify = None;
-            
+
             'find_bond: for modifier in map.modifiers.iter() {
                 if modifiers_applied.contains(&modifier) {
                     continue;
@@ -728,7 +761,29 @@ impl LocalState {
 
                     // We now have two molecules, replace src and add dst
                     self.molecules[index] = src;
-                    self.molecules.push(dst);
+                    // self.molecules.push(dst);
+
+                    // The original code is better (.push) but causes a bug in Dark Red/Around
+                    /*
+                    X h -
+                    /|
+                    - h H
+
+                    Move left, the bond is broken so the moving H can bond to either one, we choose:
+
+                    X h -
+                    /
+                    H-H -
+
+                    But the game expects:
+
+                    X H -
+                    /|
+                    h H -
+
+                    This is happening because the split molecule goes to the end of the list so is lower priority for the bond
+                    */
+                    self.molecules.insert(index + 1, dst);
                 }
                 ModifierKind::Strengthen => {
                     // Verify we have enough free electrons
@@ -747,66 +802,72 @@ impl LocalState {
             }
         }
 
-        // Collect all molecules that would move
-        let mut would_move = vec![index];
+        // Make sure we won't hit a wall
+        // Check each moving molecule to see if it would hit a wall
+        if self.molecules[index].intersects_wall(offset, map) {
+            self.molecules = original_molecules;
+            return false;
+        }
 
-        // Recursively add any molecules we'd hit
-        // Each will try to move by the same offset (represent a chain of moving)
-        'settling: loop {
-            // For each currently moving molecule
-            for i in 0..self.molecules.len() {
-                if !would_move.contains(&i) {
+        // Try to update each molecule we're pushing on
+        'moving: loop {
+            for other_index in 0..self.molecules.len() {
+                if other_index == index {
                     continue;
                 }
 
-                // If moving that molecule into another would cause an intersection, add it to the list
-                for j in 0..self.molecules.len() {
-                    if i == j || would_move.contains(&j) {
-                        continue;
+                if self.molecules[index].intersects(offset, &self.molecules[other_index]) {
+                    let moved = self.__try_move_recursive__(map, other_index, offset, false);
+
+                    if !moved {
+                        self.molecules = original_molecules;
+                        return false;
                     }
 
-                    if self.molecules[i].intersects(offset, &self.molecules[j]) {
-                        would_move.push(j);
-                        continue 'settling;
-                    }
+                    continue 'moving;
                 }
             }
 
-            break;
+            break 'moving;
         }
 
-        // Check each moving molecule to see if it would hit a wall
-        for i in would_move.iter() {
-            if self.molecules[*i].intersects_wall(offset, map) {
+        // Verify that after pushing, we're no longer intersecting anything
+        for i in 0..self.molecules.len() {
+            if i == index {
+                continue;
+            }
+
+            if self.molecules[index].intersects(offset, &self.molecules[i]) {
+                self.molecules = original_molecules;
                 return false;
             }
         }
 
-        // Assume move is allowed, update all moving molecules
-        for i in would_move.iter() {
-            self.molecules[*i].offset = self.molecules[*i].offset + offset;
-        }
+        // Finally, update our own location
+        self.molecules[index].offset = self.molecules[index].offset + offset;
 
-        // Try to bond all pairs of molecules
-        // TODO: Inefficient, we only really need to check moved (?); especially with all the cloning
-        'settling: loop {
-            for i in 0..self.molecules.len() {
-                for j in 0..self.molecules.len() {
-                    if i == j {
-                        continue;
-                    }
+        // If we're the first call, re-apply bonds and remove inactive molecules
+        if first {
+            'bonding: loop {
+                for i in 0..self.molecules.len() {
+                    for j in 0..self.molecules.len() {
+                        if i == j {
+                            continue;
+                        }
 
-                    let mut primary = self.molecules[i].clone();
-
-                    if primary.try_bond(Point::ZERO, &self.molecules[j]) {
-                        self.molecules[i] = primary;
-                        self.molecules.remove(j);
-                        continue 'settling;
+                        let mut primary = self.molecules[i].clone();
+                        if primary.try_bond(Point::ZERO, &self.molecules[j]) {
+                            self.molecules[i] = primary;
+                            self.molecules[j].active = false;
+                            continue 'bonding;
+                        }
                     }
                 }
+
+                break 'bonding;
             }
 
-            break;
+            self.molecules.retain(|m| m.active);
         }
 
         true
@@ -853,6 +914,7 @@ mod test_localstate {
         let (map, mut state) = Map::load("H-h#");
 
         assert!(state.try_move(&map, 0, Point { x: 1, y: 0 }));
+        println!("{}", state.stringify(&map));
         assert_eq!(state.molecules.len(), 1);
         assert_eq!(state.molecules[0].offset, Point { x: 1, y: 0 });
         assert_eq!(state.molecules[0].elements.len(), 2);
@@ -1123,8 +1185,9 @@ N n",
 v2
 C n n
  + /
-- - -");
-        
+- - -",
+        );
+
         // Verify that we have one molecule with two single bonds
         assert_eq!(state.molecules.len(), 1);
         assert_eq!(state.molecules[0].bonds.len(), 2);
@@ -1140,7 +1203,7 @@ C n n
         assert_eq!(state.molecules[1].offset, Point { x: 2, y: 0 });
         assert_eq!(state.molecules[1].bonds.len(), 0);
     }
-    
+
     #[test]
     fn test_join_split() {
         use super::*;
@@ -1150,7 +1213,8 @@ C n n
 v2
 C n n
  / +
-- - -");
+- - -",
+        );
 
         // Verify that we have one molecule with two single bonds
         assert_eq!(state.molecules.len(), 1);
@@ -1167,6 +1231,46 @@ C n n
         assert_eq!(state.molecules[1].offset, Point { x: 1, y: 0 });
         assert_eq!(state.molecules[1].bonds.len(), 1);
         assert_eq!(state.molecules[1].bonds[0].count, 1);
+    }
+
+    #[test]
+    fn test_push_across_splitter() {
+        use super::*;
+
+        let (map, mut state) = Map::load(
+            "\
+v2
+- - h - C
+   / 
+- - h - -",
+        );
+
+        assert!(state.try_move(&map, 0, Point { x: -1, y: 0 }));
+        assert!(state.try_move(&map, 0, Point { x: -1, y: 0 }));
+
+        // Should end up with a single molecule with two C/H bonds (one left, one down)
+        assert_eq!(state.molecules.len(), 1);
+        assert_eq!(state.molecules[0].elements.len(), 3);
+    }
+
+    #[test]
+    fn test_split_and_push() {
+        use super::*;
+
+        let (map, mut state) = Map::load(
+            "\
+v2
+- - - h
+   /
+- c - O
+   /
+- - - h",
+        );
+
+        assert!(state.try_move(&map, 0, Point { x: -1, y: 0 }));
+        println!("{}", state.stringify(&map));
+        assert!(state.try_move(&map, 0, Point { x: -1, y: 0 }));
+        println!("{}", state.stringify(&map));
     }
 }
 
@@ -1424,14 +1528,14 @@ mod test_solutions {
     test! {test_04_02, "04 - Red", "02 - Lock.txt", "DDWDSAWWWWAADDSSSA"}
     test! {test_04_03, "04 - Red", "03 - Push Up.txt", "DAAWDSDWA"}
     test! {test_04_04, "04 - Red", "04 - Out of Reach.txt", "WDDDDSAWDSAAWW"}
-    test! {test_04_05, "04 - Red", "05 - Small Key.txt", "ASDWDWASSAWSDWDDD"}
-    test! {test_04_06, "04 - Red", "06 - Anxiety.txt", "WAASAWDWWSDSDW"}
-    test! {test_04_07, "04 - Red", "07 - Wingman.txt", "WAWWSDDDSASDSAAAAWW"}
-    test! {test_04_08, "04 - Red", "08 - Wing.txt", "DDAAWWSDWWDAA"}
+    test! {test_04_05, "04 - Red", "05 - Small Key.txt", "AWDSDSAWWASWDSDDD"}
+    test! {test_04_06, "04 - Red", "06 - Anxiety.txt", "WAASAWDWWSDDSA"}
+    test! {test_04_07, "04 - Red", "07 - Wingman.txt", "DDDSAWWWASAAWSSSSDD"}
+    test! {test_04_08, "04 - Red", "08 - Ring.txt", "DDAAWWSDWWDAA"}
     test! {test_04_09, "04 - Red", "09 - Anvil.txt", "SDSSDSAADWWWAASSDDDWWADSSAAAWSA"}
-    test! {test_04_10, "04 - Red", "10 - Cottage.txt", "SWWWWDDSDSAWWAAAASASDWWDDSSSS"}
-    test! {test_04_11, "04 - Red", "11 - Hanoi.txt", "SAAWDDDDSAAWAASDDDDWAAAASDDDDWAAAA"}
-    test! {test_04_12, "04 - Red", "12 - Trap.txt", "DSDWAASDWWASDSDDDDDWSAWWDSASAAA"}
+    test! {test_04_10, "04 - Red", "10 - Cottage.txt", "SWWWWAASASDWWDDDDSDSAWWAASSSS"}
+    test! {test_04_11, "04 - Red", "11 - Hanoi.txt", "AASWDDDDSAAWAASDDDDWAAAASDDDDWAAAA"}
+    test! {test_04_12, "04 - Red", "12 - Trap.txt", "DSDWAASDWWASDSDDDDDWADSAWWDSASAAA"}
 
     test! {test_05_01, "05 - Green", "01 - Breathe.txt", "WWDSDSWAW"}
     test! {test_05_02, "05 - Green", "02 - Doubling.txt", "WAWWASSDW"}
@@ -1446,28 +1550,67 @@ mod test_solutions {
     test! {test_05_11, "05 - Green", "11 - Cat's Cradle.txt", "DWWDAAASSWWDDDSSSAAA"}
 
     test! {test_06_01, "06 - Dark Green", "01 - Papers Please.txt", "DADDDDDDDASWWASAAA"}
-    test! {test_06_02, "06 - Dark Green", "02 - Airplane.txt", "SSWWWAASDDDWDSAAWWSWDSSSADWWDDDSAAWASSASDWWAWAAASDDWDSSDSAWWWWDADSSSSS"} // Slow
+    test! {test_06_02, "06 - Dark Green", "02 - Airplane.txt", "SSWWWAASDDDWDSAAWWSWDSSSADWDWDDSAAWASSASDWWAAWAASDDWDSSDSAWWWWDADSSSSS"} // Slow
     test! {test_06_03, "06 - Dark Green", "03 - Mine Field.txt", "SDDDDSSSAWAWAWDSAAWWSDSDSDSAAAAAA"}
-    // test! {test_06_04, "06 - Dark Green", "04 - Workshop.txt", ""}
+    test! {test_06_04, "06 - Dark Green", "04 - Workshop.txt", "DSDDWDDSAAASDWAD"}
     test! {test_06_05, "06 - Dark Green", "05 - Dissection.txt", "AASSDDAWADWASDDDDD"}
-    test! {test_06_06, "06 - Dark Green", "06 - Casket.txt", "DDAASSDDDWAWSAWSD"}
-    test! {test_06_07, "06 - Dark Green", "07 - Three Body Problem.txt", "DDAWDSAWWDDASSAAWWS"}
+    test! {test_06_06, "06 - Dark Green", "06 - Casket.txt", "SSWWDDSSSAWADWADS"}
+    test! {test_06_07, "06 - Dark Green", "07 - Three Body Problem.txt", "DDAWDSDWASDWASDWWWAAD"}
     test! {test_06_08, "06 - Dark Green", "08 - Cat.txt", "WAADDDAADAAWSSDDWD"}
     test! {test_06_09, "06 - Dark Green", "09 - Halves.txt", "ADDSAWAAWDSDD"}
-    test! {test_06_10, "06 - Dark Green", "10 - Arrow.txt", "SWWWADWWSWASSSSDWWWAA"}
+    test! {test_06_10, "06 - Dark Green", "10 - Arrow.txt", "SWWWADWWSWASSSSDWWAWA"}
     test! {test_06_11, "06 - Dark Green", "11 - Hallway.txt", "DDASAWSAAWDDDDSAWDSWAADDAASDWSAAWSWASDDDA"}
 
-    test! {test_07_01, "07 - Dark Red", "01 - Plunge.txt", "SAWDSDWWSAWASSWDWDWASASDDWWAASDDSDDD"}
+    test! {test_07_01, "07 - Dark Red", "01 - Plunge.txt", "SAWWDDSADSWAWASDSAWDDWASASDWWDSDDD"}
     test! {test_07_02, "07 - Dark Red", "02 - Compass.txt", "SSDDASAAWADSDS"}
-    // test! {test_07_03, "07 - Dark Red", "03 - Blocking the Way.txt", ""}
+    test! {test_07_03, "07 - Dark Red", "03 - Blocking the Way.txt", "SSSSAAAWWDDAAWSASSDDDDWWAAAWWDDDSSAAASWDDDDS"}
     test! {test_07_04, "07 - Dark Red", "04 - Power.txt", "WWDDSWWDSAAAWDDWSSAAWSSS"}
     test! {test_07_05, "07 - Dark Red", "05 - Around.txt", "DWAASWDDSAAASSWWDDDSWAASSSDWAWWASSDWSSDD"}
-    test! {test_07_06, "07 - Dark Red", "06 - Infinity.txt", "SSSWDDAWASSWDWSDDWDDAASADWDDSSADAWDSWW"}
-    test! {test_07_07, "07 - Dark Red", "07 - Grater.txt", "SSAWDSSSWWWDS"}
-    test! {test_07_08, "07 - Dark Red", "08 - Windows.txt", "WWAAWDSAWASDWDDDDSSWWAAAAASDWASDDDSSSD"}
-    // test! {test_07_09, "07 - Dark Red", "09 - Home.txt", ""}
-    test! {test_07_10, "07 - Dark Red", "10 - Long Legs.txt", "DWDDDSSSWWAWAASADDSWWDDD"}
-    test! {test_07_11, "07 - Dark Red", "11 - Station.txt", "DSSDDDDDAAAAAWWDAWWDDDDSSWWAAAAASS"}    
-    // test! {test_07_12, "07 - Dark Red", "12 - Arena.txt", ""}
 
+    test! {test_07_06, "07 - Dark Red", "06 - Infinity.txt", "SSSWDDAWASSWDWSDDWDDAASADWDDSSAWDWSS"}
+    test! {test_07_07, "07 - Dark Red", "07 - Grater.txt", "SSDWASSSWWWAS"}
+    test! {test_07_08, "07 - Dark Red", "08 - Windows.txt", "AAAWWSDWAWDSASSSSDDAAWWWWWDSAWDSSSDDDS"}
+    test! {test_07_09, "07 - Dark Red", "09 - Home.txt", "WWWWAWSSDSSSSDWAWWWDDWAASSSASDWWWAAWDDSSSASWDWWDWWSSASSS"}
+    test! {test_07_10, "07 - Dark Red", "10 - Long Legs.txt", "DWDDDSSSWWAWAASADDSWWDDD"}
+    test! {test_07_11, "07 - Dark Red", "11 - Station.txt", "DSSDDDDDAAAAAWWDAWWDDDDSSWWAAAAASS"}
+    test! {test_07_12, "07 - Dark Red", "12 - Arena.txt", ""}
 }
+
+// #[cfg(test)]
+// mod manual_testing {
+//     #[test]
+//     fn test_solution() {
+//         use super::*;
+
+//         let input = "\
+// xxxxxxx
+// x--h--x
+// x-----x
+// xh-n-hx
+// xx-n-xx
+// -x-E-x-
+// -xxhxx-
+// --xxx--";
+
+//         let instructions = "DWWWWADSSSSAWAWDWWDDSAASWWAASDS";
+
+//         let (map, mut state) = Map::load(input);
+//         println!("Initial state:\n{}", state.stringify(&map));
+
+//         for c in instructions.chars() {
+//             let offset = match c {
+//                 'W' => Step::North,
+//                 'S' => Step::South,
+//                 'D' => Step::East,
+//                 'A' => Step::West,
+//                 _ => panic!("invalid instruction: {}", c),
+//             };
+
+//             assert!(state.try_move(&map, 0, offset.into()));
+//             println!("Move: {}, state:\n{}", c, state.stringify(&map));
+//             for (i, molecule) in state.molecules.iter().enumerate() {
+//                 println!("Molecule {}: {:?}", i, molecule.bonds);
+//             }
+//         }
+//     }
+// }
