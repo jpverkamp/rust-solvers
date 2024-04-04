@@ -573,10 +573,6 @@ impl LocalState {
         offset: Point,
         first: bool,
     ) -> bool {
-        if index > self.molecules.len() {
-            return false;
-        }
-
         let original_molecules = self.molecules.clone();
 
         // Collect all map modifiers that we are trying to cross (this may take multiple passes)
@@ -817,6 +813,19 @@ impl LocalState {
                 }
 
                 if self.molecules[index].intersects(offset, &self.molecules[other_index]) {
+                    // HACK: Don't try to move the primary molecule more than once
+                    // This can happen if the primary wraps around another, like:
+                    /*
+                    O-O-O
+                    |   |
+                    H h H
+                    */
+                    // This can happen for non-primaries, but I don't have a good way to fix that
+                    // Assume if we made it this far, the primary *can* move, but don't actually do it here
+                    if other_index == 0 {
+                        continue;
+                    }
+
                     let moved = self.__try_move_recursive__(map, other_index, offset, false);
 
                     if !moved {
