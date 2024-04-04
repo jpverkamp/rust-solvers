@@ -393,20 +393,21 @@ impl Molecule {
     }
 
     // If the given molecule + an offset would intersect another molecule
-    fn intersects(&self, offset: Point, other: &Molecule) -> bool {
+    // If there's an intersection, return the intersecting point of each molecule (without offset)
+    fn intersects(&self, offset: Point, other: &Molecule) -> Option<(Point, Point)> {
         if !self.active || !other.active {
-            return false;
+            return None;
         }
 
         for element in &self.elements {
             for other_element in &other.elements {
                 if self.offset + element.offset + offset == other.offset + other_element.offset {
-                    return true;
+                    return Some((element.offset, other_element.offset));
                 }
             }
         }
 
-        false
+        None
     }
 
     // Try to bond two molecules together
@@ -521,9 +522,9 @@ mod test_molecule {
         let a = Molecule::new(Point::ZERO, ElementKind::Hydrogen);
         let b = Molecule::new(Point { x: 1, y: 0 }, ElementKind::Hydrogen);
 
-        assert!(a.intersects(Point { x: 1, y: 0 }, &b));
-        assert!(!a.intersects(Point { x: 0, y: 0 }, &b));
-        assert!(!a.intersects(Point { x: 0, y: 1 }, &b));
+        assert!(a.intersects(Point { x: 1, y: 0 }, &b).is_some());
+        assert!(a.intersects(Point { x: 0, y: 0 }, &b).is_none());
+        assert!(a.intersects(Point { x: 0, y: 1 }, &b).is_none());
     }
 
     #[test]
@@ -825,7 +826,9 @@ impl LocalState {
                     continue;
                 }
 
-                if self.molecules[index].intersects(offset, &self.molecules[other_index]) {
+                if let Some((_, other_intersection_offset)) =
+                    self.molecules[index].intersects(offset, &self.molecules[other_index])
+                {
                     // HACK: Don't try to move the primary molecule more than once
                     // This can happen if the primary wraps around another, like:
                     /*
@@ -839,8 +842,12 @@ impl LocalState {
                         continue;
                     }
 
-                    let moved = self.__try_move_recursive__(map, other_index, offset, false);
+                    // Recenter the other point so that the intersection is at 0,0
+                    // This will properly handle a molecule being pushed across a split
+                    // TODO: This won't properly work if multiple points are being pushed since only one is returned
+                    self.molecules[other_index].recenter(other_intersection_offset);
 
+                    let moved = self.__try_move_recursive__(map, other_index, offset, false);
                     if !moved {
                         self.molecules = original_molecules;
                         return false;
@@ -859,7 +866,7 @@ impl LocalState {
                 continue;
             }
 
-            if self.molecules[index].intersects(offset, &self.molecules[i]) {
+            if self.molecules[index].intersects(offset, &self.molecules[i]).is_some() {
                 self.molecules = original_molecules;
                 return false;
             }
@@ -1276,6 +1283,26 @@ v2
     }
 
     #[test]
+    fn test_push_across_splitter_inverse() {
+        use super::*;
+
+        let (map, mut state) = Map::load(
+            "\
+v2
+- - h - -
+   / 
+- - h - C",
+        );
+
+        assert!(state.try_move(&map, 0, Point { x: -1, y: 0 }));
+        assert!(state.try_move(&map, 0, Point { x: -1, y: 0 }));
+
+        // Should end up with a single molecule with two C/H bonds (one left, one down)
+        assert_eq!(state.molecules.len(), 1);
+        assert_eq!(state.molecules[0].elements.len(), 3);
+    }
+
+    #[test]
     fn test_split_and_push() {
         use super::*;
 
@@ -1351,9 +1378,7 @@ impl State<Map, Step> for LocalState {
     }
 
     fn is_solved(&self, _global: &Map) -> bool {
-        self.molecules
-            .iter()
-            .all(|m| m.free_electrons() == 0)
+        self.molecules.iter().all(|m| m.free_electrons() == 0)
     }
 
     fn next_states(&self, map: &Map) -> Option<Vec<(i64, Step, LocalState)>> {
@@ -1451,7 +1476,11 @@ impl State<Map, Step> for LocalState {
 fn solve(input: &str) -> Option<String> {
     let (map, molecules) = Map::load(input);
 
-    log::info!("Initial state (multiple={}):\n{}", map.allow_multiple, molecules.stringify(&map));
+    log::info!(
+        "Initial state (multiple={}):\n{}",
+        map.allow_multiple,
+        molecules.stringify(&map)
+    );
 
     let mut solver = Solver::new(map.clone(), molecules.clone());
 
@@ -1536,13 +1565,13 @@ mod test_solutions {
     test! {test_02_07, "02 - Orange", "07 - Chandelier.txt", "DSSSAWDWDSSAWWWA"}
     test! {test_02_08, "02 - Orange", "08 - Creature.txt", "WDDWWAAWASDDDDSSAASSAWAAW"}
     test! {test_02_09, "02 - Orange", "09 - Rosie.txt", "WAWWDDAASASSDDDD"}
-    test! {test_02_10, "02 - Orange", "10 - Kruskal.txt", "ASAWDWDDSSSWAAWW"}
+    test! {test_02_10, "02 - Orange", "10 - Kruskal.txt", "ASAWDWDDSSSWWAAW"}
 
     test! {test_03_01, "03 - Gray", "01 - Helium.txt", "WDDDDDSAAWASSDSSS"}
     test! {test_03_02, "03 - Gray", "02 - Tee.txt", "WWASWDDDSAAWASDSSADSSWWW"}
     test! {test_03_03, "03 - Gray", "03 - Freedom.txt", "AAWAWDD"}
     test! {test_03_04, "03 - Gray", "04 - Against the Wall.txt", "WAASWAWWDSASDDSSSAWWSAAWWDDWWDDSSAAWAWASASDDDD"}
-    test! {test_03_05, "03 - Gray", "05 - Pathways.txt", "AWWDSASDSSSDDWWAASSAAWW"}
+    test! {test_03_05, "03 - Gray", "05 - Pathways.txt", "AWWDSDSASSSAAWWDDSSDDWW"}
     test! {test_03_06, "03 - Gray", "06 - Three Doors.txt", "DAWWSAAWWAWDDSDSSAASDSDWWWSDDWSDSSAWWAAAAWWDD"}
     test! {test_03_07, "03 - Gray", "07 - Cloud.txt", "DWWASDDSWWASSD"}
     test! {test_03_08, "03 - Gray", "08 - Planning.txt", "WDSDSAASSAWDWASAAWDDDDSDDW"}
@@ -1555,7 +1584,7 @@ mod test_solutions {
     test! {test_04_02, "04 - Red", "02 - Lock.txt", "DDWDSAWWWWAADDSSSA"}
     test! {test_04_03, "04 - Red", "03 - Push Up.txt", "DAAWDSDWA"}
     test! {test_04_04, "04 - Red", "04 - Out of Reach.txt", "WDDDDSAWDSAAWW"}
-    test! {test_04_05, "04 - Red", "05 - Small Key.txt", "AWDSDSAWWASWDSDDD"}
+    test! {test_04_05, "04 - Red", "05 - Small Key.txt", "ASDWDWASSAWSDWDDD"}
     test! {test_04_06, "04 - Red", "06 - Anxiety.txt", "WAASAWDWWSDDSA"}
     test! {test_04_07, "04 - Red", "07 - Wingman.txt", "DDDSAWWWASAAWSSSSDD"}
     test! {test_04_08, "04 - Red", "08 - Ring.txt", "DDAAWWSDWWDAA"}
@@ -1590,10 +1619,9 @@ mod test_solutions {
 
     test! {test_07_01, "07 - Dark Red", "01 - Plunge.txt", "SAWWDDSADSWAWASDSAWDDWASASDWWDSDDD"}
     test! {test_07_02, "07 - Dark Red", "02 - Compass.txt", "SSDDASAAWADSDS"}
-    test! {test_07_03, "07 - Dark Red", "03 - Blocking the Way.txt", "SSSSAAAWWDDAAWSASSDDDDWWAAAWWDDDSSAAASWDDDDS"}
+    test! {test_07_03, "07 - Dark Red", "03 - Blocking the Way.txt", "SSSSAAAWWDDAAWSSASDDDDWWAAAWWDDDSSAAASWDDDDS"}
     test! {test_07_04, "07 - Dark Red", "04 - Power.txt", "WWDDSWWDSAAAWDDWSSAAWSSS"}
     test! {test_07_05, "07 - Dark Red", "05 - Around.txt", "DWAASWDDSAAASSWWDDDSWAASSSDWAWWASSDWSSDD"}
-
     test! {test_07_06, "07 - Dark Red", "06 - Infinity.txt", "SSSWDDAWASSWDWSDDWDDAASADWDDSSAWDWSS"}
     test! {test_07_07, "07 - Dark Red", "07 - Grater.txt", "SSDWASSSWWWAS"}
     test! {test_07_08, "07 - Dark Red", "08 - Windows.txt", "AAAWWSDWAWDSASSSSDDAAWWWWWDSAWDSSSDDDS"}
@@ -1606,6 +1634,8 @@ mod test_solutions {
     test! {test_08_02, "08 - Light Gray", "02 - Water Water.txt", "DWASSWDDW"}
     test! {test_08_03, "08 - Light Gray", "03 - Twofold.txt", "ASDWDWDSWAAA"}
     test! {test_08_04, "08 - Light Gray", "04 - Aye.txt", "WWDWAASDSSSSASDDWWWAWWASS"}
+    test! {test_08_05, "08 - Light Gray", "05 - Twins.txt", "WSSWDDWASASSWWAA"}
+    test! {test_08_06, "08 - Light Gray", "06 - Double-Bleached.txt", ""}
 }
 
 #[cfg(test)]
@@ -1615,16 +1645,26 @@ mod manual_testing {
         use super::*;
 
         let input = "\
---xxx---
-xxhxxxx-
-xh----x-
-xx-Oe-x-
--x-eo-xx
--x----hx
--xxxxhxx
-----xxx-";
+v2 multiple
+x x x x x x x x x
 
-        let instructions = "ASDWDWDSWAAA";
+x - - - x - - - x
+           /
+x - - - - o o - x
+
+x - h x - x - - x
+
+x - h x E x h - x
+
+x - - x - x h - x
+
+x - o o - - - - x
+     /
+x - - - x - - - x
+
+x x x x x x x x x";
+
+        let instructions = "WWAAASSSDWWSSSDDDSDWWDWWWWADSSSSSAAAASAWWWWAWDDDSSSSDDWWW";
 
         let (map, mut state) = Map::load(input);
         println!("Initial state:\n{}", state.stringify(&map));
