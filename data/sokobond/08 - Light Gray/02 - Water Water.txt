@@ -1,0 +1,12 @@
+v2 multiple
+x x x x x x
+
+x h - - h x
+
+x - - o - x
+     /
+x - O - - x
+
+x h - - h x
+
+x x x x x x

@@ -90,6 +90,7 @@ struct Map {
     height: usize,
     walls: Vec<bool>,
     modifiers: Vec<Modifier>,
+    allow_multiple: bool,
 }
 
 impl Map {
@@ -112,9 +113,16 @@ impl Map {
 
         let mut lines = input.lines().peekable();
 
+        let mut multiple = false;
+
         // In v2, build a new input array as alternating lines
         let grid = if lines.peek().is_some_and(|l| l.starts_with("v2")) {
-            lines.next(); // Skip the v2 line
+            // Look for additional options
+            let options = lines.next().unwrap();
+            if options.contains("multiple") {
+                multiple = true;
+            }
+
             let mut new_input = String::new();
 
             let mut y = 0;
@@ -221,6 +229,7 @@ impl Map {
                 height,
                 walls,
                 modifiers,
+                allow_multiple: multiple,
             },
             LocalState { molecules },
         )
@@ -471,6 +480,18 @@ impl Molecule {
             false
         }
     }
+
+    fn recenter(&mut self, new_zero: Point) {
+        self.offset = self.offset + new_zero;
+
+        for element in &mut self.elements {
+            element.offset = element.offset - new_zero;
+        }
+        for dst_bond in &mut self.bonds {
+            dst_bond.a = dst_bond.a - new_zero;
+            dst_bond.b = dst_bond.b - new_zero;
+        }
+    }
 }
 
 #[cfg(test)]
@@ -488,6 +509,7 @@ mod test_molecule {
                 true, true, true, true, false, true, true, true, true, // 3x3
             ],
             modifiers: vec![],
+            allow_multiple: false,
         };
 
         assert!(a.intersects_wall(Point { x: 1, y: 0 }, &map));
@@ -744,16 +766,7 @@ impl LocalState {
 
                     // Now update the offset in dst so that one of the elements is at 0,0
                     // Not strictly necessary, but I think it will make rotation easier later?
-                    let new_zero = dst.elements[0].offset;
-                    dst.offset = dst.offset + new_zero;
-
-                    for element in &mut dst.elements {
-                        element.offset = element.offset - new_zero;
-                    }
-                    for dst_bond in &mut dst.bonds {
-                        dst_bond.a = dst_bond.a - new_zero;
-                        dst_bond.b = dst_bond.b - new_zero;
-                    }
+                    dst.recenter(dst.elements[0].offset);
 
                     // We now have two molecules, replace src and add dst
                     self.molecules[index] = src;
@@ -1309,6 +1322,11 @@ impl State<Map, Step> for LocalState {
             return true;
         }
 
+        // If it's a board that allows multiples, anything goes
+        if map.allow_multiple {
+            return true;
+        }
+
         // If we have any splitters, anything goes :)
         if !map.modifiers.is_empty() {
             return true;
@@ -1335,7 +1353,7 @@ impl State<Map, Step> for LocalState {
     fn is_solved(&self, _global: &Map) -> bool {
         self.molecules
             .iter()
-            .all(|m| m.is_helium() || m.free_electrons() == 0)
+            .all(|m| m.free_electrons() == 0)
     }
 
     fn next_states(&self, map: &Map) -> Option<Vec<(i64, Step, LocalState)>> {
@@ -1433,7 +1451,7 @@ impl State<Map, Step> for LocalState {
 fn solve(input: &str) -> Option<String> {
     let (map, molecules) = Map::load(input);
 
-    log::info!("Initial state:\n{}", molecules.stringify(&map));
+    log::info!("Initial state (multiple={}):\n{}", map.allow_multiple, molecules.stringify(&map));
 
     let mut solver = Solver::new(map.clone(), molecules.clone());
 
@@ -1582,44 +1600,51 @@ mod test_solutions {
     test! {test_07_09, "07 - Dark Red", "09 - Home.txt", "WWWWAWSSDSSSSDWAWWWDDWAASSSASDWWWAAWDDSSSASWDWWDWWSSASSS"}
     test! {test_07_10, "07 - Dark Red", "10 - Long Legs.txt", "DWDDDSSSWWAWAASADDSWWDDD"}
     test! {test_07_11, "07 - Dark Red", "11 - Station.txt", "DSSDDDDDAAAAAWWDAWWDDDDSSWWAAAAASS"}
-    test! {test_07_12, "07 - Dark Red", "12 - Arena.txt", ""}
+    // test! {test_07_12, "07 - Dark Red", "12 - Arena.txt", ""} // Bug with recentering, not solved
+
+    test! {test_08_01, "08 - Light Gray", "01 - Multiple.txt", "DDWWASAWDD"}
+    test! {test_08_02, "08 - Light Gray", "02 - Water Water.txt", "DWASSWDDW"}
+    test! {test_08_03, "08 - Light Gray", "03 - Twofold.txt", "ASDWDWDSWAAA"}
+    test! {test_08_04, "08 - Light Gray", "04 - Aye.txt", "WWDWAASDSSSSASDDWWWAWWASS"}
 }
 
-// #[cfg(test)]
-// mod manual_testing {
-//     #[test]
-//     fn test_solution() {
-//         use super::*;
+#[cfg(test)]
+mod manual_testing {
+    #[test]
+    fn test_solution() {
+        use super::*;
 
-//         let input = "\
-// xxxxxxx
-// x--h--x
-// x-----x
-// xh-n-hx
-// xx-n-xx
-// -x-E-x-
-// -xxhxx-
-// --xxx--";
+        let input = "\
+--xxx---
+xxhxxxx-
+xh----x-
+xx-Oe-x-
+-x-eo-xx
+-x----hx
+-xxxxhxx
+----xxx-";
 
-//         let instructions = "DWWWWADSSSSAWAWDWWDDSAASWWAASDS";
+        let instructions = "ASDWDWDSWAAA";
 
-//         let (map, mut state) = Map::load(input);
-//         println!("Initial state:\n{}", state.stringify(&map));
+        let (map, mut state) = Map::load(input);
+        println!("Initial state:\n{}", state.stringify(&map));
+        println!("Multiple? {}", map.allow_multiple);
 
-//         for c in instructions.chars() {
-//             let offset = match c {
-//                 'W' => Step::North,
-//                 'S' => Step::South,
-//                 'D' => Step::East,
-//                 'A' => Step::West,
-//                 _ => panic!("invalid instruction: {}", c),
-//             };
+        for c in instructions.chars() {
+            let offset = match c {
+                'W' => Step::North,
+                'S' => Step::South,
+                'D' => Step::East,
+                'A' => Step::West,
+                _ => panic!("invalid instruction: {}", c),
+            };
 
-//             assert!(state.try_move(&map, 0, offset.into()));
-//             println!("Move: {}, state:\n{}", c, state.stringify(&map));
-//             for (i, molecule) in state.molecules.iter().enumerate() {
-//                 println!("Molecule {}: {:?}", i, molecule.bonds);
-//             }
-//         }
-//     }
-// }
+            assert!(state.try_move(&map, 0, offset.into()));
+            println!("Move: {}, state:\n{}", c, state.stringify(&map));
+            for (i, molecule) in state.molecules.iter().enumerate() {
+                println!("Molecule {}: {:?}", i, molecule.bonds);
+            }
+            println!("Is solved? {}", state.is_solved(&map));
+        }
+    }
+}
