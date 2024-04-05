@@ -1,5 +1,6 @@
 use std::io;
 use std::ops::Add;
+use std::ops::ControlFlow;
 use std::ops::Sub;
 
 use solver::{Solver, State};
@@ -655,7 +656,7 @@ impl LocalState {
                     }
 
                     // We have a bond to try to modify
-                    bond_to_modify = Some((bond_index, modifier, is_vertical, is_positive));
+                    bond_to_modify = Some((bond_index, modifier));
                     break 'find_bond;
                 }
             }
@@ -666,7 +667,7 @@ impl LocalState {
             }
 
             // Note it, so we don't apply the same modifier more than once per move
-            let (bond_index, modifier, is_vertical, is_positive) = bond_to_modify.unwrap();
+            let (bond_index, modifier) = bond_to_modify.unwrap();
             modifiers_applied.push(modifier);
 
             // Figure out which elements we're dealing with
@@ -697,86 +698,15 @@ impl LocalState {
                         continue;
                     }
 
-                    // We're going to modify the molecule, clone it and we'll put the new one in later
-                    let mut src = self.molecules[index].clone();
-                    src.bonds.remove(bond_index);
+                    // Try to performe a split at that bond
+                    // If this returns None, it means we have a ring, so have nothing else to do
+                    // Otherwise, update our molecule list
+                    if let Some((part_a, part_b)) = self.split_at_bond(index, bond_index) {
+                        self.molecules[index] = part_a;
+                        self.molecules.push(part_b);
+                    };
 
-                    // Now starting at the origin in src, remove anything we can get to in dst
-                    // TODO: This can be factored into a function
-                    let mut connected_elements = Vec::new();
-                    let mut connected_bonds = Vec::new();
-
-                    let mut todo = vec![Point::ZERO];
-                    let mut done = vec![];
-
-                    while let Some(pt) = todo.pop() {
-                        done.push(pt);
-
-                        for (i, element) in src.elements.iter().enumerate() {
-                            if element.offset == pt && !connected_elements.contains(&i) {
-                                connected_elements.push(i);
-                            }
-                        }
-
-                        for (i, src_bond) in src.bonds.iter().enumerate() {
-                            if src_bond.a == pt {
-                                if !connected_bonds.contains(&i) {
-                                    connected_bonds.push(i);
-                                }
-
-                                if !(todo.contains(&src_bond.b) || done.contains(&src_bond.b)) {
-                                    todo.push(src_bond.b);
-                                }
-                            }
-
-                            if src_bond.b == pt {
-                                if !connected_bonds.contains(&i) {
-                                    connected_bonds.push(i);
-                                }
-
-                                if !(todo.contains(&src_bond.a) || done.contains(&src_bond.a)) {
-                                    todo.push(src_bond.a);
-                                }
-                            }
-                        }
-                    }
-
-                    // If we actually keep all of the elements, we don't need to modify src/dst at all
-                    if connected_elements.len() == src.elements.len() {
-                        self.molecules[index] = src;
-                        continue;
-                    }
-
-                    // Otherwise, we're going to create a second molecule
-                    // This is basically a partition (src gets connected, dst gets everything else)
-                    let mut dst = src.clone();
-                    connected_elements.sort();
-                    for i in connected_elements.iter().rev() {
-                        dst.elements.remove(*i);
-                    }
-                    connected_bonds.sort();
-                    for i in connected_bonds.iter().rev() {
-                        dst.bonds.remove(*i);
-                    }
-
-                    for i in (0..src.elements.len()).rev() {
-                        if !connected_elements.contains(&i) {
-                            src.elements.remove(i);
-                        }
-                    }
-                    for i in (0..src.bonds.len()).rev() {
-                        if !connected_bonds.contains(&i) {
-                            src.bonds.remove(i);
-                        }
-                    }
-
-                    // Now update the offset in dst so that one of the elements is at 0,0
-                    // Not strictly necessary, but I think it will make rotation easier later?
-                    dst.recenter(dst.elements[0].offset);
-
-                    // We now have two molecules, replace src and add dst
-                    self.molecules[index] = src;
-                    self.molecules.push(dst);
+                    
                 }
                 ModifierKind::Strengthen => {
                     // Verify we have enough free electrons
@@ -795,77 +725,87 @@ impl LocalState {
                     // When rotating, the rest of the molecule will move as expected
                     // But the bond with the primary will 'wrap' around
                     // I expect I will get this wrong
-                    let el_a = &self.molecules[index].elements[el_a_index];
-                    let el_b = &self.molecules[index].elements[el_b_index];
+                    
+                    // Split the molecule into two parts, (temporarily) removing the rotate bond
+                    // The part with the old primary will move as expected
+                    // The other part will be 'pulled' along the bond
+                    // Both have to move without colliding
+                    // And then we'll merge them and put the bond back
 
-                    // Verify that we only have a single bond to the primary element
-                    // TODO: This is probably not required
-                    if self.molecules[index]
-                        .bonds
-                        .iter()
-                        .filter(|b| b.a == Point::ZERO || b.b == Point::ZERO)
-                        .count()
-                        != 1
-                    {
-                        todo!("only one bond to primary expected");
-                    }
+                    // Part b will move 'along' the path of the original bond
+                    let bond = self.molecules[index].bonds[bond_index];
+                    let parts = self.split_at_bond(index, bond_index);
 
-                    // Verify that one of a or b is the primary
-                    // TODO: This is probably not required
-                    if el_a_index != 0 && el_b_index != 0 {
-                        todo!("one of a or b should be primary");
-                    }
-                    let is_a_primary = el_a_index == 0;
-
-                    // Determine if the primary is the 'minimal' element (so we know if we're going 'over' or 'under')
-                    let is_primary_minimal = match (is_vertical, is_a_primary) {
-                        (true, true) => el_a.offset.y < el_b.offset.y,
-                        (true, false) => el_b.offset.y < el_a.offset.y,
-                        (false, true) => el_a.offset.x < el_b.offset.x,
-                        (false, false) => el_b.offset.x < el_a.offset.x,
-                    };
-
-                    // Determine where we need to move the primary element + what the new offset will be
-                    let (new_primary_offset, new_offset) =
-                        match (is_vertical, is_positive, is_primary_minimal) {
-                            // Vertical, moving right, primary is on top
-                            (true, true, true) => (Point { x: 1, y: 1 }, Point { x: 0, y: -1 }),
-                            // Vertical, moving right, primary is on bottom
-                            (true, true, false) => (Point { x: 1, y: -1 }, Point { x: 0, y: 1 }),
-                            // Vertical, moving left, primary is on top
-                            (true, false, true) => (Point { x: -1, y: 1 }, Point { x: 0, y: -1 }),
-                            // Vertical, moving right, primary is on bottom
-                            (true, false, false) => (Point { x: -1, y: -1 }, Point { x: 0, y: 1 }),
-                            // Horizontal, moving down, primary is on left
-                            (false, true, true) => (Point { x: 1, y: 1 }, Point { x: -1, y: 0 }),
-                            // // Horizontal, moving down, primary is on right
-                            (false, true, false) => (Point { x: -1, y: 1 }, Point { x: 1, y: 0 }),
-                            // // Horizontal, moving up, primary is on left
-                            (false, false, true) => (Point { x: 1, y: -1 }, Point { x: -1, y: 0 }),
-                            // // Horizontal, moving up, primary is on right
-                            (false, false, false) => (Point { x: -1, y: -1 }, Point { x: 1, y: 0 }),
-
-                            _ => todo!(),
-                        };
-
-                    // Verify that there's nothing in this molecule in that new spot
-                    if self.molecules[index].elements.iter().any(|el| el.offset == new_primary_offset) {
+                    // If it doesn't split, we have a ring; rotator won't work
+                    if parts.is_none() {
                         self.molecules = original_molecules;
                         return false;
                     }
 
-                    // That element will 'back up' one step and then move by the offset
-                    // This might overlap for the back up but this *should* be fine
-                    if is_a_primary {
-                        self.molecules[index].elements[el_a_index].offset = new_primary_offset;
-                        self.molecules[index].bonds[bond_index].a = new_primary_offset;
+                    let (part_a, part_b) = parts.unwrap();
+
+                    // Determine how which way part b will remove because we'll move a and b shortly
+                    let bond_a_in_a = part_a.bonds.iter().position(|b| b.a == Point::ZERO).is_some();
+                    let new_b_offset = if bond_a_in_a { 
+                        bond.b - bond.a
                     } else {
-                        self.molecules[index].elements[el_b_index].offset = new_primary_offset;
-                        self.molecules[index].bonds[bond_index].b = new_primary_offset;
+                        bond.a - bond.b
+                    };
+
+                    // Part a becomes the new primary, b is added
+                    self.molecules[index] = part_a;
+                    let part_b_index = self.molecules.len();
+                    self.molecules.push(part_b);
+
+
+                    // Part a contains the original primary, it moves in the original direction
+                    let moved = self.__try_move_recursive__(map, index, offset, false);
+                    if !moved {
+                        self.molecules = original_molecules;
+                        return false;
                     }
 
-                    self.molecules[index].recenter(new_primary_offset);
-                    offset = new_offset;
+                    // Part b contains the 'other' half which moves along the bond (as calculated earlier)
+                    let moved = self.__try_move_recursive__(map, part_b_index, new_b_offset, false);
+                    if !moved {
+                        self.molecules = original_molecules;
+                        return false;
+                    }
+
+                    // Combine b into a
+                    let mut part_a = self.molecules[index].clone();
+                    let part_b = self.molecules[part_b_index].clone();
+
+                    for element in part_b.elements {
+                        part_a.elements.push(Element {
+                            kind: element.kind,
+                            offset: part_b.offset - part_a.offset + element.offset,
+                            free_electrons: element.free_electrons,
+                        });
+                    }
+
+                    for bond in part_b.bonds {
+                        part_a.bonds.push(Bond {
+                            a: part_b.offset - part_a.offset + bond.a,
+                            b: part_b.offset - part_a.offset + bond.b,
+                            count: bond.count,
+                        });
+                    }
+
+                    // And rebuild the original (now rotated) bond
+                    let new_bond = Bond {
+                        a: Point::ZERO,
+                        b: Point::ZERO - offset,
+                        count: bond.count,
+                    };
+
+                    part_a.bonds.push(new_bond);
+
+                    self.molecules[index] = part_a;
+                    self.molecules[part_b_index].active = false;
+
+                    // HACK: Now move back one step (without verifying) so that the push checks etc later work
+                    self.molecules[index].offset = self.molecules[index].offset - offset;
                 }
             }
         }
@@ -962,12 +902,98 @@ impl LocalState {
 
         true
     }
+
+    fn split_at_bond(&mut self, index: usize, bond_index: usize) -> Option<(Molecule, Molecule)> {
+        // Create a new primary half of the molecule
+        let mut part_a = self.molecules[index].clone();
+        part_a.bonds.remove(bond_index);
+
+        // Flood fill to determine what elements and bonds are part of part A
+        let mut connected_elements = Vec::new();
+        let mut connected_bonds = Vec::new();
+        let mut todo = vec![Point::ZERO];
+        let mut done = vec![];
+
+        // Keep going until we find all connected elements
+        while let Some(pt) = todo.pop() {
+            done.push(pt);
+
+            // If any element matches the point, add to connected
+            for (i, element) in part_a.elements.iter().enumerate() {
+                if element.offset == pt && !connected_elements.contains(&i) {
+                    connected_elements.push(i);
+                }
+            }
+
+            // If any bond matches the point, add to connected
+            // Then, if the other end isn't already accounted for, add it to the list to do
+            for (i, src_bond) in part_a.bonds.iter().enumerate() {
+                if src_bond.a == pt {
+                    if !connected_bonds.contains(&i) {
+                        connected_bonds.push(i);
+                    }
+
+                    if !(todo.contains(&src_bond.b) || done.contains(&src_bond.b)) {
+                        todo.push(src_bond.b);
+                    }
+                }
+
+                if src_bond.b == pt {
+                    if !connected_bonds.contains(&i) {
+                        connected_bonds.push(i);
+                    }
+
+                    if !(todo.contains(&src_bond.a) || done.contains(&src_bond.a)) {
+                        todo.push(src_bond.a);
+                    }
+                }
+            }
+        }
+
+        // If we are still connected to everything, this split will not create a new molecule
+        // This can happen if you have a ring
+        if connected_elements.len() == part_a.elements.len() {
+            self.molecules[index] = part_a;
+            return None;
+        }
+
+        // Create the second element
+        // The first will remove anything that is *not* connected
+        // The second (this one) will remove anything that *is* connected
+        let mut part_b = part_a.clone();
+
+        // Sort the elements and bonds and remove from the end so the indexes are correct
+        connected_elements.sort();
+        for i in connected_elements.iter().rev() {
+            part_b.elements.remove(*i);
+        }
+        connected_bonds.sort();
+        for i in connected_bonds.iter().rev() {
+            part_b.bonds.remove(*i);
+        }
+
+        // Likewise, remove anything not in the list from the end to preserve indexes
+        for i in (0..part_a.elements.len()).rev() {
+            if !connected_elements.contains(&i) {
+                part_a.elements.remove(i);
+            }
+        }
+        for i in (0..part_a.bonds.len()).rev() {
+            if !connected_bonds.contains(&i) {
+                part_a.bonds.remove(i);
+            }
+        }
+
+        // Part b no longer has an element at (0,0), choose one arbitrarily and recenter
+        part_b.recenter(part_b.elements[0].offset);
+
+        // Return the new parts
+        Some((part_a, part_b))
+    }
 }
 
 #[cfg(test)]
 mod test_localstate {
-    use core::hash;
-
     #[test]
     fn test_move_basic() {
         use super::*;
@@ -1442,6 +1468,11 @@ h -",
             assert_eq!(state.molecules[0].offset, h0 + offset);
             assert_eq!(state.molecules[0].elements[0].offset, Point::ZERO);
             assert_eq!(state.molecules[0].elements[1].offset, end_offset);
+
+            // Verify we didn't keep any extra molecules around or lose any bonds
+            assert_eq!(state.molecules.len(), 1);
+            assert_eq!(state.molecules[0].elements.len(), 2);
+            assert_eq!(state.molecules[0].bonds.len(), 1);
         }
     }
 }
@@ -1543,6 +1574,10 @@ impl State<Map, Step> for LocalState {
         }
 
         for (i, molecule) in self.molecules.iter().enumerate() {
+            if !molecule.active {
+                continue;
+            }
+
             // Add the elements
             for element in &molecule.elements {
                 let offset = molecule.offset + element.offset;
@@ -1856,6 +1891,9 @@ mod test_solutions {
         "DDDWAAAASDWAADDDSAADWASDWSDDWASWAADDD",
         "DDDWAAAASDWAADDDSAAWDSDDWASWDAAASDWA",
     ]}
+
+    test! {test_09_01, "09 - Blue", "01 - Rotate.txt", "ASADDWWDSSAAS"}
+    test! {test_09_02, "09 - Blue", "02 - Key.txt", "DDASDWWWWAd "}
 }
 
 #[cfg(test)]
