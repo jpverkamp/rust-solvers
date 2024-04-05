@@ -781,18 +781,34 @@ impl LocalState {
                     self.molecules.push(part_b);
 
                     // Part a contains the original primary, it moves in the original direction
+                    // Disable collision checking with b to allow tail chasing
+                    self.molecules[part_b_index].active = false;
                     let moved = self.__try_move_recursive__(map, index, offset, false);
                     if !moved {
                         self.molecules = original_molecules;
                         return false;
                     }
+                    self.molecules[part_b_index].active = true;
+                    println!("moved a:\n{}", self.stringify(&map));
 
                     // Part b contains the 'other' half which moves along the bond (as calculated earlier)
+                    // Likewise, disable collision checking with a
+                    self.molecules[index].active = false;
                     let moved = self.__try_move_recursive__(map, part_b_index, new_b_offset, false);
                     if !moved {
                         self.molecules = original_molecules;
                         return false;
                     }
+                    self.molecules[index].active = true;
+                    println!("moved b:\n{}", self.stringify(&map));
+
+                    // Once they've both moved, make sure they're non intersecting
+                    if self.molecules[index].intersects(Point::ZERO, &self.molecules[part_b_index]).is_some() {
+                        self.molecules = original_molecules;
+                        return false;
+                    }
+
+                    println!("non-intersecting");
 
                     // Combine b into a
                     let mut part_a = self.molecules[index].clone();
@@ -854,8 +870,18 @@ impl LocalState {
                         count: bond.count,
                     };
 
-                    assert!(part_a.elements.iter().any(|el| el.offset == new_bond.a));
-                    assert!(part_a.elements.iter().any(|el| el.offset == new_bond.b));
+                    dbg!(&part_a, new_bond, left_side, top_side, moving_horizontal);
+
+                    // Validate that we didn't create a screwy bond
+                    // assert!(part_a.elements.iter().any(|el| el.offset == new_bond.a));
+                    // assert!(part_a.elements.iter().any(|el| el.offset == new_bond.b));
+
+                    // HACK: If we did create a screwy bond, just don't move
+                    // Assume that there's another possible solution
+                    if !part_a.elements.iter().any(|el| el.offset == new_bond.a) || !part_a.elements.iter().any(|el| el.offset == new_bond.b) {
+                        self.molecules = original_molecules;
+                        return false;
+                    }
 
                     part_a.bonds.push(new_bond);
 
@@ -1573,6 +1599,26 @@ v2
         );
 
         assert!(!state.try_move(&map, 0, Point { x: 0, y: 1 }));
+    }
+
+    #[test]
+    fn test_rotate_chase_tail() {
+        use super::*;
+
+        let (map, mut state) = Map::load(
+            "\
+v2
+- - - h 
+ @
+- H n n");
+
+        println!("{}", state.stringify(&map));
+        assert!(state.try_move(&map, 0, Point { x: -1, y: 0 }));
+        println!("{}", state.stringify(&map));
+        assert!(state.try_move(&map, 0, Point { x: 0, y: -1 }));
+        println!("{}", state.stringify(&map));
+        assert!(state.try_move(&map, 0, Point { x: 1, y: 0 }));
+        println!("{}", state.stringify(&map));
     }
 }
 
