@@ -1,0 +1,18 @@
+v2 multiple
+x x x - - - x x x
+
+x h x x x x x h x
+
+x - - - - - - - x
+
+x - - - n - - - x
+       / /
+x e - h E h - e x
+       / /
+x - - - n - - - x
+
+x - - - - - - - x
+
+x h - - e - - h x
+
+x x x x x x x x x

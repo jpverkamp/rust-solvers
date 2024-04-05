@@ -1679,11 +1679,30 @@ mod test_solutions {
     ]}
     test! {test_08_03, "08 - Light Gray", "03 - Twofold.txt", "ASDWDWDSWAAA"}
     test! {test_08_04, "08 - Light Gray", "04 - Aye.txt", "WWDWAASDSSSSASDDWWWAWWASS"}
-    test! {test_08_05, "08 - Light Gray", "05 - Twins.txt" in [
+test! {test_08_05, "08 - Light Gray", "05 - Twins.txt" in [
         "WSSWDDWASASSWWAA",
         "SWWSDDSAAWWWSSAA",
     ]}
-    test! {test_08_06, "08 - Light Gray", "06 - Double-Bleached.txt", ""}
+    test! {test_08_06, "08 - Light Gray", "06 - Double-Bleached.txt", "WWAAASSSDSDAASDWDDWWWWAASSSASDWWWWDDSSSSAADDDSDDWAAADDDWWWWAAAAWASSSS"} // 8 minutes...
+    test! {test_08_07, "08 - Light Gray", "07 - Spaceship.txt", "DDDSDDWAWAASASAAWWSDDDWASAAWDDDSDSDWWWSSSSS"}
+    test! {test_08_08, "08 - Light Gray", "08 - Counterintuitive.txt" in [
+        "WWAWDSSSDWASAWDWWAASDWDSWDDSAWASASDSWWDSASSSWWDDAAAA",
+        "WWDWASSSAWSDDWAWWDDSAWASWAASDWDSDSAWASDSAADDSSWWDD",
+    ]}
+    test! {test_08_09, "08 - Light Gray", "09 - Corners.txt", ""}
+    test! {test_08_10, "08 - Light Gray", "10 - Ocean.txt" in [
+        "AAAWWSDDWWWWAASDSAWASAWSS",
+        "AWASDDAAAAAWWDDDSDWAWWAA",
+    ]}
+    test! {test_08_11, "08 - Light Gray", "11 - Much Methane.txt" in [
+        "ASSSDWWADSADWAWWASDSDSADWAWDWSAA", // Bond order
+        "ASSSDWWAWDSADSADWAWWASSDSAWWWDD",  // Bond order
+    ]} 
+    test! {test_08_12, "08 - Light Gray", "12 - Hydrogen Machine.txt" in [
+        "DDDWAAAASDWAADDDSAADWASDWSDDWASWAADDD",
+        "DDDWAAAASDWAADDDSAAWDSDDWASWDAAASDWA",
+    ]}
+
 }
 
 // #[cfg(test)]
@@ -1694,25 +1713,25 @@ mod test_solutions {
 
 //         let input = "\
 // v2 multiple
-// x x x x x x x x x
+// - - - - - x x x -
 
-// x - - - x - - - x
-//            /
-// x - - - - o o - x
+// x x x x x x h x x
 
-// x - h x - x - - x
+// x - - - - - - h x
 
-// x - h x E x h - x
+// x - - h - H - - x
+//        / /
+// x x x c - c x x x
+//        / /
+// x - - h - h - - x
 
-// x - - x - x h - x
+// x h - - - - - - x
 
-// x - o o - - - - x
-//      /
-// x - - - x - - - x
+// x x h x x x x x x
 
-// x x x x x x x x x";
+// - x x x - - - - -";
 
-//         let instructions = "WWAAASSSDWWSSSDDDSDWWDWWWWADSSSSSAAAASAWWWWAWDDDSSSSDDWWW";
+//         let instructions = "ASSSDWWADSADWAWWASDSDSADWAWDWSAA";
 
 //         let (map, mut state) = Map::load(input);
 //         println!("Initial state:\n{}", state.stringify(&map));
