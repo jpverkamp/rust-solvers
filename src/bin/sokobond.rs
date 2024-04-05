@@ -40,6 +40,15 @@ impl Sub<Point> for Point {
     }
 }
 
+impl Into<Point> for (isize, isize) {
+    fn into(self) -> Point {
+        Point {
+            x: self.0,
+            y: self.1,
+        }
+    }
+}
+
 impl Point {
     const ZERO: Point = Point { x: 0, y: 0 };
 
@@ -591,6 +600,7 @@ impl LocalState {
         offset: Point,
         first: bool,
     ) -> bool {
+        let mut offset = offset;
         let original_molecules = self.molecules.clone();
 
         // Collect all map modifiers that we are trying to cross (this may take multiple passes)
@@ -645,7 +655,7 @@ impl LocalState {
                     }
 
                     // We have a bond to try to modify
-                    bond_to_modify = Some((bond_index, modifier));
+                    bond_to_modify = Some((bond_index, modifier, is_vertical, is_positive));
                     break 'find_bond;
                 }
             }
@@ -656,7 +666,7 @@ impl LocalState {
             }
 
             // Note it, so we don't apply the same modifier more than once per move
-            let (bond_index, modifier) = bond_to_modify.unwrap();
+            let (bond_index, modifier, is_vertical, is_positive) = bond_to_modify.unwrap();
             modifiers_applied.push(modifier);
 
             // Figure out which elements we're dealing with
@@ -781,7 +791,82 @@ impl LocalState {
                     self.molecules[index].elements[el_b_index].free_electrons -= 1;
                     self.molecules[index].bonds[bond_index].count += 1;
                 }
-                ModifierKind::Rotate => todo!(),
+                ModifierKind::Rotate => {
+                    // When rotating, the rest of the molecule will move as expected
+                    // But the bond with the primary will 'wrap' around
+                    // I expect I will get this wrong
+                    let el_a = &self.molecules[index].elements[el_a_index];
+                    let el_b = &self.molecules[index].elements[el_b_index];
+
+                    // Verify that we only have a single bond to the primary element
+                    // TODO: This is probably not required
+                    if self.molecules[index]
+                        .bonds
+                        .iter()
+                        .filter(|b| b.a == Point::ZERO || b.b == Point::ZERO)
+                        .count()
+                        != 1
+                    {
+                        todo!("only one bond to primary expected");
+                    }
+
+                    // Verify that one of a or b is the primary
+                    // TODO: This is probably not required
+                    if el_a_index != 0 && el_b_index != 0 {
+                        todo!("one of a or b should be primary");
+                    }
+                    let is_a_primary = el_a_index == 0;
+
+                    // Determine if the primary is the 'minimal' element (so we know if we're going 'over' or 'under')
+                    let is_primary_minimal = match (is_vertical, is_a_primary) {
+                        (true, true) => el_a.offset.y < el_b.offset.y,
+                        (true, false) => el_b.offset.y < el_a.offset.y,
+                        (false, true) => el_a.offset.x < el_b.offset.x,
+                        (false, false) => el_b.offset.x < el_a.offset.x,
+                    };
+
+                    // Determine where we need to move the primary element + what the new offset will be
+                    let (new_primary_offset, new_offset) =
+                        match (is_vertical, is_positive, is_primary_minimal) {
+                            // Vertical, moving right, primary is on top
+                            (true, true, true) => (Point { x: 1, y: 1 }, Point { x: 0, y: -1 }),
+                            // Vertical, moving right, primary is on bottom
+                            (true, true, false) => (Point { x: 1, y: -1 }, Point { x: 0, y: 1 }),
+                            // Vertical, moving left, primary is on top
+                            (true, false, true) => (Point { x: -1, y: 1 }, Point { x: 0, y: -1 }),
+                            // Vertical, moving right, primary is on bottom
+                            (true, false, false) => (Point { x: -1, y: -1 }, Point { x: 0, y: 1 }),
+                            // Horizontal, moving down, primary is on left
+                            (false, true, true) => (Point { x: 1, y: 1 }, Point { x: -1, y: 0 }),
+                            // // Horizontal, moving down, primary is on right
+                            (false, true, false) => (Point { x: -1, y: 1 }, Point { x: 1, y: 0 }),
+                            // // Horizontal, moving up, primary is on left
+                            (false, false, true) => (Point { x: 1, y: -1 }, Point { x: -1, y: 0 }),
+                            // // Horizontal, moving up, primary is on right
+                            (false, false, false) => (Point { x: -1, y: -1 }, Point { x: 1, y: 0 }),
+
+                            _ => todo!(),
+                        };
+
+                    // Verify that there's nothing in this molecule in that new spot
+                    if self.molecules[index].elements.iter().any(|el| el.offset == new_primary_offset) {
+                        self.molecules = original_molecules;
+                        return false;
+                    }
+
+                    // That element will 'back up' one step and then move by the offset
+                    // This might overlap for the back up but this *should* be fine
+                    if is_a_primary {
+                        self.molecules[index].elements[el_a_index].offset = new_primary_offset;
+                        self.molecules[index].bonds[bond_index].a = new_primary_offset;
+                    } else {
+                        self.molecules[index].elements[el_b_index].offset = new_primary_offset;
+                        self.molecules[index].bonds[bond_index].b = new_primary_offset;
+                    }
+
+                    self.molecules[index].recenter(new_primary_offset);
+                    offset = new_offset;
+                }
             }
         }
 
@@ -839,7 +924,10 @@ impl LocalState {
                 continue;
             }
 
-            if self.molecules[index].intersects(offset, &self.molecules[i]).is_some() {
+            if self.molecules[index]
+                .intersects(offset, &self.molecules[i])
+                .is_some()
+            {
                 self.molecules = original_molecules;
                 return false;
             }
@@ -878,6 +966,8 @@ impl LocalState {
 
 #[cfg(test)]
 mod test_localstate {
+    use core::hash;
+
     #[test]
     fn test_move_basic() {
         use super::*;
@@ -1294,6 +1384,66 @@ v2
         assert!(state.try_move(&map, 0, Point { x: -1, y: 0 }));
         println!("{}", state.stringify(&map));
     }
+
+    #[test]
+    fn test_rotate() {
+        use super::*;
+
+        let (map, state) = Map::load(
+            "\
+v2
+H - 
+ @
+h -",
+        );
+
+        // Order is:
+        // - Primary hydrogen (absolute position)
+        // - Other hydrogen (absolute position)
+        // - The way the primary tries to move
+        // - The ending relative offset of the secondary hydrogen
+        let tests = [
+            // Vertical, moving right, primary is on the top
+            ((0, 0), (0, 1), (1, 0), (-1, 0)),
+            // Vertical, moving right, primary is on the bottom
+            ((0, 1), (0, 0), (1, 0), (-1, 0)),
+            // Vertical, moving left, primary is on the top
+            ((1, 0), (1, 1), (-1, 0), (1, 0)),
+            // Vertical, moving left, primary is on the bottom
+            ((1, 1), (1, 0), (-1, 0), (1, 0)),
+            // Horizontal, moving down, primary is on the left
+            ((0, 0), (1, 0), (0, 1), (0, -1)),
+            // Horizontal, moving down, primary is on the right
+            ((1, 0), (0, 0), (0, 1), (0, -1)),
+            // Horizontal, moving up, primary is on the left
+            ((0, 1), (1, 1), (0, -1), (0, 1)),
+            // Horizontal, moving up, primary is on the right
+            ((1, 1), (0, 1), (0, -1), (0, 1)),
+        ];
+
+        for (_i, (h0, h1, offset, end_offset)) in tests.into_iter().enumerate() {
+            let h0: Point = h0.into();
+            let h1: Point = h1.into();
+            let offset: Point = offset.into();
+            let end_offset: Point = end_offset.into();
+
+            // Create the new test case from the original state
+            let mut state = state.clone();
+            state.molecules[0].offset = h0;
+            state.molecules[0].elements[0].offset = Point::ZERO;
+            state.molecules[0].elements[1].offset = h1 - h0;
+            state.molecules[0].bonds[0].a = Point::ZERO;
+            state.molecules[0].bonds[0].b = h1 - h0;
+
+            // Try to move the requested direction
+            assert!(state.try_move(&map, 0, offset));
+
+            // Verify that the molecule itself and the secondary hydrogen moved as expected
+            assert_eq!(state.molecules[0].offset, h0 + offset);
+            assert_eq!(state.molecules[0].elements[0].offset, Point::ZERO);
+            assert_eq!(state.molecules[0].elements[1].offset, end_offset);
+        }
+    }
 }
 
 // The step the primary molecule takes each tick
@@ -1513,7 +1663,11 @@ mod test_solutions {
             fn $name() {
                 let input = include_str!(concat!("../../data/sokobond/", $folder, "/", $file));
                 let solution = solve(input).expect("solution exists");
-                assert!($expected_list.contains(&solution.as_str()), "{solution} not in {:?}", $expected_list);
+                assert!(
+                    $expected_list.contains(&solution.as_str()),
+                    "{solution} not in {:?}",
+                    $expected_list
+                );
             }
         };
         ($name:ident, $folder:literal, $file:literal, $expected:expr) => {
@@ -1578,7 +1732,7 @@ mod test_solutions {
     test! {test_04_06, "04 - Red", "06 - Anxiety.txt" in [
         "WAASAWDWWSDDSA",
         "WAASAWDWWSDSDW",
-    ]} 
+    ]}
     test! {test_04_07, "04 - Red", "07 - Wingman.txt" in [
         "DDDSAWWWASAAWSSSSDD",
         "WAWWSDDDSASDSAAAAWW",
@@ -1594,7 +1748,7 @@ mod test_solutions {
         "SAAWDDDDSAAWAASDDDDWAAAASDDDDWAAAA",
     ]}
     test! {test_04_12, "04 - Red", "12 - Trap.txt" in [
-        "DSDWAASDWWASDSDDDDDWADSAWWDSASAAA", 
+        "DSDWAASDWWASDSDDDDDWADSAWWDSASAAA",
         "DSDWAASDWWASDSDDDDDWSAWWDSASAAA",
     ]}
 
@@ -1679,7 +1833,7 @@ mod test_solutions {
     ]}
     test! {test_08_03, "08 - Light Gray", "03 - Twofold.txt", "ASDWDWDSWAAA"}
     test! {test_08_04, "08 - Light Gray", "04 - Aye.txt", "WWDWAASDSSSSASDDWWWAWWASS"}
-test! {test_08_05, "08 - Light Gray", "05 - Twins.txt" in [
+    test! {test_08_05, "08 - Light Gray", "05 - Twins.txt" in [
         "WSSWDDWASASSWWAA",
         "SWWSDDSAAWWWSSAA",
     ]}
@@ -1697,61 +1851,56 @@ test! {test_08_05, "08 - Light Gray", "05 - Twins.txt" in [
     test! {test_08_11, "08 - Light Gray", "11 - Much Methane.txt" in [
         "ASSSDWWADSADWAWWASDSDSADWAWDWSAA", // Bond order
         "ASSSDWWAWDSADSADWAWWASSDSAWWWDD",  // Bond order
-    ]} 
+    ]}
     test! {test_08_12, "08 - Light Gray", "12 - Hydrogen Machine.txt" in [
         "DDDWAAAASDWAADDDSAADWASDWSDDWASWAADDD",
         "DDDWAAAASDWAADDDSAAWDSDDWASWDAAASDWA",
     ]}
-
 }
 
-// #[cfg(test)]
-// mod manual_testing {
-//     #[test]
-//     fn test_solution() {
-//         use super::*;
+#[cfg(test)]
+mod manual_testing {
+    #[test]
+    fn test_solution() {
+        use super::*;
 
-//         let input = "\
-// v2 multiple
-// - - - - - x x x -
+        let input = "\
+v2
+- - x x x x x
 
-// x x x x x x h x x
+- - x - - - x
+         @
+x x x - O - x
 
-// x - - - - - - h x
+x h - - - - x
 
-// x - - h - H - - x
-//        / /
-// x x x c - c x x x
-//        / /
-// x - - h - h - - x
+x x x - x x x
 
-// x h - - - - - - x
+- - x h x - -
 
-// x x h x x x x x x
+- - x x x - -";
 
-// - x x x - - - - -";
+        let instructions = "ASADDWWDSSAAS";
 
-//         let instructions = "ASSSDWWADSADWAWWASDSDSADWAWDWSAA";
+        let (map, mut state) = Map::load(input);
+        println!("Initial state:\n{}", state.stringify(&map));
+        println!("Multiple? {}", map.allow_multiple);
 
-//         let (map, mut state) = Map::load(input);
-//         println!("Initial state:\n{}", state.stringify(&map));
-//         println!("Multiple? {}", map.allow_multiple);
+        for c in instructions.chars() {
+            let offset = match c {
+                'W' => Step::North,
+                'S' => Step::South,
+                'D' => Step::East,
+                'A' => Step::West,
+                _ => panic!("invalid instruction: {}", c),
+            };
 
-//         for c in instructions.chars() {
-//             let offset = match c {
-//                 'W' => Step::North,
-//                 'S' => Step::South,
-//                 'D' => Step::East,
-//                 'A' => Step::West,
-//                 _ => panic!("invalid instruction: {}", c),
-//             };
-
-//             assert!(state.try_move(&map, 0, offset.into()));
-//             println!("Move: {}, state:\n{}", c, state.stringify(&map));
-//             for (i, molecule) in state.molecules.iter().enumerate() {
-//                 println!("Molecule {}: {:?}", i, molecule.bonds);
-//             }
-//             println!("Is solved? {}", state.is_solved(&map));
-//         }
-//     }
-// }
+            assert!(state.try_move(&map, 0, offset.into()));
+            println!("Move: {}, state:\n{}", c, state.stringify(&map));
+            for (i, molecule) in state.molecules.iter().enumerate() {
+                println!("Molecule {}: {:?}", i, molecule.bonds);
+            }
+            println!("Is solved? {}", state.is_solved(&map));
+        }
+    }
+}
