@@ -101,6 +101,7 @@ struct Map {
     walls: Vec<bool>,
     modifiers: Vec<Modifier>,
     allow_multiple: bool,
+    solutions: Vec<String>,
 }
 
 impl Map {
@@ -112,6 +113,8 @@ impl Map {
         let mut modifiers = Vec::new();
 
         let mut molecules = Vec::new();
+
+        let mut solutions = Vec::new();
 
         // Version 1 files are just the grid of elements
 
@@ -137,6 +140,12 @@ impl Map {
 
             let mut y = 0;
             while let Some(line) = lines.next() {
+                if line.starts_with("=") {
+                    new_input.push_str(line);
+                    new_input.push('\n');
+                    continue;
+                }
+
                 y += 1;
                 if y % 2 == 1 {
                     for (x, c) in line.chars().enumerate() {
@@ -173,6 +182,13 @@ impl Map {
 
         // Now grid contains just the elements, walls, and empty space
         for (y, line) in grid.lines().enumerate() {
+            // Lines starting with = represent solutions
+            // They should only be at the end of the file
+            if line.starts_with('=') {
+                solutions.push(line[1..].to_string());
+                continue;
+            }
+
             width = width.max(line.len());
             height += 1;
 
@@ -240,6 +256,7 @@ impl Map {
                 walls,
                 modifiers,
                 allow_multiple: multiple,
+                solutions,
             },
             LocalState { molecules },
         )
@@ -516,6 +533,7 @@ mod test_molecule {
             ],
             modifiers: vec![],
             allow_multiple: false,
+            solutions: vec![],
         };
 
         assert!(a.intersects_wall(Point { x: 1, y: 0 }, &map));
@@ -1694,210 +1712,101 @@ fn main() {
 
 #[cfg(test)]
 mod test_solutions {
+    use std::{fs::File, io::Read, sync::mpsc, thread};
+
     use super::*;
 
-    macro_rules! test {
-        ($name:ident, $folder:literal, $file:literal in $expected_list:expr) => {
-            #[test]
-            fn $name() {
-                let input = include_str!(concat!("../../data/sokobond/", $folder, "/", $file));
-                let solution = solve(input).expect("solution exists");
-                assert!(
-                    $expected_list.contains(&solution.as_str()),
-                    "{solution} not in {:?}",
-                    $expected_list
-                );
+    #[test]
+    fn test_all_solutions() {
+        let timeout = std::time::Duration::from_secs(1);
+
+        // Collect all tests to run in order
+        let mut test_files = Vec::new();
+        for entry in std::fs::read_dir("data/sokobond").unwrap() {
+            let entry = entry.unwrap();
+            let path = entry.path();
+            if !path.is_dir() {
+                continue;
             }
-        };
-        ($name:ident, $folder:literal, $file:literal, $expected:expr) => {
-            #[test]
-            fn $name() {
-                let input = include_str!(concat!("../../data/sokobond/", $folder, "/", $file));
-                let solution = solve(input);
-                assert_eq!(solution.expect("solution exists"), $expected);
+
+            for entry in std::fs::read_dir(&path).unwrap() {
+                let entry = entry.unwrap();
+                let path = entry.path();
+                if path.extension().unwrap() != "txt" {
+                    continue;
+                }
+
+                test_files.push(path);
             }
-        };
-    }
+        }
+        test_files.sort();
 
-    test! {test_01_01, "01 - Yellow", "01 - Let's Go.txt", "WWDDWWDD"}
-    test! {test_01_02, "01 - Yellow", "02 - Cell.txt", "DWDDAA"}
-    test! {test_01_03, "01 - Yellow", "03 - Loop.txt", "SSDDWWSSAAAWWWWD"}
-    test! {test_01_04, "01 - Yellow", "04 - Monty Hall.txt", "WSDDWSAAWWWDAAA"}
-    test! {test_01_05, "01 - Yellow", "05 - Knot.txt", "WDASASWADDDD"}
-    test! {test_01_06, "01 - Yellow", "06 - Push.txt", "DDSDWD"}
-    test! {test_01_07, "01 - Yellow", "07 - Structure.txt", "DSSAWAA"}
-    test! {test_01_08, "01 - Yellow", "08 - Lotus.txt", "SASSDDSAS"}
-    test! {test_01_09, "01 - Yellow", "09 - Coyote.txt", "WWAASASSAA"}
-    test! {test_01_10, "01 - Yellow", "10 - Roadrunner.txt", "WDWDSDDWAAASSD"}
+        // Run each test with timeout
+        let mut unsolved_tests = vec![];
+        let mut failed_tests = vec![];
+        let mut timed_out_tests = vec![];
 
-    test! {test_02_01, "02 - Orange", "01 - Suit.txt", "SSDDWSSDSAS"}
-    test! {test_02_02, "02 - Orange", "02 - Chimney.txt", "WDAWSSAAWDDW"}
-    test! {test_02_03, "02 - Orange", "03 - Heart.txt", "WWDWASAAWDAWWDSDDW"}
-    test! {test_02_04, "02 - Orange", "04 - Factory.txt", "DDSSAAAAAWWWSDDDDDWWAWAS"}
-    test! {test_02_05, "02 - Orange", "05 - Scoop.txt", "DAASSDSDDAWAAA"}
-    test! {test_02_06, "02 - Orange", "06 - Block.txt", "ASSDDSDDWWWADSSAAAW"}
-    test! {test_02_07, "02 - Orange", "07 - Chandelier.txt", "DSSSAWDWDSSAWWWA"}
-    test! {test_02_08, "02 - Orange", "08 - Creature.txt", "WDDWWAAWASDDDDSSAASSAWAAW"}
-    test! {test_02_09, "02 - Orange", "09 - Rosie.txt", "WAWWDDAASASSDDDD"}
-    test! {test_02_10, "02 - Orange", "10 - Kruskal.txt", "ASAWDWDDSSSWWAAW"}
+        for path in test_files {
+            println!("Testing {:?}", path);
 
-    test! {test_03_01, "03 - Gray", "01 - Helium.txt", "WDDDDDSAAWASSDSSS"}
-    test! {test_03_02, "03 - Gray", "02 - Tee.txt", "WWASWDDDSAAWASDSSADSSWWW"}
-    test! {test_03_03, "03 - Gray", "03 - Freedom.txt", "AAWAWDD"}
-    test! {test_03_04, "03 - Gray", "04 - Against the Wall.txt", "WAASWAWWDSASDDSSSAWWSAAWWDDWWDDSSAAWAWASASDDDD"}
-    test! {test_03_05, "03 - Gray", "05 - Pathways.txt", "AWWDSDSASSSAAWWDDSSDDWW"}
-    test! {test_03_06, "03 - Gray", "06 - Three Doors.txt" in [
-        "DAWWSAAWWAWDDSDSSAASDSDWWWSDDWSDSSAWWAAAAWWDD",
-        "AWAWSDDWSDDWWDWAAASSSDDSASAWWWSDDWWAASSSASAWW",
-    ]}
-    test! {test_03_07, "03 - Gray", "07 - Cloud.txt", "DWWASDDSWWASSD"}
-    test! {test_03_08, "03 - Gray", "08 - Planning.txt", "WDSDSAASSAWDWASAAWDDDDSDDW"}
-    test! {test_03_09, "03 - Gray", "09 - Out of the Way.txt" in [
-        "AWDDDSAWAAAWWDDDDSWAAAASSDDWSDSDDWAAADDWWAAADSSASAW",
-        "DAWAASDWDDDWWAAAASWDDDDSSAAWSASAAWDDDAAWWDDDASSDSDW",
-    ]}
-    test! {test_03_10, "03 - Gray", "10 - Impasse.txt", "DWADDSASAAWADDSSWWDWWA"}
-    test! {test_03_11, "03 - Gray", "11 - Fetch.txt", "WDWASSSADDASWWWWDSAWASDSDAA"}
-    test! {test_03_12, "03 - Gray", "12 - Drill.txt", "AWWWWDSASSSDWDWAWWAASDSDASSDWAWWDSWWDDSAS"}
+            let mut file = File::open(&path).unwrap();
+            let mut input = String::new();
+            file.read_to_string(&mut input).unwrap();
 
-    test! {test_04_01, "04 - Red", "01 - Split.txt", "DDWWDSSDDDAAWA"}
-    test! {test_04_02, "04 - Red", "02 - Lock.txt", "DDWDSAWWWWAADDSSSA"}
-    test! {test_04_03, "04 - Red", "03 - Push Up.txt", "DAAWDSDWA"}
-    test! {test_04_04, "04 - Red", "04 - Out of Reach.txt", "WDDDDSAWDSAAWW"}
-    test! {test_04_05, "04 - Red", "05 - Small Key.txt" in [
-        "ASDWDWASSAWSDWDDD",
-        "DSAWAWDSSDWSAWDDD",
-    ]}
-    test! {test_04_06, "04 - Red", "06 - Anxiety.txt" in [
-        "WAASAWDWWSDDSA",
-        "WAASAWDWWSDSDW",
-    ]}
-    test! {test_04_07, "04 - Red", "07 - Wingman.txt" in [
-        "DDDSAWWWASAAWSSSSDD",
-        "WAWWSDDDSASDSAAAAWW",
-    ]}
-    test! {test_04_08, "04 - Red", "08 - Ring.txt", "DDAAWWSDWWDAA"}
-    test! {test_04_09, "04 - Red", "09 - Anvil.txt", "SDSSDSAADWWWAASSDDDWWADSSAAAWSA"}
-    test! {test_04_10, "04 - Red", "10 - Cottage.txt" in [
-        "SWWWWAASASDWWDDDDSDSAWWAASSSS",
-        "SWWWWDDSDSAWWAAAASASDWWDDSSSS",
-    ]}
-    test! {test_04_11, "04 - Red", "11 - Hanoi.txt" in [
-        "AASWDDDDSAAWAASDDDDWAAAASDDDDWAAAA",
-        "SAAWDDDDSAAWAASDDDDWAAAASDDDDWAAAA",
-    ]}
-    test! {test_04_12, "04 - Red", "12 - Trap.txt" in [
-        "DSDWAASDWWASDSDDDDDWADSAWWDSASAAA",
-        "DSDWAASDWWASDSDDDDDWSAWWDSASAAA",
-    ]}
+            let (map, _) = Map::load(&input);
 
-    test! {test_05_01, "05 - Green", "01 - Breathe.txt", "WWDSDSWAW"}
-    test! {test_05_02, "05 - Green", "02 - Doubling.txt", "WAWWASSDW"}
-    test! {test_05_03, "05 - Green", "03 - Koan.txt", "WAWAADDSASWDW"}
-    test! {test_05_04, "05 - Green", "04 - Together.txt", "SSWDDWWSSAWA"}
-    test! {test_05_05, "05 - Green", "05 - Agoraphobia.txt", "SWDWDDSSSA"}
-    test! {test_05_06, "05 - Green", "06 - Forethought.txt", "WDWWSSDDDAAASA"}
-    test! {test_05_07, "05 - Green", "07 - Apartment.txt", "SDDWWDDDSDWWWWAAAADDDDW"}
-    test! {test_05_08, "05 - Green", "08 - Lettuce.txt", "WDDWAWSSA"}
-    test! {test_05_09, "05 - Green", "09 - Landing Pad.txt", "SDDDSSWWWWSSAAAAWSS"}
-    test! {test_05_10, "05 - Green", "10 - Matchmaker.txt", "DDWWWDASAAASDDDSS"}
-    test! {test_05_11, "05 - Green", "11 - Cat's Cradle.txt", "DWWDAAASSWWDDDSSSAAA"}
+            let (tx, rx) = mpsc::channel();
+            thread::spawn(move || {
+                let solution = solve(&input);
+                match tx.send(solution) {
+                    Ok(_) => {}
+                    Err(_) => {}
+                } // I don't actually care if this succeeds, but need to consume it
+            });
 
-    test! {test_06_01, "06 - Dark Green", "01 - Papers Please.txt", "DADDDDDDDASWWASAAA"}
-    test! {test_06_02, "06 - Dark Green", "02 - Airplane.txt" in [
-        "SSWWWAASDDDWDSAAWWSWDSSSADWDWDDSAAWASSASDWWAAWAASDDWDSSDSAWWWWDADSSSSS",
-        "SSWWWAASDDDWDSAAWWSWDSSSADWWDDDSAAWASSASDWWAAWAASDDWDSSDSAWWWWDADSSSSS",
-    ]}
-    test! {test_06_03, "06 - Dark Green", "03 - Mine Field.txt", "SDDDDSSSAWAWAWDSAAWWSDSDSDSAAAAAA"}
-    test! {test_06_04, "06 - Dark Green", "04 - Workshop.txt", "DSDDWDDSAAASDWAD"}
-    test! {test_06_05, "06 - Dark Green", "05 - Dissection.txt", "AASSDDAWADWASDDDDD"}
-    test! {test_06_06, "06 - Dark Green", "06 - Casket.txt" in [
-        "DDAASSDDDWAWSAWSD",
-        "DDAASSDDDWAWSAWSD",
-    ]}
-    test! {test_06_07, "06 - Dark Green", "07 - Three Body Problem.txt" in [
-        "DDAWDSDWASDWASDWWWAAD",
-        "DDAWDSAWWDDASSAAWWS",
-    ]}
-    test! {test_06_08, "06 - Dark Green", "08 - Cat.txt", "WAADDDAADAAWSSDDWD"}
-    test! {test_06_09, "06 - Dark Green", "09 - Halves.txt", "ADDSAWAAWDSDD"}
-    test! {test_06_10, "06 - Dark Green", "10 - Arrow.txt" in [
-        "SWWWADWWSWASSSSDWWWAA",
-        "SWWWADWWSWASSSSDWWAWA",
-    ]}
-    test! {test_06_11, "06 - Dark Green", "11 - Hallway.txt", "DDASAWSAAWDDDDSAWDSWAADDAASDWSAAWSWASDDDA"}
+            match rx.recv_timeout(timeout) {
+                Ok(solution) => {
+                    if solution.is_none() {
+                        println!("- No solution found");
+                        unsolved_tests.push(path);
+                        continue;
+                    }
 
-    test! {test_07_01, "07 - Dark Red", "01 - Plunge.txt" in [
-        "SAWWDDSADSWAWASDSAWDDWASASDWWDSDDD",
-        "SAWWSDWDSASDWWAWASSDDWWASASSDDWDDD",
-        "WDSSWASAWWDWDSSADWAASDDSAWAWDSSDWSWDDD",
-    ]}
-    test! {test_07_02, "07 - Dark Red", "02 - Compass.txt", "SSDDASAAWADSDS"}
-    test! {test_07_03, "07 - Dark Red", "03 - Blocking the Way.txt", "SSSSAAAWWDDAAWSSASDDDDWWAAAWWDDDSSAAASWDDDDS"}
-    test! {test_07_04, "07 - Dark Red", "04 - Power.txt", "WWDDSWWDSAAAWDDWSSAAWSSS"}
-    test! {test_07_05, "07 - Dark Red", "05 - Around.txt" in [
-        "DWAASWDDSAAASSWWDDDSWAASSSDWAWWASSDWSSDD",
-        "DWAASDAASSDAWWDSWSSDSWAAWWDD",
-        "DWAASDAASSDAWWDSSDSWAAWWDD",
-    ]}
-    test! {test_07_06, "07 - Dark Red", "06 - Infinity.txt" in [
-        "SSSWDDAWASSWDWSDDWDDAASADWDDSSAWDWSS",
-        "SSSWDDAWASSWDWSDDWDDAASADWDDSSADAWDSWW",
-    ]}
-    test! {test_07_07, "07 - Dark Red", "07 - Grater.txt" in [
-        "SSAWDSSSWWWDS",
-        "SSDWASSSWWWAS",
-        "SSASSSWWDWDS", // Bond ordering
-    ]}
-    test! {test_07_08, "07 - Dark Red", "08 - Windows.txt" in [
-        "AAAWWSDWAWDSASSSSDDAAWWWWWDSAWDSSSDDDS",
-        "WWAAWDSAWASDWDDDDSSWWAAAAASDWASDDDSSSD",
-    ]}
-    test! {test_07_09, "07 - Dark Red", "09 - Home.txt" in [
-        "WWWWAWSSDSSSSDWAWWWAAWDDSSSASDWWWDDWAASSSASWDWWWDWSSASSS",
-        "WWWWDWSSASSSSDWAWWWAAWDDSSSASDWWWDDWAASSSASWDWWAWWSSDSSS",
-        "WWWWAWSSDSSSSDWAWWWDDWAASSSASDWWWAAWDDSSSASWDWWDWWSSASSS",
-    ]}
-    test! {test_07_10, "07 - Dark Red", "10 - Long Legs.txt", "DWDDDSSSWWAWAASADDSWWDDD"}
-    test! {test_07_11, "07 - Dark Red", "11 - Station.txt", "DSSDDDDDAAAAAWWDAWWDDDDSSWWAAAAASS"}
-    test! {test_07_12, "07 - Dark Red", "12 - Arena.txt"  in [
-        "ASAWWDDDWSAAWDWAADDAA",
-        "WDWAASSSADWWASAWWSSWW",
-    ]}
+                    let solution = solution.unwrap();
+                    if !map.solutions.contains(&solution) {
+                        println!("- Invalid solution: {:?}", solution);
+                        failed_tests.push((path, solution));
+                    }
 
-    test! {test_08_01, "08 - Light Gray", "01 - Multiple.txt", "DDWWASAWDD"}
-    test! {test_08_02, "08 - Light Gray", "02 - Water Water.txt" in [
-        "DWASSWDDW",
-        "SDWWASDW",
-    ]}
-    test! {test_08_03, "08 - Light Gray", "03 - Twofold.txt", "ASDWDWDSWAAA"}
-    test! {test_08_04, "08 - Light Gray", "04 - Aye.txt", "WWDWAASDSSSSASDDWWWAWWASS"}
-    test! {test_08_05, "08 - Light Gray", "05 - Twins.txt" in [
-        "WSSWDDWASASSWWAA",
-        "SWWSDDSAAWWWSSAA",
-    ]}
-    test! {test_08_06, "08 - Light Gray", "06 - Double-Bleached.txt", "WWAAASSSDSDAASDWDDWWWWAASSSASDWWWWDDSSSSAADDDSDDWAAADDDWWWWAAAAWASSSS"} // 8 minutes...
-    test! {test_08_07, "08 - Light Gray", "07 - Spaceship.txt", "DDDSDDWAWAASASAAWWSDDDWASAAWDDDSDSDWWWSSSSS"}
-    test! {test_08_08, "08 - Light Gray", "08 - Counterintuitive.txt" in [
-        "WWAWDSSSDWASAWDWWAASDWDSWDDSAWASASDSWWDSASSSWWDDAAAA",
-        "WWDWASSSAWSDDWAWWDDSAWASWAASDWDSDSAWASDSAADDSSWWDD",
-    ]}
-    test! {test_08_09, "08 - Light Gray", "09 - Corners.txt", ""}
-    test! {test_08_10, "08 - Light Gray", "10 - Ocean.txt" in [
-        "AAAWWSDDWWWWAASDSAWASAWSS",
-        "AWASDDAAAAAWWDDDSDWAWWAA",
-    ]}
-    test! {test_08_11, "08 - Light Gray", "11 - Much Methane.txt" in [
-        "ASSSDWWADSADWAWWASDSDSADWAWDWSAA", // Bond order
-        "ASSSDWWAWDSADSADWAWWASSDSAWWWDD",  // Bond order
-    ]}
-    test! {test_08_12, "08 - Light Gray", "12 - Hydrogen Machine.txt" in [
-        "DDDWAAAASDWAADDDSAADWASDWSDDWASWAADDD",
-        "DDDWAAAASDWAADDDSAAWDSDDWASWDAAASDWA",
-    ]}
+                    // If we made it this far, it's a valid solution!
+                }
+                Err(_) => {
+                    println!("- Timed out");
+                    timed_out_tests.push(path);
+                }
+            }
+        }
 
-    test! {test_09_01, "09 - Blue", "01 - Rotate.txt", "ASADDWWDSSAAS"}
-    test! {test_09_02, "09 - Blue", "02 - Key.txt", "DDASDWWWWA"}
+        // Print out the results
+        println!("\nUnsolved tests:");
+        for path in &unsolved_tests {
+            println!("  {:?}", path);
+        }
+
+        println!("\nFailed tests:");
+        for (path, solution) in &failed_tests {
+            println!("  {:?} -> {:?}", path, solution);
+        }
+
+        println!("\nTimed out tests:");
+        for path in &timed_out_tests {
+            println!("  {:?}", path);
+        }
+
+        assert!(unsolved_tests.is_empty());
+        assert!(failed_tests.is_empty());
+        assert!(timed_out_tests.is_empty());
+    }   
 }
 
 #[cfg(test)]

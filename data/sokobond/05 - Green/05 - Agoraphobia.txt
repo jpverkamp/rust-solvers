@@ -12,3 +12,4 @@ x - c - o - x
 x x - - - - x
 
 - x x x x x x
+=SWDWDDSSSA
