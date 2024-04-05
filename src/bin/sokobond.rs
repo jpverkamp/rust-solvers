@@ -1719,7 +1719,13 @@ mod test_solutions {
 
     #[test]
     fn test_all_solutions() {
-        let timeout = std::time::Duration::from_secs(1);
+        // Timeout after 1 second or SOKOBOND_TEST_TIMEOUT if set
+        let timeout = std::time::Duration::from_secs(
+            std::env::var("SOKOBOND_TEST_TIMEOUT")
+                .ok()
+                .and_then(|s| s.parse().ok())
+                .unwrap_or(1),
+        );
 
         // Collect all tests to run in order
         let mut test_files = Vec::new();
@@ -1752,7 +1758,7 @@ mod test_solutions {
         }
 
         let results = test_files.par_iter().map(move |path| {
-            println!("Testing {:?}", path);
+            println!("Starting {:?}", path);
 
             let mut file = File::open(&path).unwrap();
             let mut input = String::new();
@@ -1772,17 +1778,22 @@ mod test_solutions {
             match rx.recv_timeout(timeout) {
                 Ok(solution) => {
                     if solution.is_none() {
+                        println!("No solution: {:?}", path);
                         return TestResult::NoSolution;
                     }
                     let solution = solution.unwrap();
                     
                     if !map.solutions.contains(&solution) {
+                        println!("Invalid solution ({}): {:?}", solution, path);
                         return TestResult::InvalidSolution(solution);
                     }
 
+                    println!("Solved: {:?}", path);
                     return TestResult::Success;
+                    
                 }
                 Err(_) => {
+                    println!("Timed out: {:?}", path);
                     return TestResult::TimedOut
                 }
             }
