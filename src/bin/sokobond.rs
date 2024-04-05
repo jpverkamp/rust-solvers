@@ -601,8 +601,8 @@ impl LocalState {
         offset: Point,
         first: bool,
     ) -> bool {
-        let mut offset = offset;
         let original_molecules = self.molecules.clone();
+        let mut moved_early = false;
 
         // Collect all map modifiers that we are trying to cross (this may take multiple passes)
         let mut modifiers_applied = Vec::new();
@@ -804,77 +804,81 @@ impl LocalState {
                     self.molecules[index] = part_a;
                     self.molecules[part_b_index].active = false;
 
-                    // HACK: Now move back one step (without verifying) so that the push checks etc later work
-                    self.molecules[index].offset = self.molecules[index].offset - offset;
+                    // // HACK: Now move back one step (without verifying) so that the push checks etc later work
+                    // self.molecules[index].offset = self.molecules[index].offset - offset;
+
+                    moved_early = true;
                 }
             }
         }
 
-        // Make sure we won't hit a wall
-        // Check each moving molecule to see if it would hit a wall
-        if self.molecules[index].intersects_wall(offset, map) {
-            self.molecules = original_molecules;
-            return false;
-        }
-
-        // Try to update each molecule we're pushing on
-        'moving: loop {
-            for other_index in 0..self.molecules.len() {
-                if other_index == index {
-                    continue;
-                }
-
-                if let Some((_, other_intersection_offset)) =
-                    self.molecules[index].intersects(offset, &self.molecules[other_index])
-                {
-                    // HACK: Don't try to move the primary molecule more than once
-                    // This can happen if the primary wraps around another, like:
-                    /*
-                    O-O-O
-                    |   |
-                    H h H
-                    */
-                    // This can happen for non-primaries, but I don't have a good way to fix that
-                    // Assume if we made it this far, the primary *can* move, but don't actually do it here
-                    if other_index == 0 {
-                        continue;
-                    }
-
-                    // Recenter the other point so that the intersection is at 0,0
-                    // This will properly handle a molecule being pushed across a split
-                    // TODO: This won't properly work if multiple points are being pushed since only one is returned
-                    self.molecules[other_index].recenter(other_intersection_offset);
-
-                    let moved = self.__try_move_recursive__(map, other_index, offset, false);
-                    if !moved {
-                        self.molecules = original_molecules;
-                        return false;
-                    }
-
-                    continue 'moving;
-                }
-            }
-
-            break 'moving;
-        }
-
-        // Verify that after pushing, we're no longer intersecting anything
-        for i in 0..self.molecules.len() {
-            if i == index {
-                continue;
-            }
-
-            if self.molecules[index]
-                .intersects(offset, &self.molecules[i])
-                .is_some()
-            {
+        if !moved_early {
+            // Make sure we won't hit a wall
+            // Check each moving molecule to see if it would hit a wall
+            if self.molecules[index].intersects_wall(offset, map) {
                 self.molecules = original_molecules;
                 return false;
             }
-        }
 
-        // Finally, update our own location
-        self.molecules[index].offset = self.molecules[index].offset + offset;
+            // Try to update each molecule we're pushing on
+            'moving: loop {
+                for other_index in 0..self.molecules.len() {
+                    if other_index == index {
+                        continue;
+                    }
+
+                    if let Some((_, other_intersection_offset)) =
+                        self.molecules[index].intersects(offset, &self.molecules[other_index])
+                    {
+                        // HACK: Don't try to move the primary molecule more than once
+                        // This can happen if the primary wraps around another, like:
+                        /*
+                        O-O-O
+                        |   |
+                        H h H
+                        */
+                        // This can happen for non-primaries, but I don't have a good way to fix that
+                        // Assume if we made it this far, the primary *can* move, but don't actually do it here
+                        if other_index == 0 {
+                            continue;
+                        }
+
+                        // Recenter the other point so that the intersection is at 0,0
+                        // This will properly handle a molecule being pushed across a split
+                        // TODO: This won't properly work if multiple points are being pushed since only one is returned
+                        self.molecules[other_index].recenter(other_intersection_offset);
+
+                        let moved = self.__try_move_recursive__(map, other_index, offset, false);
+                        if !moved {
+                            self.molecules = original_molecules;
+                            return false;
+                        }
+
+                        continue 'moving;
+                    }
+                }
+
+                break 'moving;
+            }
+
+            // Verify that after pushing, we're no longer intersecting anything
+            for i in 0..self.molecules.len() {
+                if i == index {
+                    continue;
+                }
+
+                if self.molecules[index]
+                    .intersects(offset, &self.molecules[i])
+                    .is_some()
+                {
+                    self.molecules = original_molecules;
+                    return false;
+                }
+            }
+
+            // Finally, update our own location
+            self.molecules[index].offset = self.molecules[index].offset + offset;
+        }
 
         // If we're the first call, re-apply bonds and remove inactive molecules
         if first {
@@ -1893,7 +1897,7 @@ mod test_solutions {
     ]}
 
     test! {test_09_01, "09 - Blue", "01 - Rotate.txt", "ASADDWWDSSAAS"}
-    test! {test_09_02, "09 - Blue", "02 - Key.txt", "DDASDWWWWAd "}
+    test! {test_09_02, "09 - Blue", "02 - Key.txt", "DDASDWWWWA"}
 }
 
 #[cfg(test)]
