@@ -789,8 +789,7 @@ impl LocalState {
                         return false;
                     }
                     self.molecules[part_b_index].active = true;
-                    println!("moved a:\n{}", self.stringify(&map));
-
+                    
                     // Part b contains the 'other' half which moves along the bond (as calculated earlier)
                     // Likewise, disable collision checking with a
                     self.molecules[index].active = false;
@@ -800,15 +799,12 @@ impl LocalState {
                         return false;
                     }
                     self.molecules[index].active = true;
-                    println!("moved b:\n{}", self.stringify(&map));
-
+                    
                     // Once they've both moved, make sure they're non intersecting
                     if self.molecules[index].intersects(Point::ZERO, &self.molecules[part_b_index]).is_some() {
                         self.molecules = original_molecules;
                         return false;
                     }
-
-                    println!("non-intersecting");
 
                     // Combine b into a
                     let mut part_a = self.molecules[index].clone();
@@ -869,8 +865,6 @@ impl LocalState {
                         b: new_bond_b,
                         count: bond.count,
                     };
-
-                    dbg!(&part_a, new_bond, left_side, top_side, moving_horizontal);
 
                     // Validate that we didn't create a screwy bond
                     // assert!(part_a.elements.iter().any(|el| el.offset == new_bond.a));
@@ -1156,8 +1150,6 @@ mod test_localstate {
         assert!(state.try_move(&map, 0, Point { x: 0, y: 1 }));
         assert!(state.try_move(&map, 0, Point { x: 0, y: 1 }));
 
-        println!("{}", state.stringify(&map));
-
         // Two molecules
         assert_eq!(state.molecules.len(), 2);
 
@@ -1190,7 +1182,6 @@ h - - -",
 
         // Move again, now we're split
         assert!(state.try_move(&map, 0, Point { x: 1, y: 0 }));
-        println!("{}", state.stringify(&map));
         assert_eq!(state.molecules.len(), 2);
         assert_eq!(state.molecules[0].elements.len(), 1);
         assert_eq!(state.molecules[1].elements.len(), 1);
