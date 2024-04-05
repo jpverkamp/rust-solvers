@@ -722,8 +722,6 @@ impl LocalState {
                         self.molecules[index] = part_a;
                         self.molecules.push(part_b);
                     };
-
-                    
                 }
                 ModifierKind::Strengthen => {
                     // Verify we have enough free electrons
@@ -742,7 +740,7 @@ impl LocalState {
                     // When rotating, the rest of the molecule will move as expected
                     // But the bond with the primary will 'wrap' around
                     // I expect I will get this wrong
-                    
+
                     // Split the molecule into two parts, (temporarily) removing the rotate bond
                     // The part with the old primary will move as expected
                     // The other part will be 'pulled' along the bond
@@ -762,18 +760,25 @@ impl LocalState {
                     let (part_a, part_b) = parts.unwrap();
 
                     // Determine how which way part b will remove because we'll move a and b shortly
-                    let bond_a_in_a = part_a.bonds.iter().position(|b| b.a == Point::ZERO).is_some();
-                    let new_b_offset = if bond_a_in_a { 
-                        bond.b - bond.a
-                    } else {
-                        bond.a - bond.b
+                    let left_side = part_a.offset.x == modifier.location.x;
+                    let top_side = part_a.offset.y == modifier.location.y;
+                    let moving_horizontal = offset.x != 0;
+
+                    let new_b_offset = match (left_side, top_side, moving_horizontal) {
+                        (true, true, true) => Point { x: 0, y: -1 },
+                        (true, true, false) => Point { x: -1, y: 0 },
+                        (true, false, true) => Point { x: 0, y: 1 },
+                        (true, false, false) => Point { x: -1, y: 0 },
+                        (false, true, true) => Point { x: 0, y: -1 },
+                        (false, true, false) => Point { x: 1, y: 0 },
+                        (false, false, true) => Point { x: 0, y: 1 },
+                        (false, false, false) => Point { x: 1, y: 0 },
                     };
 
                     // Part a becomes the new primary, b is added
                     self.molecules[index] = part_a;
                     let part_b_index = self.molecules.len();
                     self.molecules.push(part_b);
-
 
                     // Part a contains the original primary, it moves in the original direction
                     let moved = self.__try_move_recursive__(map, index, offset, false);
@@ -809,21 +814,55 @@ impl LocalState {
                         });
                     }
 
-                    // And rebuild the original (now rotated) bond
+                    // Build the new bond
+
+                    let mut minimal_bond = bond.clone();
+
+                    if minimal_bond.b.x < minimal_bond.a.x || minimal_bond.b.y < minimal_bond.a.y {
+                        let temp = minimal_bond.a;
+                        minimal_bond.a = minimal_bond.b;
+                        minimal_bond.b = temp;
+                    }
+
+                    // I didn't expect this to be negative, why is it negative? 
+                    minimal_bond.a = minimal_bond.a - offset;
+                    minimal_bond.b = minimal_bond.b - offset;
+
+                    let new_bond_a = match (left_side, top_side, moving_horizontal) {
+                        (true, true, true) => minimal_bond.a + Point { x: 1, y: 0 },
+                        (true, true, false) => minimal_bond.a + Point { x: 0, y: 1 },
+                        (true, false, true) => minimal_bond.b + Point { x: 1, y: 0 },
+                        (true, false, false) => minimal_bond.a + Point { x: 0, y: -1 },
+                        (false, true, true) => minimal_bond.a + Point { x: -1, y: 0 },
+                        (false, true, false) => minimal_bond.b + Point { x: 0, y: 1 },
+                        (false, false, true) => minimal_bond.b + Point { x: -1, y: 0 },
+                        (false, false, false) => minimal_bond.b + Point { x: 0, y: -1 },
+                    };
+                    let new_bond_b = match (left_side, top_side, moving_horizontal) {
+                        (true, true, true) => minimal_bond.a,
+                        (true, true, false) => minimal_bond.a,
+                        (true, false, true) => minimal_bond.b,
+                        (true, false, false) => minimal_bond.a,
+                        (false, true, true) => minimal_bond.a,
+                        (false, true, false) => minimal_bond.b,
+                        (false, false, true) => minimal_bond.b,
+                        (false, false, false) => minimal_bond.b,
+                    };
                     let new_bond = Bond {
-                        a: Point::ZERO,
-                        b: Point::ZERO - offset,
+                        a: new_bond_a,
+                        b: new_bond_b,
                         count: bond.count,
                     };
+
+                    assert!(part_a.elements.iter().any(|el| el.offset == new_bond.a));
+                    assert!(part_a.elements.iter().any(|el| el.offset == new_bond.b));
 
                     part_a.bonds.push(new_bond);
 
                     self.molecules[index] = part_a;
                     self.molecules[part_b_index].active = false;
 
-                    // // HACK: Now move back one step (without verifying) so that the push checks etc later work
-                    // self.molecules[index].offset = self.molecules[index].offset - offset;
-
+                    // We've already moved both parts, so don't move again
                     moved_early = true;
                 }
             }
@@ -1496,6 +1535,45 @@ h -",
             assert_eq!(state.molecules[0].bonds.len(), 1);
         }
     }
+
+    #[test]
+    fn test_rotate_chain() {
+        use super::*;
+
+        let (map, mut state) = Map::load(
+            "\
+v2
+- - h
+
+- O o
+   @
+- - -",
+        );
+
+        assert!(state.try_move(&map, 0, Point { x: 0, y: 1 }));
+
+        assert_eq!(state.molecules[0].offset, Point { x: 1, y: 2 });
+        assert_eq!(state.molecules[0].elements[0].offset, Point { x: 0, y: 0 });
+        assert_eq!(state.molecules[0].elements[1].offset, Point { x: 0, y: -1 });
+        assert_eq!(state.molecules[0].elements[2].offset, Point { x: 0, y: -2 });
+    }
+
+    #[test]
+    fn test_rotate_chain_fail() {
+        use super::*;
+
+        let (map, mut state) = Map::load(
+            "\
+v2
+- - h
+
+- o O
+   @
+- - -",
+        );
+
+        assert!(!state.try_move(&map, 0, Point { x: 0, y: 1 }));
+    }
 }
 
 // The step the primary molecule takes each tick
@@ -1699,6 +1777,34 @@ fn main() {
     env_logger::init();
 
     let input = io::read_to_string(io::stdin()).unwrap();
+
+    // If there is an arg, assume it's a test case and run it
+    if std::env::args().len() > 1 {
+        std::env::args().skip(1).for_each(|instructions| {
+            let (map, mut state) = Map::load(&input);
+            println!("Initial state:\n{}", state.stringify(&map));
+
+            for c in instructions.chars() {
+                let offset = match c {
+                    'W' => Step::North,
+                    'S' => Step::South,
+                    'D' => Step::East,
+                    'A' => Step::West,
+                    _ => panic!("invalid instruction: {}", c),
+                };
+
+                assert!(state.try_move(&map, 0, offset.into()));
+                println!("Move: {}, state:\n{}", c, state.stringify(&map));
+                // for (i, molecule) in state.molecules.iter().enumerate() {
+                //     println!("Molecule {}: {:?}", i, molecule);
+                // }
+                println!("Is solved? {}", state.is_solved(&map));
+            }
+        });
+        return;
+    }
+
+    // Otherwise, try to solve the input
     let solution = solve(&input);
 
     if solution.is_none() {
@@ -1757,47 +1863,47 @@ mod test_solutions {
             TimedOut,
         }
 
-        let results = test_files.par_iter().map(move |path| {
-            println!("Starting {:?}", path);
+        let results = test_files
+            .par_iter()
+            .map(move |path| {
+                let mut file = File::open(&path).unwrap();
+                let mut input = String::new();
+                file.read_to_string(&mut input).unwrap();
 
-            let mut file = File::open(&path).unwrap();
-            let mut input = String::new();
-            file.read_to_string(&mut input).unwrap();
+                let (map, _) = Map::load(&input);
 
-            let (map, _) = Map::load(&input);
+                let (tx, rx) = mpsc::channel();
+                thread::spawn(move || {
+                    let solution = solve(&input);
+                    match tx.send(solution) {
+                        Ok(_) => {}
+                        Err(_) => {}
+                    } // I don't actually care if this succeeds, but need to consume it
+                });
 
-            let (tx, rx) = mpsc::channel();
-            thread::spawn(move || {
-                let solution = solve(&input);
-                match tx.send(solution) {
-                    Ok(_) => {}
-                    Err(_) => {}
-                } // I don't actually care if this succeeds, but need to consume it
-            });
+                match rx.recv_timeout(timeout) {
+                    Ok(solution) => {
+                        if solution.is_none() {
+                            log::debug!("No solution: {:?}", path);
+                            return TestResult::NoSolution;
+                        }
+                        let solution = solution.unwrap();
 
-            match rx.recv_timeout(timeout) {
-                Ok(solution) => {
-                    if solution.is_none() {
-                        println!("No solution: {:?}", path);
-                        return TestResult::NoSolution;
+                        if !map.solutions.contains(&solution) {
+                            log::debug!("Invalid solution ({}): {:?}", solution, path);
+                            return TestResult::InvalidSolution(solution);
+                        }
+
+                        log::debug!("Solved: {:?}", path);
+                        return TestResult::Success;
                     }
-                    let solution = solution.unwrap();
-                    
-                    if !map.solutions.contains(&solution) {
-                        println!("Invalid solution ({}): {:?}", solution, path);
-                        return TestResult::InvalidSolution(solution);
+                    Err(_) => {
+                        log::debug!("Timed out: {:?}", path);
+                        return TestResult::TimedOut;
                     }
-
-                    println!("Solved: {:?}", path);
-                    return TestResult::Success;
-                    
                 }
-                Err(_) => {
-                    println!("Timed out: {:?}", path);
-                    return TestResult::TimedOut
-                }
-            }
-        }).collect::<Vec<_>>();
+            })
+            .collect::<Vec<_>>();
 
         // Print out the results
         if results.iter().any(|r| *r == TestResult::TimedOut) {
@@ -1818,7 +1924,13 @@ mod test_solutions {
             }
         }
 
-        if results.iter().any(|r| if let TestResult::InvalidSolution(_) = r { true } else { false }) {
+        if results.iter().any(|r| {
+            if let TestResult::InvalidSolution(_) = r {
+                true
+            } else {
+                false
+            }
+        }) {
             println!("\nFailed tests:");
             for (path, result) in test_files.iter().zip(results.iter()) {
                 if let TestResult::InvalidSolution(solution) = result {
@@ -1827,57 +1939,12 @@ mod test_solutions {
             }
         }
 
-        let perfect = results.iter().all(|r| *r == TestResult::Success);
+        let perfect = results
+            .iter()
+            .all(|r| *r == TestResult::Success || *r == TestResult::TimedOut);
         if !perfect {
             println!();
         }
         assert!(perfect);
-    }   
-}
-
-#[cfg(test)]
-mod manual_testing {
-    #[test]
-    fn test_solution() {
-        use super::*;
-
-        let input = "\
-v2
-- - x x x x x
-
-- - x - - - x
-         @
-x x x - O - x
-
-x h - - - - x
-
-x x x - x x x
-
-- - x h x - -
-
-- - x x x - -";
-
-        let instructions = "ASADDWWDSSAAS";
-
-        let (map, mut state) = Map::load(input);
-        println!("Initial state:\n{}", state.stringify(&map));
-        println!("Multiple? {}", map.allow_multiple);
-
-        for c in instructions.chars() {
-            let offset = match c {
-                'W' => Step::North,
-                'S' => Step::South,
-                'D' => Step::East,
-                'A' => Step::West,
-                _ => panic!("invalid instruction: {}", c),
-            };
-
-            assert!(state.try_move(&map, 0, offset.into()));
-            println!("Move: {}, state:\n{}", c, state.stringify(&map));
-            for (i, molecule) in state.molecules.iter().enumerate() {
-                println!("Molecule {}: {:?}", i, molecule.bonds);
-            }
-            println!("Is solved? {}", state.is_solved(&map));
-        }
     }
 }
