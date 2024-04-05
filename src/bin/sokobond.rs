@@ -365,6 +365,30 @@ struct Bond {
     count: usize,
 }
 
+impl Add<Point> for Bond {
+    type Output = Bond;
+
+    fn add(self, rhs: Point) -> Self::Output {
+        Bond {
+            a: self.a + rhs,
+            b: self.b + rhs,
+            count: self.count,
+        }
+    }
+}
+
+impl Sub<Point> for Bond {
+    type Output = Bond;
+
+    fn sub(self, rhs: Point) -> Self::Output {
+        Bond {
+            a: self.a - rhs,
+            b: self.b - rhs,
+            count: self.count,
+        }
+    }
+}
+
 // Represent elements joined together into a molecule
 // Each element contains the Element, offset, and remaining free electrons
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
@@ -826,56 +850,38 @@ impl LocalState {
                         });
                     }
 
-                    // Build the new bond
+                    // Create the new bond as vertical or horizontal depending on which way we were moving
+                    // Moving horizontally means the new bond will end up horizontal
+                    let new_bond = if moving_horizontal { 
+                        Bond {
+                            a: Point::ZERO,
+                            b: Point { x: 1, y: 0 },
+                            count: bond.count,
+                        }
+                    } else {
+                        Bond {
+                            a: Point::ZERO,
+                            b: Point { x: 0, y: 1 },
+                            count: bond.count,
+                        }
+                    };
 
-                    let mut minimal_bond = bond.clone();
+                    // Offset will be moving the location of the bond based on the location of the modifier in the scope of the new molecule
+                    let mut new_bond = new_bond + modifier.location - part_a.offset;
 
-                    if minimal_bond.b.x < minimal_bond.a.x || minimal_bond.b.y < minimal_bond.a.y {
-                        let temp = minimal_bond.a;
-                        minimal_bond.a = minimal_bond.b;
-                        minimal_bond.b = temp;
+                    if !moving_horizontal && part_a.offset.x > modifier.location.x { 
+                        new_bond.a.x += 1;
+                        new_bond.b.x += 1;
                     }
 
-                    // I didn't expect this to be negative, why is it negative? 
-                    minimal_bond.a = minimal_bond.a - offset;
-                    minimal_bond.b = minimal_bond.b - offset;
-
-                    let new_bond_a = match (left_side, top_side, moving_horizontal) {
-                        (true, true, true) => minimal_bond.a + Point { x: 1, y: 0 },
-                        (true, true, false) => minimal_bond.a + Point { x: 0, y: 1 },
-                        (true, false, true) => minimal_bond.b + Point { x: 1, y: 0 },
-                        (true, false, false) => minimal_bond.a + Point { x: 0, y: -1 },
-                        (false, true, true) => minimal_bond.a + Point { x: -1, y: 0 },
-                        (false, true, false) => minimal_bond.b + Point { x: 0, y: 1 },
-                        (false, false, true) => minimal_bond.b + Point { x: -1, y: 0 },
-                        (false, false, false) => minimal_bond.b + Point { x: 0, y: -1 },
-                    };
-                    let new_bond_b = match (left_side, top_side, moving_horizontal) {
-                        (true, true, true) => minimal_bond.a,
-                        (true, true, false) => minimal_bond.a,
-                        (true, false, true) => minimal_bond.b,
-                        (true, false, false) => minimal_bond.a,
-                        (false, true, true) => minimal_bond.a,
-                        (false, true, false) => minimal_bond.b,
-                        (false, false, true) => minimal_bond.b,
-                        (false, false, false) => minimal_bond.b,
-                    };
-                    let new_bond = Bond {
-                        a: new_bond_a,
-                        b: new_bond_b,
-                        count: bond.count,
-                    };
+                    if moving_horizontal && part_a.offset.y > modifier.location.y {
+                        new_bond.a.y += 1;
+                        new_bond.b.y += 1;
+                    }
 
                     // Validate that we didn't create a screwy bond
-                    // assert!(part_a.elements.iter().any(|el| el.offset == new_bond.a));
-                    // assert!(part_a.elements.iter().any(|el| el.offset == new_bond.b));
-
-                    // HACK: If we did create a screwy bond, just don't move
-                    // Assume that there's another possible solution
-                    if !part_a.elements.iter().any(|el| el.offset == new_bond.a) || !part_a.elements.iter().any(|el| el.offset == new_bond.b) {
-                        self.molecules = original_molecules;
-                        return false;
-                    }
+                    assert!(part_a.elements.iter().any(|el| el.offset == new_bond.a));
+                    assert!(part_a.elements.iter().any(|el| el.offset == new_bond.b));
 
                     part_a.bonds.push(new_bond);
 
@@ -1112,7 +1118,6 @@ mod test_localstate {
         let (map, mut state) = Map::load("H-h#");
 
         assert!(state.try_move(&map, 0, Point { x: 1, y: 0 }));
-        println!("{}", state.stringify(&map));
         assert_eq!(state.molecules.len(), 1);
         assert_eq!(state.molecules[0].offset, Point { x: 1, y: 0 });
         assert_eq!(state.molecules[0].elements.len(), 2);
@@ -1483,13 +1488,11 @@ v2
         );
 
         assert!(state.try_move(&map, 0, Point { x: -1, y: 0 }));
-        println!("{}", state.stringify(&map));
         assert!(state.try_move(&map, 0, Point { x: -1, y: 0 }));
-        println!("{}", state.stringify(&map));
     }
 
     #[test]
-    fn test_rotate() {
+    fn test_rotate_simple() {
         use super::*;
 
         let (map, state) = Map::load(
@@ -1603,13 +1606,28 @@ v2
  @
 - H n n");
 
-        println!("{}", state.stringify(&map));
         assert!(state.try_move(&map, 0, Point { x: -1, y: 0 }));
-        println!("{}", state.stringify(&map));
         assert!(state.try_move(&map, 0, Point { x: 0, y: -1 }));
-        println!("{}", state.stringify(&map));
         assert!(state.try_move(&map, 0, Point { x: 1, y: 0 }));
-        println!("{}", state.stringify(&map));
+    }
+
+    #[test]
+    fn test_rotate_tail_part() {
+        use super::*;
+
+        let (map, mut state) = Map::load(
+            "\
+v2
+o H - -
+ @ 
+h - - -");
+
+        assert!(state.try_move(&map, 0, Point { x: 1, y: 0 }));
+        
+        assert_eq!(state.molecules[0].offset, Point { x: 2, y: 0 });
+        assert_eq!(state.molecules[0].elements[0].offset, Point { x: 0, y: 0 });
+        assert_eq!(state.molecules[0].elements[1].offset, Point { x: -1, y: 0 });
+        assert_eq!(state.molecules[0].elements[2].offset, Point { x: -2, y: 0 });
     }
 }
 
