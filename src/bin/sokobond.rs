@@ -1,6 +1,5 @@
 use std::io;
 use std::ops::Add;
-use std::ops::ControlFlow;
 use std::ops::Sub;
 
 use solver::{Solver, State};
@@ -1714,6 +1713,8 @@ fn main() {
 mod test_solutions {
     use std::{fs::File, io::Read, sync::mpsc, thread};
 
+    use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+
     use super::*;
 
     #[test]
@@ -1742,11 +1743,15 @@ mod test_solutions {
         test_files.sort();
 
         // Run each test with timeout
-        let mut unsolved_tests = vec![];
-        let mut failed_tests = vec![];
-        let mut timed_out_tests = vec![];
+        #[derive(Debug, Clone, Eq, PartialEq)]
+        enum TestResult {
+            Success,
+            NoSolution,
+            InvalidSolution(String),
+            TimedOut,
+        }
 
-        for path in test_files {
+        let results = test_files.par_iter().map(move |path| {
             println!("Testing {:?}", path);
 
             let mut file = File::open(&path).unwrap();
@@ -1767,45 +1772,55 @@ mod test_solutions {
             match rx.recv_timeout(timeout) {
                 Ok(solution) => {
                     if solution.is_none() {
-                        println!("- No solution found");
-                        unsolved_tests.push(path);
-                        continue;
+                        return TestResult::NoSolution;
                     }
-
                     let solution = solution.unwrap();
+                    
                     if !map.solutions.contains(&solution) {
-                        println!("- Invalid solution: {:?}", solution);
-                        failed_tests.push((path, solution));
+                        return TestResult::InvalidSolution(solution);
                     }
 
-                    // If we made it this far, it's a valid solution!
+                    return TestResult::Success;
                 }
                 Err(_) => {
-                    println!("- Timed out");
-                    timed_out_tests.push(path);
+                    return TestResult::TimedOut
+                }
+            }
+        }).collect::<Vec<_>>();
+
+        // Print out the results
+        if results.iter().any(|r| *r == TestResult::TimedOut) {
+            println!("\nTimed out tests:");
+            for (path, result) in test_files.iter().zip(results.iter()) {
+                if *result == TestResult::TimedOut {
+                    println!("  {:?}", path);
                 }
             }
         }
 
-        // Print out the results
-        println!("\nUnsolved tests:");
-        for path in &unsolved_tests {
-            println!("  {:?}", path);
+        if results.iter().any(|r| *r == TestResult::NoSolution) {
+            println!("\nUnsolved tests:");
+            for (path, result) in test_files.iter().zip(results.iter()) {
+                if *result == TestResult::NoSolution {
+                    println!("  {:?}", path);
+                }
+            }
         }
 
-        println!("\nFailed tests:");
-        for (path, solution) in &failed_tests {
-            println!("  {:?} -> {:?}", path, solution);
+        if results.iter().any(|r| if let TestResult::InvalidSolution(_) = r { true } else { false }) {
+            println!("\nFailed tests:");
+            for (path, result) in test_files.iter().zip(results.iter()) {
+                if let TestResult::InvalidSolution(solution) = result {
+                    println!("  {:?} -> {:?}", path, solution);
+                }
+            }
         }
 
-        println!("\nTimed out tests:");
-        for path in &timed_out_tests {
-            println!("  {:?}", path);
+        let perfect = results.iter().all(|r| *r == TestResult::Success);
+        if !perfect {
+            println!();
         }
-
-        assert!(unsolved_tests.is_empty());
-        assert!(failed_tests.is_empty());
-        assert!(timed_out_tests.is_empty());
+        assert!(perfect);
     }   
 }
 
