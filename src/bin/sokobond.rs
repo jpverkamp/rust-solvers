@@ -650,12 +650,33 @@ impl LocalState {
         loop {
             let mut bond_to_modify = None;
 
-            'find_bond: for modifier in map.modifiers.iter() {
-                if modifiers_applied.contains(&modifier) {
-                    continue;
-                }
+            // We want to handle bonds from the closest to origin first
+            // This will help with cases with multiple rotators when we only want to hit the 'first' one
+            let mut sorted_bonds = self
+                .molecules[index]
+                .bonds
+                .iter()
+                .enumerate()
+                .collect::<Vec<_>>();
 
-                for (bond_index, bond) in self.molecules[index].bonds.iter().enumerate() {
+
+            sorted_bonds.sort_by_key(|(_, bond)| {
+                bond.a.manhattan_distance(Point::ZERO) + bond.b.manhattan_distance(Point::ZERO)
+            });
+
+            'find_bond: for (bond_index, bond) in sorted_bonds {
+                let mut sorted_modifiers = map.modifiers.clone();
+
+                sorted_modifiers.sort_by_key(|m| {
+                    let real_bond = *bond + self.molecules[index].offset;
+                    real_bond.a.manhattan_distance(m.location) + real_bond.b.manhattan_distance(m.location)
+                });
+
+                for modifier in sorted_modifiers {
+                    if modifiers_applied.contains(&modifier) {
+                        continue;
+                    }
+
                     let real_a = bond.a + self.molecules[index].offset;
                     let real_b = bond.b + self.molecules[index].offset;
 
@@ -772,7 +793,6 @@ impl LocalState {
                     // And then we'll merge them and put the bond back
 
                     // Part b will move 'along' the path of the original bond
-                    let bond = self.molecules[index].bonds[bond_index];
                     let parts = self.split_at_bond(index, bond_index);
 
                     // If it doesn't split, we have a ring; rotator won't work
@@ -784,10 +804,28 @@ impl LocalState {
                     let (part_a, part_b) = parts.unwrap();
 
                     // Determine how which way part b will remove because we'll move a and b shortly
-                    let left_side = part_a.offset.x == modifier.location.x;
-                    let top_side = part_a.offset.y == modifier.location.y;
+
+                    // Find the half of the bond that is still in a
+                    let part_a_el_of_bond = part_a.offset + part_a
+                        .elements
+                        .iter()
+                        .find(|el| part_a.offset + el.offset == part_a.offset + bond.a || part_a.offset + el.offset == part_a.offset + bond.b)
+                        .expect("couldn't find bond in part a")
+                        .offset;
+
+                    let part_b_el_of_bond= part_b.offset + part_b
+                        .elements
+                        .iter()
+                        .find(|el| part_b.offset + el.offset == part_a.offset + bond.a || part_b.offset + el.offset == part_a.offset + bond.b)
+                        .expect("couldn't find bond in part b")
+                        .offset;
+
+                    // Determine which side of the rotate modifier that element is in
+                    let left_side = part_a_el_of_bond.x == modifier.location.x;
+                    let top_side = part_a_el_of_bond.y == modifier.location.y;
                     let moving_horizontal = offset.x != 0;
 
+                    // And use that information to figure out how the b half of the bond will move
                     let new_b_offset = match (left_side, top_side, moving_horizontal) {
                         (true, true, true) => Point { x: 0, y: -1 },
                         (true, true, false) => Point { x: -1, y: 0 },
@@ -850,38 +888,28 @@ impl LocalState {
                         });
                     }
 
-                    // Create the new bond as vertical or horizontal depending on which way we were moving
-                    // Moving horizontally means the new bond will end up horizontal
-                    let new_bond = if moving_horizontal { 
-                        Bond {
-                            a: Point::ZERO,
-                            b: Point { x: 1, y: 0 },
-                            count: bond.count,
-                        }
-                    } else {
-                        Bond {
-                            a: Point::ZERO,
-                            b: Point { x: 0, y: 1 },
-                            count: bond.count,
-                        }
+                    // Create the new bond, this will be based on the part_a_el_of_bond and the new_b_offset
+                    let new_bond = Bond {
+                        a: part_a_el_of_bond + offset - part_a.offset,
+                        b: part_b_el_of_bond + new_b_offset - part_a.offset,
+                        count: bond.count,
                     };
-
-                    // Offset will be moving the location of the bond based on the location of the modifier in the scope of the new molecule
-                    let mut new_bond = new_bond + modifier.location - part_a.offset;
-
-                    if !moving_horizontal && part_a.offset.x > modifier.location.x { 
-                        new_bond.a.x += 1;
-                        new_bond.b.x += 1;
-                    }
-
-                    if moving_horizontal && part_a.offset.y > modifier.location.y {
-                        new_bond.a.y += 1;
-                        new_bond.b.y += 1;
-                    }
 
                     // Validate that we didn't create a screwy bond
                     assert!(part_a.elements.iter().any(|el| el.offset == new_bond.a));
                     assert!(part_a.elements.iter().any(|el| el.offset == new_bond.b));
+
+                    // Validate we don't have any overlapping bonds
+                    assert!(
+                        !part_a.bonds.iter().enumerate().any(|(i, b1)|
+                            part_a.bonds.iter().enumerate().any(|(j, b2)| 
+                                i != j && (
+                                    (b1.a == b2.a && b1.b == b2.b)
+                                    || (b1.a == b2.b && b1.b == b2.a)
+                                )
+                            )
+                        )
+                    );
 
                     part_a.bonds.push(new_bond);
 
@@ -890,6 +918,9 @@ impl LocalState {
 
                     // We've already moved both parts, so don't move again
                     moved_early = true;
+
+                    // HACK: Only apply one rotate per move
+                    break;
                 }
             }
         }
@@ -1557,7 +1588,7 @@ h -",
     }
 
     #[test]
-    fn test_rotate_chain() {
+    fn test_rotate_chain_succeed() {
         use super::*;
 
         let (map, mut state) = Map::load(
@@ -1628,6 +1659,65 @@ h - - -");
         assert_eq!(state.molecules[0].elements[0].offset, Point { x: 0, y: 0 });
         assert_eq!(state.molecules[0].elements[1].offset, Point { x: -1, y: 0 });
         assert_eq!(state.molecules[0].elements[2].offset, Point { x: -2, y: 0 });
+    }
+
+    #[test]
+    fn test_rotate_in_a_corner() {
+        use super::*;
+
+        let (map, mut state) = Map::load(
+            "\
+v2
+- c
+   
+- c
+ @ 
+- N");
+        assert!(state.try_move(&map, 0, Point { x: -1, y: 0 }));
+        let actual = state.stringify(&map);
+        
+        let (map, state) = Map::load("\
+v2
+- -
+  
+- c
+ @
+N c");
+        let expected = state.stringify(&map);
+
+        assert_eq!(actual, expected);
+    }
+
+    #[test]
+    fn test_not_double_rotate() {
+        use super::*;
+
+        let (map, mut state) = Map::load(
+            "\
+v2
+- n
+ @
+- c
+  
+- c
+ @
+- N");
+        assert!(state.try_move(&map, 0, Point { x: -1, y: 0 }));
+        let actual = state.stringify(&map);
+        
+        let (map, state) = Map::load("\
+v2
+- -
+ @
+- n
+  
+- c
+ @
+N c");
+        let expected = state.stringify(&map);
+
+        assert_eq!(actual, expected);
+
     }
 }
 

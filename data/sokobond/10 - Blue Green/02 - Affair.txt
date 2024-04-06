@@ -1,0 +1,18 @@
+v2
+- x x x x -
+
+- x - - x -
+     +
+x x - - x x
+
+x - - - - x
+   @   @
+x N - - c x
+
+x c - - n x
+   @   @
+x - - - - x
+
+x x x x x x
+=WDDWWSSASSDSDAWWWWS
+=DWADWWSSDSSAWWS
