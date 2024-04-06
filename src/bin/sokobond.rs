@@ -670,7 +670,10 @@ impl LocalState {
                 sorted_modifiers.sort_by_key(|m| {
                     let real_bond = *bond + self.molecules[index].offset;
                     real_bond.a.manhattan_distance(m.location) + real_bond.b.manhattan_distance(m.location)
+
+                    // TODO: Do we still need to sort by type? 
                 });
+
 
                 for modifier in sorted_modifiers {
                     if modifiers_applied.contains(&modifier) {
