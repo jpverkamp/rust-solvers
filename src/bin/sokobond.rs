@@ -652,13 +652,11 @@ impl LocalState {
 
             // We want to handle bonds from the closest to origin first
             // This will help with cases with multiple rotators when we only want to hit the 'first' one
-            let mut sorted_bonds = self
-                .molecules[index]
+            let mut sorted_bonds = self.molecules[index]
                 .bonds
                 .iter()
                 .enumerate()
                 .collect::<Vec<_>>();
-
 
             sorted_bonds.sort_by_key(|(_, bond)| {
                 bond.a.manhattan_distance(Point::ZERO) + bond.b.manhattan_distance(Point::ZERO)
@@ -669,11 +667,11 @@ impl LocalState {
 
                 sorted_modifiers.sort_by_key(|m| {
                     let real_bond = *bond + self.molecules[index].offset;
-                    real_bond.a.manhattan_distance(m.location) + real_bond.b.manhattan_distance(m.location)
+                    real_bond.a.manhattan_distance(m.location)
+                        + real_bond.b.manhattan_distance(m.location)
 
-                    // TODO: Do we still need to sort by type? 
+                    // TODO: Do we still need to sort by type?
                 });
-
 
                 for modifier in sorted_modifiers {
                     if modifiers_applied.contains(&modifier) {
@@ -809,19 +807,27 @@ impl LocalState {
                     // Determine how which way part b will remove because we'll move a and b shortly
 
                     // Find the half of the bond that is still in a
-                    let part_a_el_of_bond = part_a.offset + part_a
-                        .elements
-                        .iter()
-                        .find(|el| part_a.offset + el.offset == part_a.offset + bond.a || part_a.offset + el.offset == part_a.offset + bond.b)
-                        .expect("couldn't find bond in part a")
-                        .offset;
+                    let part_a_el_of_bond = part_a.offset
+                        + part_a
+                            .elements
+                            .iter()
+                            .find(|el| {
+                                part_a.offset + el.offset == part_a.offset + bond.a
+                                    || part_a.offset + el.offset == part_a.offset + bond.b
+                            })
+                            .expect("couldn't find bond in part a")
+                            .offset;
 
-                    let part_b_el_of_bond= part_b.offset + part_b
-                        .elements
-                        .iter()
-                        .find(|el| part_b.offset + el.offset == part_a.offset + bond.a || part_b.offset + el.offset == part_a.offset + bond.b)
-                        .expect("couldn't find bond in part b")
-                        .offset;
+                    let part_b_el_of_bond = part_b.offset
+                        + part_b
+                            .elements
+                            .iter()
+                            .find(|el| {
+                                part_b.offset + el.offset == part_a.offset + bond.a
+                                    || part_b.offset + el.offset == part_a.offset + bond.b
+                            })
+                            .expect("couldn't find bond in part b")
+                            .offset;
 
                     // Determine which side of the rotate modifier that element is in
                     let left_side = part_a_el_of_bond.x == modifier.location.x;
@@ -854,7 +860,7 @@ impl LocalState {
                         return false;
                     }
                     self.molecules[part_b_index].active = true;
-                    
+
                     // Part b contains the 'other' half which moves along the bond (as calculated earlier)
                     // Likewise, disable collision checking with a
                     self.molecules[index].active = false;
@@ -864,9 +870,12 @@ impl LocalState {
                         return false;
                     }
                     self.molecules[index].active = true;
-                    
+
                     // Once they've both moved, make sure they're non intersecting
-                    if self.molecules[index].intersects(Point::ZERO, &self.molecules[part_b_index]).is_some() {
+                    if self.molecules[index]
+                        .intersects(Point::ZERO, &self.molecules[part_b_index])
+                        .is_some()
+                    {
                         self.molecules = original_molecules;
                         return false;
                     }
@@ -903,16 +912,13 @@ impl LocalState {
                     assert!(part_a.elements.iter().any(|el| el.offset == new_bond.b));
 
                     // Validate we don't have any overlapping bonds
-                    assert!(
-                        !part_a.bonds.iter().enumerate().any(|(i, b1)|
-                            part_a.bonds.iter().enumerate().any(|(j, b2)| 
-                                i != j && (
-                                    (b1.a == b2.a && b1.b == b2.b)
-                                    || (b1.a == b2.b && b1.b == b2.a)
-                                )
-                            )
-                        )
-                    );
+                    assert!(!part_a.bonds.iter().enumerate().any(|(i, b1)| part_a
+                        .bonds
+                        .iter()
+                        .enumerate()
+                        .any(|(j, b2)| i != j
+                            && ((b1.a == b2.a && b1.b == b2.b)
+                                || (b1.a == b2.b && b1.b == b2.a)))));
 
                     part_a.bonds.push(new_bond);
 
@@ -1638,7 +1644,8 @@ v2
 v2
 - - - h 
  @
-- H n n");
+- H n n",
+        );
 
         assert!(state.try_move(&map, 0, Point { x: -1, y: 0 }));
         assert!(state.try_move(&map, 0, Point { x: 0, y: -1 }));
@@ -1654,10 +1661,11 @@ v2
 v2
 o H - -
  @ 
-h - - -");
+h - - -",
+        );
 
         assert!(state.try_move(&map, 0, Point { x: 1, y: 0 }));
-        
+
         assert_eq!(state.molecules[0].offset, Point { x: 2, y: 0 });
         assert_eq!(state.molecules[0].elements[0].offset, Point { x: 0, y: 0 });
         assert_eq!(state.molecules[0].elements[1].offset, Point { x: -1, y: 0 });
@@ -1675,17 +1683,20 @@ v2
    
 - c
  @ 
-- N");
+- N",
+        );
         assert!(state.try_move(&map, 0, Point { x: -1, y: 0 }));
         let actual = state.stringify(&map);
-        
-        let (map, state) = Map::load("\
+
+        let (map, state) = Map::load(
+            "\
 v2
 - -
   
 - c
  @
-N c");
+N c",
+        );
         let expected = state.stringify(&map);
 
         assert_eq!(actual, expected);
@@ -1704,11 +1715,13 @@ v2
   
 - c
  @
-- N");
+- N",
+        );
         assert!(state.try_move(&map, 0, Point { x: -1, y: 0 }));
         let actual = state.stringify(&map);
-        
-        let (map, state) = Map::load("\
+
+        let (map, state) = Map::load(
+            "\
 v2
 - -
  @
@@ -1716,11 +1729,11 @@ v2
   
 - c
  @
-N c");
+N c",
+        );
         let expected = state.stringify(&map);
 
         assert_eq!(actual, expected);
-
     }
 }
 
