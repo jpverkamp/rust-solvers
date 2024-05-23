@@ -1,0 +1,17 @@
+map 8 5
+    cut 0 0 
+    cut 0 5
+    cut 7 0
+    cut 7 5
+    
+    element Nitrogen 6 2
+    element Hydrogen 4 1
+    element Hydrogen 3 2
+    element Hydrogen 4 3
+end
+
+track 
+    from 6 2 Left
+    via 5 2
+    to 1 2 Left
+end

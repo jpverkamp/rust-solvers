@@ -1,0 +1,11 @@
+map 6 4
+    element Oxygen 0 2
+    element Hydrogen 2 0
+    element Hydrogen 2 3
+end
+
+track 
+    from 0 2 Right
+    via 1 2
+    to 5 2 Right
+end

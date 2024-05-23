@@ -1,0 +1,12 @@
+map 3 5
+    cut 0 2
+    element Hydrogen 1 0
+    element Hydrogen 2 2
+end
+
+track 
+    from 1 0 Down
+    via 1 1
+    to 1 4 Down
+end 
+

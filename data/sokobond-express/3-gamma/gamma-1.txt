@@ -1,0 +1,11 @@
+map 5 5  
+    element Hydrogen 1 1 0
+    element Hydrogen 3 2
+    element Ion 4 2
+end
+
+track 
+    from 1 1 Right
+    via 2 1
+    to 1 3 Left
+end
