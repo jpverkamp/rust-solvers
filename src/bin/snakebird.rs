@@ -160,7 +160,7 @@ impl State<Global, Step> for Local {
                     .any(|snake| snake.points.contains(&point))
         };
 
-        for snake_index in 0..=self.snakes.len() {
+        for (snake_index, _) in self.snakes.iter().enumerate() {
             'one_direction: for direction in [
                 Direction::Up,
                 Direction::Down,
@@ -174,119 +174,124 @@ impl State<Global, Step> for Local {
                     direction: *direction,
                 };
                 let mut new_local = self.clone();
+                let head = new_local.snakes[snake_index].points.first().unwrap();
 
-                if let Some(snake) = new_local.snakes.get_mut(snake_index) {
-                    let head = snake.points.first().unwrap();
+                if head.x == 0 && direction == &Direction::Left {
+                    continue 'one_direction;
+                } else if head.y == 0 && direction == &Direction::Up {
+                    continue 'one_direction;
+                } else if head.x == global.width - 1 && direction == &Direction::Right {
+                    continue 'one_direction;
+                } else if head.y == global.height - 1 && direction == &Direction::Down {
+                    continue 'one_direction;
+                }
 
-                    if head.x == 0 && direction == &Direction::Left {
-                        continue 'one_direction;
-                    } else if head.y == 0 && direction == &Direction::Up {
-                        continue 'one_direction;
-                    } else if head.x == global.width - 1 && direction == &Direction::Right {
-                        continue 'one_direction;
-                    } else if head.y == global.height - 1 && direction == &Direction::Down {
-                        continue 'one_direction;
-                    }
+                let new_head = match direction {
+                    Direction::Up => Point {
+                        x: head.x,
+                        y: head.y - 1,
+                    },
+                    Direction::Down => Point {
+                        x: head.x,
+                        y: head.y + 1,
+                    },
+                    Direction::Left => Point {
+                        x: head.x - 1,
+                        y: head.y,
+                    },
+                    Direction::Right => Point {
+                        x: head.x + 1,
+                        y: head.y,
+                    },
+                };
 
-                    let new_head = match direction {
-                        Direction::Up => Point {
-                            x: head.x,
-                            y: head.y - 1,
-                        },
-                        Direction::Down => Point {
-                            x: head.x,
-                            y: head.y + 1,
-                        },
-                        Direction::Left => Point {
-                            x: head.x - 1,
-                            y: head.y,
-                        },
-                        Direction::Right => Point {
-                            x: head.x + 1,
-                            y: head.y,
-                        },
-                    };
+                // Cannot move into a wall or another snake
+                if is_occupied(new_head) {
+                    continue 'one_direction;
+                }
 
-                    // Cannot move into a wall or another snake
-                    if is_occupied(new_head) {
-                        continue 'one_direction;
-                    }
-
+                if global.tile(new_head) == Tile::Exit {
                     // Check for exit
-                    if global.tile(new_head) == Tile::Exit {
-                        // Cannot exit until all fruit is eaten
-                        if !new_local.fruit.is_empty() {
+                    // Cannot exit (or even move onto exit) until all fruit is eaten
+                    if !new_local.fruit.is_empty() {
+                        continue 'one_direction;
+                    }
+
+                    // Otherwise, snake literally exits
+                    // Bye bye snake
+                    new_local.snakes.remove(snake_index);
+                } else {
+                    // Update the snake
+                    new_local.snakes[snake_index].points.insert(0, new_head);
+
+                    // Potentially eat fruit; don't remove tail if fruit was eaten
+                    if let Some(fruit_index) =
+                        new_local.fruit.iter().position(|fruit| fruit == &new_head)
+                    {
+                        new_local.fruit.remove(fruit_index);
+                    } else {
+                        new_local.snakes[snake_index].points.pop();
+                    }
+                }
+
+                // Apply gravity to all snakes
+                'still_falling: loop {
+                    // Check if any snake can fall
+                    for (snake_index, _) in new_local.snakes.iter().enumerate() {
+                        let can_fall = &new_local.snakes[snake_index].points.iter().all(|point| {
+                            let below = Point {
+                                x: point.x,
+                                y: point.y + 1,
+                            };
+
+                            // Apparently we can walk across fruit?
+                            if new_local.fruit.contains(&below) {
+                                return false;
+                            }
+
+                            // Otherwise, don't fall through walls
+                            if global.tile(below) == Tile::Wall {
+                                return false;
+                            }
+
+                            // And don't fall on *other* snakes (we can't support ourselves)
+                            for (other_snake_index, other_snake) in self.snakes.iter().enumerate() {
+                                if snake_index != other_snake_index
+                                    && other_snake.points.contains(&below)
+                                {
+                                    return false;
+                                }
+                            }
+
+                            true
+                        });
+                        if !can_fall {
+                            break;
+                        }
+
+                        // If we can fall and we're on the bottom, bad things happen
+                        // By that, I mean you lose
+                        if new_local.snakes[snake_index]
+                            .points
+                            .iter()
+                            .any(|point| point.y == global.height - 1)
+                        {
                             continue 'one_direction;
                         }
 
-                        // Otherwise, snake literally exits
-                        // Bye bye snake
-                        new_local.snakes.remove(snake_index);
-                    } else {
-                        // Update the snake
-                        snake.points.insert(0, new_head);
-
-                        // Potentially eat fruit; don't remove tail if fruit was eaten
-                        if let Some(fruit_index) =
-                            new_local.fruit.iter().position(|fruit| fruit == &new_head)
-                        {
-                            new_local.fruit.remove(fruit_index);
-                        } else {
-                            snake.points.pop();
+                        // If we made it here, the snake is falling move down all points
+                        for point in new_local.snakes[snake_index].points.iter_mut() {
+                            point.y += 1;
                         }
 
-                        // Fall
-                        loop {
-                            // Check if the snake can fall; only if no points are supported
-                            // TODO: The non-active snake might be able to fall
-                            let can_fall = &snake.points.iter().all(|point| {
-                                let below = Point {
-                                    x: point.x,
-                                    y: point.y + 1,
-                                };
-
-                                // Apparently we can walk across fruit?
-                                if new_local.fruit.contains(&below) {
-                                    return false;
-                                }
-
-                                // Otherwise, don't fall through walls
-                                if global.tile(below) == Tile::Wall {
-                                    return false;
-                                }
-
-                                // And don't fall on *other* snakes (we can't support ourselves)
-                                for (other_snake_index, other_snake) in self.snakes.iter().enumerate() {
-                                    if snake_index != other_snake_index && other_snake.points.contains(&below) {
-                                        return false;
-                                    }
-                                }
-
-                                true
-                            });
-                            if !can_fall {
-                                break;
-                            }
-
-                            // If we can fall and we're on the bottom, bad things happen
-                            // By that, I mean you lose
-                            if snake
-                                .points
-                                .iter()
-                                .any(|point| point.y == global.height - 1)
-                            {
-                                continue 'one_direction;
-                            }
-
-                            // If we made it here, the snake is falling move down all points
-                            for point in snake.points.iter_mut() {
-                                point.y += 1;
-                            }
-                        }
+                        continue 'still_falling;
                     }
 
-                    next_states.push((1, step, new_local));
+                    // If we made it here, no snake can fall anymore
+                    break;
                 }
+
+                next_states.push((1, step, new_local));
             }
         }
 
