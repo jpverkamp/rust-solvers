@@ -1,5 +1,6 @@
-use std::{collections::HashSet, io::{BufRead, Read}, ops::{Range, RangeInclusive}};
-use anyhow::{Result, anyhow};
+use anyhow::{anyhow, Result};
+use fxhash::{FxHashMap, FxHashSet};
+use std::io::{BufRead, Read};
 
 use solver::{Solver, State};
 
@@ -14,15 +15,16 @@ enum Tile {
 struct Global {
     width: usize,
     height: usize,
-    tiles: Vec<Tile>,
+    tiles: FxHashMap<Point, Tile>,
 }
 
 impl Global {
     // Read a global + local from a Readable
     fn read<R: Read + BufRead>(reader: &mut R) -> Result<(Global, Local)> {
-        let mut tiles = Vec::new();
         let mut width = 0;
         let mut height = 0;
+
+        let mut tiles = FxHashMap::default();
 
         let mut snakes = vec![
             vec![], // 0..=9
@@ -44,44 +46,64 @@ impl Global {
             height += 1;
 
             for (x, c) in line.chars().enumerate() {
-                // Default to empty to put tiles under the snakes
-                let mut tile = Tile::Empty;
+                let p = Point { x, y };
 
                 match c {
-                    '-' => tile = Tile::Empty,
-                    '#' => tile = Tile::Wall,
-                    '=' => tile = Tile::Exit,
-                    '+' => fruit.push(Point { x, y }),
-                    '0'..='9' => snakes[0].push((c, Point { x, y })),
-                    'a'..='z' => snakes[1].push((c, Point { x, y })),
-                    'A'..='Z' => snakes[2].push((c, Point { x, y })),
+                    // Known static tiles
+                    ' ' | '-' => {}
+                    '#' => {
+                        tiles.insert(p, Tile::Wall);
+                    }
+                    '=' => {
+                        tiles.insert(p, Tile::Exit);
+                    }
+                    // Fruit is stored in the local state
+                    '+' => {
+                        fruit.push(p);
+                    }
+                    // Currently known types of snakes stored in local state
+                    '0'..='9' => {
+                        snakes[0].push((c, p));
+                    }
+                    'a'..='z' => {
+                        snakes[1].push((c, p));
+                    }
+                    'A'..='Z' => {
+                        snakes[2].push((c, p));
+                    }
                     _ => return Err(anyhow!("Invalid character {c} in map")),
                 }
-
-                tiles.push(tile);
             }
         }
 
-        dbg!(width * height, tiles.len());
-
         // Remove empty snakes, sort points by character, convert to snake struct
         snakes.retain(|snake| !snake.is_empty());
-        let snakes = snakes.iter().map(|points| {
-            let mut points = points.clone();
-            points.sort();
-            Snake { 
-                head: points.first().unwrap().0,
-                points: points.iter().map(|(_, point)| *point).collect::<Vec<_>>(),
-            }
-        }).collect::<Vec<_>>();
+        let snakes = snakes
+            .iter()
+            .map(|points| {
+                let mut points = points.clone();
+                points.sort();
+                Snake {
+                    head: points.first().unwrap().0,
+                    points: points.iter().map(|(_, point)| *point).collect::<Vec<_>>(),
+                }
+            })
+            .collect::<Vec<_>>();
         let local = Local { snakes, fruit };
 
-        Ok((Global { width, height, tiles }, local))
+        Ok((
+            Global {
+                width,
+                height,
+                tiles,
+            },
+            local,
+        ))
     }
 
     // Get the tile at a point
     fn tile(&self, point: Point) -> Tile {
-        self.tiles[point.y * self.width + point.x]
+        self.tiles.get(&point).copied().unwrap_or(Tile::Empty)
     }
 }
 
@@ -131,15 +153,29 @@ impl State<Global, Step> for Local {
         let mut next_states = Vec::new();
 
         let is_occupied = |point: Point| {
-            global.tile(point) == Tile::Wall || self.snakes.iter().any(|snake| snake.points.contains(&point))
+            global.tile(point) == Tile::Wall
+                || self
+                    .snakes
+                    .iter()
+                    .any(|snake| snake.points.contains(&point))
         };
 
         for snake_index in 0..=self.snakes.len() {
-            'one_direction: for direction in [Direction::Up, Direction::Down, Direction::Left, Direction::Right].iter() {
-                let step = Step { snake: snake_index, direction: *direction };
+            'one_direction: for direction in [
+                Direction::Up,
+                Direction::Down,
+                Direction::Left,
+                Direction::Right,
+            ]
+            .iter()
+            {
+                let step = Step {
+                    snake: snake_index,
+                    direction: *direction,
+                };
                 let mut new_local = self.clone();
 
-                if let Some(snake) = new_local.snakes.get(snake_index) {
+                if let Some(snake) = new_local.snakes.get_mut(snake_index) {
                     let head = snake.points.first().unwrap();
 
                     if head.x == 0 && direction == &Direction::Left {
@@ -153,10 +189,22 @@ impl State<Global, Step> for Local {
                     }
 
                     let new_head = match direction {
-                        Direction::Up => Point { x: head.x, y: head.y - 1 },
-                        Direction::Down => Point { x: head.x, y: head.y + 1 },
-                        Direction::Left => Point { x: head.x - 1, y: head.y },
-                        Direction::Right => Point { x: head.x + 1, y: head.y },
+                        Direction::Up => Point {
+                            x: head.x,
+                            y: head.y - 1,
+                        },
+                        Direction::Down => Point {
+                            x: head.x,
+                            y: head.y + 1,
+                        },
+                        Direction::Left => Point {
+                            x: head.x - 1,
+                            y: head.y,
+                        },
+                        Direction::Right => Point {
+                            x: head.x + 1,
+                            y: head.y,
+                        },
                     };
 
                     // Cannot move into a wall or another snake
@@ -176,41 +224,63 @@ impl State<Global, Step> for Local {
                         new_local.snakes.remove(snake_index);
                     } else {
                         // Update the snake
-                        if let Some(snake) = new_local.snakes.get_mut(snake_index) {
-                            snake.points.insert(0, new_head);
+                        snake.points.insert(0, new_head);
 
-                            // Potentially eat fruit; don't remove tail if fruit was eaten
-                            if let Some(fruit_index) = new_local.fruit.iter().position(|fruit| fruit == &new_head) {
-                                new_local.fruit.remove(fruit_index);
-                            } else {
-                                snake.points.pop();
-                            }
+                        // Potentially eat fruit; don't remove tail if fruit was eaten
+                        if let Some(fruit_index) =
+                            new_local.fruit.iter().position(|fruit| fruit == &new_head)
+                        {
+                            new_local.fruit.remove(fruit_index);
+                        } else {
+                            snake.points.pop();
                         }
 
                         // Fall
                         loop {
-                            let on_bottom = new_local.snakes.iter().any(|snake| {
-                                let head = snake.points.first().unwrap();
-                                head.y == global.height - 1
-                            });
-                            if on_bottom {
-                                todo!("handle snakes falling out of the world");
-                            }
+                            // Check if the snake can fall; only if no points are supported
+                            // TODO: The non-active snake might be able to fall
+                            let can_fall = &snake.points.iter().all(|point| {
+                                let below = Point {
+                                    x: point.x,
+                                    y: point.y + 1,
+                                };
 
-                            let can_fall = new_local.snakes.iter().all(|snake| {
-                                let head = snake.points.first().unwrap();
-                                let below = Point { x: head.x, y: head.y + 1 };
-                                !is_occupied(below)
-                            });
+                                // Apparently we can walk across fruit?
+                                if new_local.fruit.contains(&below) {
+                                    return false;
+                                }
 
+                                // Otherwise, don't fall through walls
+                                if global.tile(below) == Tile::Wall {
+                                    return false;
+                                }
+
+                                // And don't fall on *other* snakes (we can't support ourselves)
+                                for (other_snake_index, other_snake) in self.snakes.iter().enumerate() {
+                                    if snake_index != other_snake_index && other_snake.points.contains(&below) {
+                                        return false;
+                                    }
+                                }
+
+                                true
+                            });
                             if !can_fall {
                                 break;
                             }
 
-                            for snake in new_local.snakes.iter_mut() {
-                                for point in snake.points.iter_mut() {
-                                    point.y += 1;
-                                }
+                            // If we can fall and we're on the bottom, bad things happen
+                            // By that, I mean you lose
+                            if snake
+                                .points
+                                .iter()
+                                .any(|point| point.y == global.height - 1)
+                            {
+                                continue 'one_direction;
+                            }
+
+                            // If we made it here, the snake is falling move down all points
+                            for point in snake.points.iter_mut() {
+                                point.y += 1;
                             }
                         }
                     }
@@ -327,3 +397,8 @@ fn main() {
     }
     println!("{path}");
 }
+
+// Tests (todo)
+// 01 0→→→→→→↑→→→→↑
+// 02 0→→→↑→→↑→→→↑←←↑←←↑↑←←←←↑↑↑←←
+// 03 0→→→↓↓←←←←←←↑↑→↑→→→→↓→→↓→→
