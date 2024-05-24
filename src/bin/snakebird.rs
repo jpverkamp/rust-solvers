@@ -204,8 +204,8 @@ impl State<Global, Step> for Local {
                     direction: *direction,
                 };
                 let mut new_local = self.clone();
-                let head = new_local.snakes[snake_index].points.first().unwrap();
-                let new_head = head + direction;
+                let head = new_local.snakes[snake_index].points.first().unwrap().clone();
+                let new_head = &head + direction;
 
                 // Cannot move out of bounds
                 if !global.in_bounds(new_head) {
@@ -220,6 +220,33 @@ impl State<Global, Step> for Local {
                 // Cannot move into yourself
                 if new_local.snakes[snake_index].points.contains(&new_head) {
                     continue 'one_direction;
+                }
+
+                // If the currently moving snake moves onto the exit, check if it can leave
+                // Otherwise, we're going to move as normal; potentially eating fruit
+                if global.tile(new_head) == Tile::Exit {
+                    // Check for exit
+
+                    // Cannot exit (or even move onto exit) until all fruit is eaten
+                    if !new_local.fruit.is_empty() {
+                        continue 'one_direction;
+                    }
+
+                    // Otherwise, snake literally exits
+                    // Bye bye snake
+                    new_local.snakes.remove(snake_index);
+                } else {
+                    // Update the snake
+                    new_local.snakes[snake_index].points.insert(0, new_head);
+
+                    // Potentially eat fruit; don't remove tail if fruit was eaten
+                    if let Some(fruit_index) =
+                        new_local.fruit.iter().position(|fruit| fruit == &new_head)
+                    {
+                        new_local.fruit.remove(fruit_index);
+                    } else {
+                        new_local.snakes[snake_index].points.pop();
+                    }
                 }
 
                 // Attempt to push any snakes in the way
@@ -271,42 +298,12 @@ impl State<Global, Step> for Local {
                     }
                 }
 
-                // If the currently moving snake moves onto the exit, check if it can leave
-                // Otherwise, we're going to move as normal; potentially eating fruit
-                if global.tile(new_head) == Tile::Exit {
-                    // Check for exit
-
-                    // Cannot exit (or even move onto exit) until all fruit is eaten
-                    if !new_local.fruit.is_empty() {
-                        continue 'one_direction;
-                    }
-
-                    // Otherwise, snake literally exits
-                    // Bye bye snake
-                    new_local.snakes.remove(snake_index);
-                } else {
-                    // Update the snake
-                    new_local.snakes[snake_index].points.insert(0, new_head);
-
-                    // Potentially eat fruit; don't remove tail if fruit was eaten
-                    if let Some(fruit_index) =
-                        new_local.fruit.iter().position(|fruit| fruit == &new_head)
-                    {
-                        new_local.fruit.remove(fruit_index);
-                    } else {
-                        new_local.snakes[snake_index].points.pop();
-                    }
-                }
-
                 // Apply gravity to all snakes
                 'still_falling: loop {
                     // Check if any snake can fall
-                    for (snake_index, _) in new_local.snakes.iter().enumerate() {
-                        let can_fall = &new_local.snakes[snake_index].points.iter().all(|point| {
-                            let below = Point {
-                                x: point.x,
-                                y: point.y + 1,
-                            };
+                    for (falling_snake_index, _) in new_local.snakes.iter().enumerate() {
+                        let can_fall = &new_local.snakes[falling_snake_index].points.iter().all(|point| {
+                            let below = point + &Direction::Down;
 
                             // Apparently we can walk across fruit?
                             if new_local.fruit.contains(&below) {
@@ -319,10 +316,12 @@ impl State<Global, Step> for Local {
                             }
 
                             // And don't fall on *other* snakes (we can't support ourselves)
-                            for (other_snake_index, other_snake) in self.snakes.iter().enumerate() {
-                                if snake_index != other_snake_index
-                                    && other_snake.points.contains(&below)
-                                {
+                            for (other_snake_index, other_snake) in new_local.snakes.iter().enumerate() {
+                                if falling_snake_index == other_snake_index {
+                                    continue;
+                                }
+
+                                if other_snake.points.contains(&below) {
                                     return false;
                                 }
                             }
@@ -330,12 +329,12 @@ impl State<Global, Step> for Local {
                             true
                         });
                         if !can_fall {
-                            break;
+                            continue;
                         }
 
                         // If we can fall and we're on the bottom, bad things happen
                         // By that, I mean you lose
-                        if new_local.snakes[snake_index]
+                        if new_local.snakes[falling_snake_index]
                             .points
                             .iter()
                             .any(|point| !global.in_bounds(*point))
@@ -344,7 +343,7 @@ impl State<Global, Step> for Local {
                         }
 
                         // If we made it here, the snake is falling move down all points
-                        for point in new_local.snakes[snake_index].points.iter_mut() {
+                        for point in new_local.snakes[falling_snake_index].points.iter_mut() {
                             point.y += 1;
                         }
 
@@ -470,15 +469,25 @@ fn main() {
 }
 
 // Tests (todo)
-// 01 0→→→→→→↑→→→→↑
-// 02 0→→→↑→→↑→→→↑←←↑←←↑↑←←←←↑↑↑←←
-// 03 0→→→↓↓←←←←←←↑↑→↑→→→→↓→→↓→→
-// 04 0↑→→→→↑←↑←←←←↑↑↑→↑
-// 05 0→→→↓→↑←←←↑
-// 06 0→→↑→↑→↑←←←↑↑→→↑←←←←←↓←↓←↓←↓↓→→→↓→↑↑ // 5 seconds!
-// 07 0↑←←↑←←↑↑→↑↑→→↓↓→↑↑←↑↑←←↑↑→↑←←←↓→→→↑↑↑→↑↑↑←↑
-// 08 0→→→→→→→↑←←←←←↑←←↑↑→→↑→→→→→↓→→→↑→↑↑↑←←↑↑←↑↑←←←↓↓←←↑←↑←←
-// 09 0←←↑←←↑↑←←←←←↑↑→↓↓←←←←←↑↑←←↑→↑→↑
-// 10 0→→→↑→→→→↑←←←←↑←←↑↑→↑→→
-// 11 a←0←a←←←←←0←a↑←↑0↑↑a←0←↑←
-// 47 0→→→→↑→↑→↑←↓←←↓←↑←↑←
+/*
+cargo --bin snakebird
+for i in $(seq -f "%02g" 1 12)
+do
+  echo -n "$i\t"
+  cat data/snakebird/primer/$i.txt | ./target/debug/snakebird
+done
+
+01	0→→→→→→↑→→→→↑
+02	0→→→↑→→↑→→→↑←←↑←←↑↑←←←←↑↑↑←←
+03	0→→→↓↓←←←←←←↑↑→↑→→→→↓→→↓→→
+04	0↑→→→→↑←↑←←←←↑↑↑→↑
+05	0→→→↓→↑←←←↑
+06	0→→↑→↑→↑←←←↑↑→→↑←←←←←↓←↓←↓←↓↓→→→↓→↑↑
+07	0↑←←↑←←↑↑→↑↑→→↓↓→↑↑←↑↑←←↑↑→↑←←←↓→→→↑↑↑→↑↑↑←↑
+08	0→→→→→→→↑←←←←←↑←←↑↑→→↑→→→→→↓→→→↑→↑↑↑←←↑↑←↑↑←←←↓↓←←↑←↑←←
+09	0←←↑←←↑↑←←←←←↑↑→↓↓←←←←←↑↑←←↑→↑→↑
+10	0→→→↑→→→→↑←←←←↑←←↑↑→↑→→
+11	0↑a←←←←←↑←0↑←a←←0←↑
+12	0→→→→a↑0→a↑0→↑
+13	a→→↑↑→→→↓↓←↑←0→a←0↑a←←0↑←←
+*/
