@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
-use fxhash::{FxHashMap, FxHashSet};
-use std::io::{BufRead, Read};
+use fxhash::FxHashMap;
+use std::{io::{BufRead, Read}, ops::Add};
 
 use solver::{Solver, State};
 
@@ -35,6 +35,7 @@ impl Global {
         let mut fruit = Vec::new();
 
         for (y, line) in reader.lines().enumerate() {
+            let y = y as isize;
             let line = line?;
 
             if width == 0 {
@@ -46,6 +47,7 @@ impl Global {
             height += 1;
 
             for (x, c) in line.chars().enumerate() {
+                let x = x as isize;
                 let p = Point { x, y };
 
                 match c {
@@ -105,12 +107,17 @@ impl Global {
     fn tile(&self, point: Point) -> Tile {
         self.tiles.get(&point).copied().unwrap_or(Tile::Empty)
     }
+
+    // Check if a point is in bounds
+    fn in_bounds(&self, point: Point) -> bool {
+        point.x >= 0 && point.x < self.width as isize && point.y >= 0 && point.y < self.height as isize
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
 struct Point {
-    x: usize,
-    y: usize,
+    x: isize,
+    y: isize,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -133,6 +140,32 @@ enum Direction {
     Right,
 }
 
+impl Add<&Direction> for &Point {
+    type Output = Point;
+
+    fn add(self, direction: &Direction) -> Point {
+        match direction {
+            Direction::Up => Point {
+                x: self.x,
+                y: self.y - 1,
+            },
+            Direction::Down => Point {
+                x: self.x,
+                y: self.y + 1,
+            },
+            Direction::Left => Point {
+                x: self.x - 1,
+                y: self.y,
+            },
+            Direction::Right => Point {
+                x: self.x + 1,
+                y: self.y,
+            },
+        }
+    }
+
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct Step {
     snake: usize,
@@ -140,8 +173,11 @@ struct Step {
 }
 
 impl State<Global, Step> for Local {
-    fn is_valid(&self, _global: &Global) -> bool {
-        true
+    fn is_valid(&self, global: &Global) -> bool {
+        // All snakes must be in bounds
+        self.snakes.iter().all(|snake| {
+            snake.points.iter().all(|point| { global.in_bounds(*point) })
+        })
     }
 
     fn is_solved(&self, _map: &Global) -> bool {
@@ -152,14 +188,7 @@ impl State<Global, Step> for Local {
     fn next_states(&self, global: &Global) -> Option<Vec<(i64, Step, Local)>> {
         let mut next_states = Vec::new();
 
-        let is_occupied = |point: Point| {
-            global.tile(point) == Tile::Wall
-                || self
-                    .snakes
-                    .iter()
-                    .any(|snake| snake.points.contains(&point))
-        };
-
+        // Try to move each snake in each direction 
         for (snake_index, _) in self.snakes.iter().enumerate() {
             'one_direction: for direction in [
                 Direction::Up,
@@ -169,49 +198,79 @@ impl State<Global, Step> for Local {
             ]
             .iter()
             {
+                // Figure out where the moving snake's head will move to
                 let step = Step {
                     snake: snake_index,
                     direction: *direction,
                 };
                 let mut new_local = self.clone();
                 let head = new_local.snakes[snake_index].points.first().unwrap();
+                let new_head = head + direction;
 
-                if head.x == 0 && direction == &Direction::Left {
-                    continue 'one_direction;
-                } else if head.y == 0 && direction == &Direction::Up {
-                    continue 'one_direction;
-                } else if head.x == global.width - 1 && direction == &Direction::Right {
-                    continue 'one_direction;
-                } else if head.y == global.height - 1 && direction == &Direction::Down {
+                // Cannot move out of bounds
+                if !global.in_bounds(new_head) {
                     continue 'one_direction;
                 }
 
-                let new_head = match direction {
-                    Direction::Up => Point {
-                        x: head.x,
-                        y: head.y - 1,
-                    },
-                    Direction::Down => Point {
-                        x: head.x,
-                        y: head.y + 1,
-                    },
-                    Direction::Left => Point {
-                        x: head.x - 1,
-                        y: head.y,
-                    },
-                    Direction::Right => Point {
-                        x: head.x + 1,
-                        y: head.y,
-                    },
-                };
-
-                // Cannot move into a wall or another snake
-                if is_occupied(new_head) {
+                // Cannot move into a wall
+                if global.tile(new_head) == Tile::Wall {
                     continue 'one_direction;
                 }
 
+                // Attempt to push any snakes in the way
+                let mut snake_pushing_indexes = Vec::new();
+                let mut snake_pushing_points = vec![new_head];
+
+                'daisies_remain: loop {
+                    for (other_snake_index, _) in new_local.snakes.iter().enumerate() {
+                        // TODO: What if we have a weird loop where we're pushing ourselves? 
+                        if snake_index == other_snake_index {
+                            continue;
+                        }
+
+                        // Already pushing this snake
+                        if snake_pushing_indexes.contains(&other_snake_index) {
+                            continue;
+                        }
+
+                        // If any pushing point is in the new snake, it's getting pushed too
+                        if snake_pushing_points.iter().any(|p| new_local.snakes[other_snake_index].points.contains(&p)) {
+                            snake_pushing_indexes.push(other_snake_index);
+                            
+                            snake_pushing_points.extend(
+                                new_local.snakes[other_snake_index].points.iter().map(|p| p + direction)
+                            );
+
+                            continue 'daisies_remain;
+                        }
+                    }
+
+                    break;
+                }
+
+                // No snake pushing points can hit anything (other than the original head)
+                // TODO: Can you push a snake into the exit? 
+                if snake_pushing_points.iter().skip(1).any(|p| global.tile(*p) != Tile::Empty) {
+                    continue 'one_direction;
+                }
+
+                // No snake pushing points can be out of bounds
+                if snake_pushing_points.iter().skip(1).any(|p| !global.in_bounds(*p)) {
+                    continue 'one_direction;
+                }
+
+                // If we have snakes to push, move them all
+                for snake_index in snake_pushing_indexes.iter() {
+                    for point in new_local.snakes[*snake_index].points.iter_mut() {
+                        *point = &*point + direction;
+                    }
+                }
+
+                // If the currently moving snake moves onto the exit, check if it can leave
+                // Otherwise, we're going to move as normal; potentially eating fruit
                 if global.tile(new_head) == Tile::Exit {
                     // Check for exit
+
                     // Cannot exit (or even move onto exit) until all fruit is eaten
                     if !new_local.fruit.is_empty() {
                         continue 'one_direction;
@@ -274,7 +333,7 @@ impl State<Global, Step> for Local {
                         if new_local.snakes[snake_index]
                             .points
                             .iter()
-                            .any(|point| point.y == global.height - 1)
+                            .any(|point| !global.in_bounds(*point))
                         {
                             continue 'one_direction;
                         }
@@ -309,7 +368,9 @@ impl State<Global, Step> for Local {
         let mut output = String::new();
 
         for y in 0..global.height {
+            let y = y as isize;
             for x in 0..global.width {
+                let x = x as isize;
                 let mut c = match global.tile(Point { x, y }) {
                     Tile::Empty => ' ',
                     Tile::Wall => '█',
