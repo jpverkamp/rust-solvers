@@ -1,0 +1,36 @@
+use solver::{Solver, State};
+
+#[derive(Debug, )]
+struct Global;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+struct Local;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+struct Step;
+
+impl State<Global, Step> for Local {
+    fn is_valid(&self, _global: &Global) -> bool {
+        true
+    }
+
+    fn is_solved(&self, _map: &Global) -> bool {
+        false
+    }
+
+    fn next_states(&self, _global: &Global) -> Option<Vec<(i64, Step, Local)>> {
+        None
+    }
+
+    fn heuristic(&self, _global: &Global) -> i64 {
+        0
+    }
+
+    fn stringify(&self, _global: &Global) -> String {
+        "".to_string()
+    }
+}
+
+fn main() {
+    env_logger::init();
+}
