@@ -217,6 +217,11 @@ impl State<Global, Step> for Local {
                     continue 'one_direction;
                 }
 
+                // Cannot move into yourself
+                if new_local.snakes[snake_index].points.contains(&new_head) {
+                    continue 'one_direction;
+                }
+
                 // Attempt to push any snakes in the way
                 let mut snake_pushing_indexes = Vec::new();
                 let mut snake_pushing_points = vec![new_head];
