@@ -30,6 +30,8 @@ impl Global {
             vec![], // A..=Z
         ];
 
+        let mut fruit = Vec::new();
+
         for (y, line) in reader.lines().enumerate() {
             let line = line?;
 
@@ -49,6 +51,7 @@ impl Global {
                     '-' => tile = Tile::Empty,
                     '#' => tile = Tile::Wall,
                     '=' => tile = Tile::Exit,
+                    '+' => fruit.push(Point { x, y }),
                     '0'..='9' => snakes[0].push((c, Point { x, y })),
                     'a'..='z' => snakes[1].push((c, Point { x, y })),
                     'A'..='Z' => snakes[2].push((c, Point { x, y })),
@@ -71,7 +74,7 @@ impl Global {
                 points: points.iter().map(|(_, point)| *point).collect::<Vec<_>>(),
             }
         }).collect::<Vec<_>>();
-        let local = Local { snakes };
+        let local = Local { snakes, fruit };
 
         Ok((Global { width, height, tiles }, local))
     }
@@ -97,6 +100,7 @@ struct Snake {
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Local {
     snakes: Vec<Snake>,
+    fruit: Vec<Point>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -119,8 +123,8 @@ impl State<Global, Step> for Local {
     }
 
     fn is_solved(&self, _map: &Global) -> bool {
-        // All snakes exited
-        self.snakes.is_empty()
+        // All snakes exited and fruit eaten
+        self.snakes.is_empty() && self.fruit.is_empty()
     }
 
     fn next_states(&self, global: &Global) -> Option<Vec<(i64, Step, Local)>> {
@@ -162,12 +166,25 @@ impl State<Global, Step> for Local {
 
                     // Check for exit
                     if global.tile(new_head) == Tile::Exit {
+                        // Cannot exit until all fruit is eaten
+                        if !new_local.fruit.is_empty() {
+                            continue 'one_direction;
+                        }
+
+                        // Otherwise, snake literally exits
+                        // Bye bye snake
                         new_local.snakes.remove(snake_index);
                     } else {
                         // Update the snake
                         if let Some(snake) = new_local.snakes.get_mut(snake_index) {
                             snake.points.insert(0, new_head);
-                            snake.points.pop();
+
+                            // Potentially eat fruit; don't remove tail if fruit was eaten
+                            if let Some(fruit_index) = new_local.fruit.iter().position(|fruit| fruit == &new_head) {
+                                new_local.fruit.remove(fruit_index);
+                            } else {
+                                snake.points.pop();
+                            }
                         }
 
                         // Fall
@@ -235,6 +252,10 @@ impl State<Global, Step> for Local {
                             };
                         }
                     }
+                }
+
+                if self.fruit.contains(&Point { x, y }) {
+                    c = '';
                 }
 
                 output.push(c);
