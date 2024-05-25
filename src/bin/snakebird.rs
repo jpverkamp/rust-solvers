@@ -377,13 +377,6 @@ impl Local {
                 }
             }
 
-            // If any snakes fell into a valid exit, they're gone
-            if self.fruit.is_empty() {
-                self.snakes.retain(|snake| {
-                    global.tile(snake.points[0]) != Tile::Exit
-                });
-            }
-
             // If any snakes fall out of the world, the whole move is invalid
             if self.snakes.iter().any(|snake| {
                 snake.points.iter().all(|point| point.y > global.height as isize)
@@ -396,6 +389,13 @@ impl Local {
                 snake.points.iter().any(|point| global.tile(*point) == Tile::Spike)
             }) {
                 return false;
+            }
+
+            // If any snakes fell into a valid exit, they're gone
+            if self.fruit.is_empty() {
+                self.snakes.retain(|snake| {
+                    global.tile(snake.points[0]) != Tile::Exit
+                });
             }
         }
 
