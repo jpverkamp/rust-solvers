@@ -118,14 +118,6 @@ impl Global {
     fn tile(&self, point: Point) -> Tile {
         self.tiles.get(&point).copied().unwrap_or(Tile::Empty)
     }
-
-    // Check if a point is in bounds
-    fn in_bounds(&self, point: Point) -> bool {
-        point.x >= 0
-            && point.x < self.width as isize
-            && point.y >= 0
-            && point.y < self.height as isize
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
@@ -190,11 +182,6 @@ impl Local {
         let head = self.snakes[index].points.first().unwrap().clone();
         let new_head = head + direction;
 
-        // Cannot move out of bounds
-        if !global.in_bounds(new_head) {
-            return false;
-        }
-
         // Cannot move into a wall
         if global.tile(new_head) == Tile::Wall {
             return false;
@@ -236,7 +223,7 @@ impl Local {
         }
 
         // Push any other snakes
-        // If any snake is pushed into a wall or out of bounds, the whole move is invalid
+        // If any snake is pushed into a wall, the whole move is invalid
         if !self.try_push(global, index, direction, new_head) {
             return false;
         }
@@ -300,15 +287,6 @@ impl Local {
             .iter()
             .skip(1)
             .any(|p| global.tile(*p) != Tile::Empty)
-        {
-            return false;
-        }
-
-        // No snake pushing points can be out of bounds
-        if snake_pushing_points
-            .iter()
-            .skip(1)
-            .any(|p| !global.in_bounds(*p))
         {
             return false;
         }
@@ -378,12 +356,11 @@ impl Local {
                     continue;
                 }
 
-                // If we can fall and we're on the bottom, bad things happen
-                // By that, I mean you lose
+                // If we fall so that all of our points are below the lowest wall, we lose
                 if self.snakes[falling_snake_index]
                     .points
                     .iter()
-                    .any(|point| !global.in_bounds(*point))
+                    .all(|point| point.y > global.height as isize)
                 {
                     return false;
                 }
@@ -519,12 +496,8 @@ mod local_move_tests {
         // Move on platform
         assert!(local.try_move(&global, 0, Direction::Right));
 
-        println!("{}", local.stringify(&global));
-
         // Hang off platform
         assert!(local.try_move(&global, 0, Direction::Right));
-
-        println!("{}", local.stringify(&global));
 
         // Fall off
         assert!(!local.try_move(&global, 0, Direction::Right));
@@ -684,10 +657,8 @@ mod local_move_tests {
 
 impl State<Global, Step> for Local {
     fn is_valid(&self, global: &Global) -> bool {
-        // All snakes must be in bounds
-        self.snakes
-            .iter()
-            .all(|snake| snake.points.iter().all(|point| global.in_bounds(*point)))
+        self.snakes.iter().all(|snake|
+        snake.points.iter().all(|point| point.y <= global.height as isize))
     }
 
     fn is_solved(&self, _map: &Global) -> bool {
@@ -881,21 +852,21 @@ do
   cat data/snakebird/primer/$i.txt | ./target/debug/snakebird
 done
 
-01	0→→→→→→↑→→→→↑
-02	0→→→↑→→↑→→→↑←←↑←←↑↑←←←←↑↑↑←←
-03	0→→→↓↓←←←←←←↑↑→↑→→→→↓→→↓→→
+01	0→→→→→→→↑→→→↑
+02	0→→→↑→→↑→→→↑←↑←←←↑←←↑←←↑↑←←↑
+03	0→→→↓↓←←←←←←↑↑→↑→→→→→→→↓↓→
 04	0↑→→→→↑←↑←←←←↑↑↑→↑
 05	0→→→↓→↑←←↑←
-06	0→→↑→↑→↑↑↑←←↓↓←↑↑↑←←←↓↓←↓←←↓↓→→→↓→↑↑
+06	0→→↑→↑→↑↑↑←←↓↓←↑↑↑←←←↓↓←←↓←↓↓→→→↓→↑↑
 07	0↑←←↑←←↑↑→↑↑→→↓↓→↑↑←↑↑←←↑↑→↑←←←↓→→→↑↑↑→↑↑↑←↑
-08	0→→→→→→→↑←←←←←↑←←↑↑→→↑→→→→→↓→→→↑→↑↑↑←←↑↑←↑↑←←←↓↓←←↑←↑←←
-09	0←←↑←←↑↑←←←←←↑↑→↓↓←←←←←↑↑←←↑→↑→↑
+08	0→→→→→→→↑←←←←←↑←←↑↑→→↑→→→→→↓→↑→→→↑↑↑←←↑↑←←↑↑←←↓↓←←↑←←←↑
+09	0←←↑←←↑↑←←←←←↑↑→↓↓←←←←←↑↑←←↑↑→→↑
 10	0→→→↑→→→→↑←←←←↑←←↑↑→↑→→
-11	0↑a←←←←←↑←0↑←a←←0←↑
-12	0→→→→a↑0→a↑0→↑
-13	a→→↑↑→→→↓↓←↑←0→a←0↑a←←0↑←←
-14	0→→→↑←←←←a↑0←←a←0←←
-15	0↑a←←↑←←←←0←←a↑0←a←0←↑←
+11	0↑a←←←←←↑←0↑a←←0←←↑
+12	0→→→→a↑0→↑→↑
+13	a→→↑↑→→→↓↓←↑0←a←0←↑a←↑←←0↑
+14	0→→→↑←←←←←a↑0←a←0←←
+15	0↑a←←↑←←←←0←←a←0←←a←0←↑
 16  0→→↑→a↑↑↑0↑↑↑←←↑→→→→→↑→→a→→→↑→→→0↑
 17  0→→→→→→↑↑←↑→→→→→→↑←←↑←←←←↑→↑↑←←←←←←↑←
 18  0↑←↑←←←←↑↑↑→→→→→↓←↓↓←←←↓→↓↓→→↑→→↓↓→→→→↑↑↑
