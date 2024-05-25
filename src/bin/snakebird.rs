@@ -875,21 +875,30 @@ mod test_solutions {
 
         // Collect all tests to run in order
         let mut test_files = Vec::new();
-        for entry in std::fs::read_dir("data/snakebird").unwrap() {
-            let entry = entry.unwrap();
-            let path = entry.path();
-            if !path.is_dir() {
-                continue;
-            }
 
-            for entry in std::fs::read_dir(&path).unwrap() {
+        let folders = [
+            "data/snakebird",
+            "data/snakebird/primer",
+        ];
+
+        for folder in folders.iter() {
+            for entry in std::fs::read_dir(folder).unwrap() {
                 let entry = entry.unwrap();
                 let path = entry.path();
-                if path.extension().unwrap() != "txt" {
+                if !path.is_dir() {
                     continue;
                 }
 
-                test_files.push(path);
+                for entry in std::fs::read_dir(&path).unwrap() {
+                    let entry = entry.unwrap();
+                    let path = entry.path();
+
+                    if path.extension().is_none() || path.extension().unwrap() != "txt" {
+                        continue;
+                    }
+
+                    test_files.push(path);
+                }
             }
         }
         test_files.sort();
