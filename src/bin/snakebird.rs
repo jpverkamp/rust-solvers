@@ -330,6 +330,11 @@ impl Local {
             return false;
         }
 
+        // You cannot be pushed into fruit either
+        if pushing_points.iter().any(|p| self.fruit.contains(p)) {
+            return false;
+        }
+
         // If we have snakes to push, move them all
         for snake_index in pushing_indexes.iter() {
             for point in self.snakes[*snake_index].points.iter_mut() {
