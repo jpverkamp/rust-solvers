@@ -374,6 +374,16 @@ impl Local {
                         continue 'finding_support;
                     }
 
+                    // Statues are supported by spikes
+                    if self.snakes[index].is_statue {
+                        if self.snakes[index].points.iter().any(|point| {
+                            global.tile(*point + Direction::Down) == Tile::Spike
+                        }) {
+                            supported_indexes.push(index);
+                            continue 'finding_support;
+                        }
+                    }
+
                     // Supported by another supported snake
                     for other_index in supported_indexes.iter() {
                         if self.snakes[index].points.iter().any(|point| {
@@ -712,8 +722,8 @@ impl State<Global, Step> for Local {
     }
 
     fn is_solved(&self, _map: &Global) -> bool {
-        // All snakes exited and fruit eaten
-        self.snakes.is_empty() && self.fruit.is_empty()
+        // All fruits eaten and all non-statue snakes are gone
+        self.fruit.is_empty() && self.snakes.iter().all(|snake| snake.is_statue)
     }
 
     fn next_states(&self, global: &Global) -> Option<Vec<(i64, Step, Local)>> {
