@@ -742,6 +742,41 @@ fn main() {
 
     log::info!("Initial state:\n{}", local.stringify(&global));
 
+    // If there is an arg, assume it's a test case and run it
+    if std::env::args().len() > 1 {
+        std::env::args().skip(1).for_each(|instructions| {
+            let mut local = local.clone();
+            let mut current_snake_index = 0;
+
+            for (step, c) in instructions.chars().enumerate() {
+                println!("\n=== Step {}: {} ===", step, c);
+
+                if "0aA{".contains(c) {
+                    current_snake_index = local.snakes.iter().position(|snake| snake.head == c).unwrap();
+                    println!("Switched to snake {} ({})", c, local.snakes[current_snake_index].head);
+                } else {
+                    let direction = match c {
+                        '↑' => Direction::Up,
+                        '↓' => Direction::Down,
+                        '←' => Direction::Left,
+                        '→' => Direction::Right,
+                        _ => panic!("invalid instruction: {}", c),
+                    };
+
+                    println!("Moving snake {} ({}) {:?}", local.snakes[current_snake_index].head, c, direction);
+                    assert!(local.try_move(&global, current_snake_index, direction));
+                    println!("After move:\n{}", local.stringify(&global));
+                    println!("Is valid? {}", local.is_valid(&global));
+                    println!("Is solved? {}", local.is_solved(&global));
+                }
+            }
+        });
+        return;
+    }
+
+    // Otherwise, read from stdin and solve
+
+
     let mut solver = Solver::new(global.clone(), local.clone());
     while let Some(state) = solver.next() {
         if solver.states_checked() % 100000 != 0 {
@@ -818,7 +853,7 @@ done
 13	a→→↑↑→→→↓↓←↑←0→a←0↑a←←0↑←←
 14	0→→→↑←←←←a↑0←a←←0←←←
 15	0↑a←←↑←←←←0←←a↑0←a←0←←↑
-
+16  
 
 x1  0→→→↓↓←←↑←←↑←←↓↓→→↓↓↓→→↑↑↑→→↑↑←←↑←↑
 x2  A↑{→A←a→→A↑a↑{↑a→0↑A→→↑←←a→A↓0→a→{↓→a→→0↑
