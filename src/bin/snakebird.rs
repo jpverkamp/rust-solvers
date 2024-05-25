@@ -301,97 +301,74 @@ impl Local {
         true
     }
 
-
-    fn is_supported_by_wall(&self, global: &Global, index: usize) -> bool {
-        self.snakes[index].points.iter().any(|point| {
-            global.tile(*point + Direction::Down) == Tile::Wall
-        })
-    }
-
-    fn is_supported_by(&self, _: &Global, index_1: usize, index_2: usize) -> bool {
-        self.snakes[index_1].points.iter().any(|point| {
-            self.snakes[index_2].points.contains(&(*point + Direction::Down))
-        })
-    }
-
     fn try_gravity(&mut self, global: &Global) -> bool {
         // Apply gravity to all snakes
         'still_falling: loop {
-            // Check if any snake can fall
-            for (falling_snake_index, _) in self.snakes.iter().enumerate() {
-                let can_fall = &self.snakes[falling_snake_index].points.iter().all(|point| {
-                    let below = *point + Direction::Down;
+            // Calculate all snakes directly support
+            let mut supported_indexes = Vec::new();
+            
+            'finding_support: loop {
+                // If all snakes are supported, we're done with both loops
+                if supported_indexes.len() == self.snakes.len() {
+                    break 'still_falling;
+                }
 
-                    // Apparently we can walk across fruit?
-                    if self.fruit.contains(&below) {
-                        return false;
+                for (index, _) in self.snakes.iter().enumerate() {
+                    // Skip snakes we've already supported (but only inner loop)
+                    if supported_indexes.contains(&index) {
+                        continue;
                     }
 
-                    // Otherwise, don't fall through walls
-                    if self.is_supported_by_wall(global, falling_snake_index) {
-                        return false;
+                    // Supported by a wall
+                    if self.snakes[index].points.iter().any(|point| {
+                        global.tile(*point + Direction::Down) == Tile::Wall
+                    }) {
+                        supported_indexes.push(index);
+                        continue 'finding_support;
                     }
 
-                    // And don't fall on *other* snakes (we can't support ourselves)
-                    for (other_snake_index, _) in self.snakes.iter().enumerate() {
-                        if falling_snake_index == other_snake_index {
-                            continue;
+                    // Supported by fruit? (we can walk across fruit)
+                    if self.snakes[index].points.iter().any(|point| {
+                        self.fruit.contains(&(*point + Direction::Down))
+                    }) {
+                        supported_indexes.push(index);
+                        continue 'finding_support;
+                    }
+
+                    // Supported by another supported snake
+                    for other_index in supported_indexes.iter() {
+                        if self.snakes[index].points.iter().any(|point| {
+                            self.snakes[*other_index].points.contains(&(*point + Direction::Down))
+                        }) {
+                            supported_indexes.push(index);
+                            continue 'finding_support;
                         }
-
-                        if self.is_supported_by(global, falling_snake_index, other_snake_index) {
-                            // Deal with mutually supported snakes
-                            // TODO: This is hacky..
-                            if self.is_supported_by(global, other_snake_index, falling_snake_index) && !self.is_supported_by_wall(global, other_snake_index) {
-                                return true;
-                            }
-
-                            // Otherwise, supported by a supported snake, cannot fall
-                            return false;
-                        }
                     }
+                }
 
-                    true
-                });
-                if !can_fall {
+                // No more supported snakes found
+                break 'finding_support;
+            }
+
+            // Otherwise, all non supported snakes fall by one
+            for index in 0..self.snakes.len() {
+                if supported_indexes.contains(&index) {
                     continue;
                 }
 
-                // If we fall so that all of our points are below the lowest wall, we lose
-                if self.snakes[falling_snake_index]
-                    .points
-                    .iter()
-                    .all(|point| point.y > global.height as isize)
-                {
-                    return false;
+                for point in self.snakes[index].points.iter_mut() {
+                    *point = *point + Direction::Down;
                 }
-
-                // If we made it here, the snake is falling move down all points
-                for point in self.snakes[falling_snake_index].points.iter_mut() {
-                    point.y += 1;
-                }
-
-                // Also, spikes
-                if self.snakes[falling_snake_index]
-                    .points
-                    .iter()
-                    .any(|point| global.tile(*point) == Tile::Spike)
-                {
-                    return false;
-                }
-
-                // If the snake's head is somehow on the exit, it ... exits? 
-                if global.tile(*self.snakes[falling_snake_index].points.first().unwrap()) == Tile::Exit {
-                    self.snakes.remove(falling_snake_index);
-                }
-
-                continue 'still_falling;
             }
 
-            // If we made it here, no snake can fall anymore
-            break;
+            // If any snakes fall out of the world, the whole move is invalid
+            if self.snakes.iter().any(|snake| {
+                snake.points.iter().all(|point| point.y > global.height as isize)
+            }) {
+                return false;
+            }
         }
 
-        // No snakes fell out of the world
         true
     }
 }
@@ -856,24 +833,24 @@ done
 02	0→→→↑→→↑→→→↑←↑←←←↑←←↑←←↑↑←←↑
 03	0→→→↓↓←←←←←←↑↑→↑→→→→→→→↓↓→
 04	0↑→→→→↑←↑←←←←↑↑↑→↑
-05	0→→→↓→↑←←↑←
-06	0→→↑→↑→↑↑↑←←↓↓←↑↑↑←←←↓↓←←↓←↓↓→→→↓→↑↑
+05	0→→→↓→↑←←←↑
+06	0→→↑→↑→↑←←←↑↑→→↑←←←←←←↓↓↓←←↓↓→→→↓→↑↑
 07	0↑←←↑←←↑↑→↑↑→→↓↓→↑↑←↑↑←←↑↑→↑←←←↓→→→↑↑↑→↑↑↑←↑
-08	0→→→→→→→↑←←←←←↑←←↑↑→→↑→→→→→↓→↑→→→↑↑↑←←↑↑←←↑↑←←↓↓←←↑←←←↑
+08	0→→→→→→→↑←←←←←↑←←↑↑→→↑→→→→→↓→↑→→→↑↑↑←←↑↑←↑←↑←←↓↓←←↑←↑←←
 09	0←←↑←←↑↑←←←←←↑↑→↓↓←←←←←↑↑←←↑↑→→↑
 10	0→→→↑→→→→↑←←←←↑←←↑↑→↑→→
 11	0↑a←←←←←↑←0↑a←←0←←↑
 12	0→→→→a↑0→↑→↑
 13	a→→↑↑→→→↓↓←↑0←a←0←↑a←↑←←0↑
-14	0→→→↑←←←←←a↑0←a←0←←
-15	0↑a←←↑←←←←0←←a←0←←a←0←↑
-16  0→→↑→a↑↑↑0↑↑↑←←↑→→→→→↑→→a→→→↑→→→0↑
-17  0→→→→→→↑↑←↑→→→→→→↑←←↑←←←←↑→↑↑←←←←←←↑←
-18  0↑←↑←←←←↑↑↑→→→→→↓←↓↓←←←↓→↓↓→→↑→→↓↓→→→→↑↑↑
-19  0←←↑←←↓←↑↑←←↑↑→→↑→→↓→↑→→→↑
-20  0↑←←↑←←←↑→→→↓→→↑↑→→→↑←←↑↑←←←↑↑→↑
-21  0←←←↑↑←←↑↑←↑←
-22  0→↓→↑→→↑→
+14	0→→→↑←←←←a↑←0←a←0←←←
+15	0↑a←←↑←←←←0←←a←0←←←↑←
+16	0→→↑→a↑0↑↑a↑0↑a↑0←←↑→→→→→→→→a→→→→→→0↑
+17	0→→→→→→↑↑←↑→→→→→→↑←←↑←←←←↑→↑↑←←←←←←←↑
+18	0↑←↑←←←←↑↑→↑→→→→↓←↓↓←←↓←↓↓→→→↑→→↓↓→→→→↑↑↑
+19	0←↑←←←←↑↑←←↑↑→→↑→→→→↑→→↑
+20	0↑←←↑←←←↑→→→→→↑↑→→→↑←←↑←↑←←↑↑↑→
+21	0←←←←←↑↑←←↑
+22	0→→→↑→→↑
 
 x1  0→→→↓↓←←↑←←↑←←↓↓→→↓↓↓→→↑↑↑→→↑↑←←↑←↑
 x2  A↑{→A←a→→A↑a↑{↑a→0↑A→→↑←←a→A↓0→a→{↓→a→→0↑
