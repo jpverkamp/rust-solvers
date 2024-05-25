@@ -724,7 +724,37 @@ impl State<Global, Step> for Local {
     }
 }
 
-fn main() {
+fn solve(global: Global, local: Local) -> Option<(Solver<Global, Local, Step>, Local)> {
+    let mut solver = Solver::new(global.clone(), local);
+    while let Some(state) = solver.next() {
+        if solver.states_checked() % 100000 != 0 {
+            continue;
+        }
+        log::info!("{solver}, state:\n{}", state.stringify(&global));
+    }
+
+    let solution = solver.get_solution();
+    if solution.is_none() {
+        log::error!(
+            "No solution found after {} states in {} seconds",
+            solver.states_checked(),
+            solver.time_spent(),
+        );
+        return None;
+    }
+    let solution = solution.unwrap();
+
+    log::info!(
+        "Solved after {} states in {} seconds:\n{}",
+        solver.states_checked(),
+        solver.time_spent(),
+        solution.stringify(&global),
+    );
+
+    Some((solver, solution))
+}
+
+fn main() -> Result<()> {
     env_logger::init();
 
     let stdin = std::io::stdin();
@@ -763,61 +793,39 @@ fn main() {
                 }
             }
         });
-        return;
+        return Ok(());
     }
 
-    // Otherwise, read from stdin and solve
+    // Otherwise, try to find a new solution
+    if let Some((solver, solution)) = solve(global.clone(), local.clone()) {
+        let mut last_moved_snake = '\0';
 
-    let mut solver = Solver::new(global.clone(), local.clone());
-    while let Some(state) = solver.next() {
-        if solver.states_checked() % 100000 != 0 {
-            continue;
+        let mut path = String::new();
+        for step in solver.path(&local, &solution).unwrap().iter() {
+            let snake = match step.snake {
+                0 => '0',
+                1 => 'a',
+                2 => 'A',
+                3 => '{',
+                _ => unreachable!(),
+            };
+            if snake != last_moved_snake {
+                path.push(snake);
+                last_moved_snake = snake;
+            }
+
+            path.push(match step.direction {
+                Direction::Up => '↑',
+                Direction::Down => '↓',
+                Direction::Left => '←',
+                Direction::Right => '→',
+            });
         }
-        log::info!("{solver}, state:\n{}", state.stringify(&global));
-    }
-
-    let solution = solver.get_solution();
-    if solution.is_none() {
-        log::error!(
-            "No solution found after {} states in {} seconds",
-            solver.states_checked(),
-            solver.time_spent(),
-        );
-        return;
-    }
-    let solution = solution.unwrap();
-
-    log::info!(
-        "Solved after {} states in {} seconds:\n{}",
-        solver.states_checked(),
-        solver.time_spent(),
-        solution.stringify(&global),
-    );
-
-    let mut last_moved_snake = '\0';
-
-    let mut path = String::new();
-    for step in solver.path(&local, &solution).unwrap().iter() {
-        let snake = match step.snake {
-            0 => '0',
-            1 => 'a',
-            2 => 'A',
-            3 => '{',
-            _ => unreachable!(),
-        };
-        if snake != last_moved_snake {
-            path.push(snake);
-            last_moved_snake = snake;
-        }
-
-        path.push(match step.direction {
-            Direction::Up => '↑',
-            Direction::Down => '↓',
-            Direction::Left => '←',
-            Direction::Right => '→',
-        });
-    }
-    println!("{path}");
+        println!("{path}");
+        return Ok(());
+    } 
+    
+    Err(anyhow!("No solution found"))
 }
 
 // Tests (todo)
@@ -829,7 +837,7 @@ do
   cat data/snakebird/primer/$i.txt | ./target/debug/snakebird
 done
 
-01	0→→→→→→→↑→→→↑
+01	
 02	0→→→↑→→↑→→→↑←↑←←←↑←←↑←←↑↑←←↑
 03	0→→→↓↓←←←←←←↑↑→↑→→→→→→→↓↓→
 04	0↑→→→→↑←↑←←←←↑↑↑→↑
