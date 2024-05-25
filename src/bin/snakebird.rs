@@ -314,6 +314,19 @@ impl Local {
         true
     }
 
+
+    fn is_supported_by_wall(&self, global: &Global, index: usize) -> bool {
+        self.snakes[index].points.iter().any(|point| {
+            global.tile(*point + Direction::Down) == Tile::Wall
+        })
+    }
+
+    fn is_supported_by(&self, global: &Global, index_1: usize, index_2: usize) -> bool {
+        self.snakes[index_1].points.iter().any(|point| {
+            self.snakes[index_2].points.contains(&(*point + Direction::Down))
+        })
+    }
+
     fn try_gravity(&mut self, global: &Global) -> bool {
         // Apply gravity to all snakes
         'still_falling: loop {
@@ -328,7 +341,7 @@ impl Local {
                     }
 
                     // Otherwise, don't fall through walls
-                    if global.tile(below) == Tile::Wall {
+                    if self.is_supported_by_wall(global, falling_snake_index) {
                         return false;
                     }
 
@@ -338,7 +351,14 @@ impl Local {
                             continue;
                         }
 
-                        if other_snake.points.contains(&below) {
+                        if self.is_supported_by(global, falling_snake_index, other_snake_index) {
+                            // Deal with mutually supported snakes
+                            // TODO: This is hacky..
+                            if self.is_supported_by(global, other_snake_index, falling_snake_index) && !self.is_supported_by_wall(global, other_snake_index) {
+                                return true;
+                            }
+
+                            // Otherwise, supported by a supported snake, cannot fall
                             return false;
                         }
                     }
@@ -362,6 +382,11 @@ impl Local {
                 // If we made it here, the snake is falling move down all points
                 for point in self.snakes[falling_snake_index].points.iter_mut() {
                     point.y += 1;
+                }
+
+                // If the snake's head is somehow on the exit, it ... exits? 
+                if global.tile(*self.snakes[falling_snake_index].points.first().unwrap()) == Tile::Exit {
+                    self.snakes.remove(falling_snake_index);
                 }
 
                 continue 'still_falling;
@@ -776,7 +801,6 @@ fn main() {
 
     // Otherwise, read from stdin and solve
 
-
     let mut solver = Solver::new(global.clone(), local.clone());
     while let Some(state) = solver.next() {
         if solver.states_checked() % 100000 != 0 {
@@ -842,8 +866,8 @@ done
 02	0→→→↑→→↑→→→↑←←↑←←↑↑←←←←↑↑↑←←
 03	0→→→↓↓←←←←←←↑↑→↑→→→→↓→→↓→→
 04	0↑→→→→↑←↑←←←←↑↑↑→↑
-05	0→→→↓→↑←←←↑
-06	0→→↑→↑→↑←←←↑↑→→↑←←←←←↓←↓←↓←↓↓→→→↓→↑↑
+05	0→→→↓→↑←←↑←
+06	0→→↑→↑→↑↑↑←←↓↓←↑↑↑←←←↓↓←↓←←↓↓→→→↓→↑↑
 07	0↑←←↑←←↑↑→↑↑→→↓↓→↑↑←↑↑←←↑↑→↑←←←↓→→→↑↑↑→↑↑↑←↑
 08	0→→→→→→→↑←←←←←↑←←↑↑→→↑→→→→→↓→→→↑→↑↑↑←←↑↑←↑↑←←←↓↓←←↑←↑←←
 09	0←←↑←←↑↑←←←←←↑↑→↓↓←←←←←↑↑←←↑→↑→↑
@@ -851,9 +875,9 @@ done
 11	0↑a←←←←←↑←0↑←a←←0←↑
 12	0→→→→a↑0→a↑0→↑
 13	a→→↑↑→→→↓↓←↑←0→a←0↑a←←0↑←←
-14	0→→→↑←←←←a↑0←a←←0←←←
-15	0↑a←←↑←←←←0←←a↑0←a←0←←↑
-16  
+14	0→→→↑←←←←a↑0←←a←0←←
+15	0↑a←←↑←←←←0←←a↑0←a←0←↑←
+16  0→→↑→a↑↑↑0↑↑↑←←↑→→→→→↑→→a→→→↑→→→0↑
 
 x1  0→→→↓↓←←↑←←↑←←↓↓→→↓↓↓→→↑↑↑→→↑↑←←↑←↑
 x2  A↑{→A←a→→A↑a↑{↑a→0↑A→→↑←←a→A↓0→a→{↓→a→→0↑
