@@ -23,6 +23,19 @@ struct Global {
     solutions: Vec<String>,
 }
 
+// Stores the minimum and maximum character for each snake type
+// Third is true if the snake is actually a block
+const SNAKE_COUNT: usize = 7;
+const SNAKE_RANGES: [(char, char, bool); SNAKE_COUNT] = [
+    ('0', '9', false),
+    ('a', 'j', false),
+    ('A', 'J', false),
+    ('{', '~', false),
+    ('X', 'X', true),
+    ('Y', 'Y', true),
+    ('Z', 'Z', true),
+];
+
 impl Global {
     // Read a global + local from a Readable
     fn read<R: Read + BufRead>(reader: &mut R) -> Result<(Global, Local)> {
@@ -30,14 +43,7 @@ impl Global {
         let mut height = 0;
 
         let mut tiles = FxHashMap::default();
-
-        let mut snakes = vec![
-            vec![], // 0..=9
-            vec![], // a..=a
-            vec![], // A..=Z
-            vec![], // {|}~
-        ];
-
+        let mut snakes = vec![vec![]; SNAKE_COUNT];
         let mut fruit = Vec::new();
 
         for (y, line) in reader.lines().enumerate() {
@@ -76,20 +82,16 @@ impl Global {
                     '+' => {
                         fruit.push(p);
                     }
-                    // Currently known types of snakes stored in local state
-                    '0'..='9' => {
-                        snakes[0].push((c, p));
+                    // Otherwise, probably a snake
+                    _ => {
+                        let (snake_type, _) = SNAKE_RANGES
+                            .iter()
+                            .enumerate()
+                            .find(|(_, (min, max, _))| c >= *min && c <= *max)
+                            .ok_or_else(|| anyhow!("Invalid character {c} in map"))?;
+
+                        snakes[snake_type].push((c, p));
                     }
-                    'a'..='z' => {
-                        snakes[1].push((c, p));
-                    }
-                    'A'..='Z' => {
-                        snakes[2].push((c, p));
-                    }
-                    '{'..='~' => {
-                        snakes[3].push((c, p));
-                    }
-                    _ => return Err(anyhow!("Invalid character {c} in map")),
                 }
             }
         }
@@ -101,12 +103,26 @@ impl Global {
             .map(|points| {
                 let mut points = points.clone();
                 points.sort();
+
+                let is_statue = SNAKE_RANGES
+                    .iter()
+                    .find_map(|(min, max, is_block)| {
+                        if points[0].0 >= *min && points[0].0 <= *max {
+                            Some(*is_block)
+                        } else {
+                            None
+                        }
+                    })
+                    .expect("Invalid snake type");
+
                 Snake {
                     head: points.first().unwrap().0,
                     points: points.iter().map(|(_, point)| *point).collect::<Vec<_>>(),
+                    is_statue,
                 }
             })
             .collect::<Vec<_>>();
+
         let local = Local { snakes, fruit };
 
         // Any remaining lines are solutions
@@ -146,6 +162,7 @@ struct Point {
 struct Snake {
     head: char,
     points: Vec<Point>,
+    is_statue: bool,
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -195,6 +212,12 @@ struct Step {
 
 impl Local {
     fn try_move(&mut self, global: &Global, index: usize, direction: Direction) -> bool {
+        // Snakes that are actually statues cannot move
+        // TODO: Don't generate this move in the first place?
+        if self.snakes[index].is_statue {
+            return false;
+        }
+
         let head = self.snakes[index].points.first().unwrap().clone();
         let new_head = head + direction;
 
@@ -261,8 +284,8 @@ impl Local {
         new_head: Point,
     ) -> bool {
         // Attempt to push any snakes in the way
-        let mut snake_pushing_indexes = Vec::new();
-        let mut snake_pushing_points = vec![new_head];
+        let mut pushing_indexes = Vec::new();
+        let mut pushing_points = vec![new_head];
 
         'daisies_remain: loop {
             for (other_index, _) in self.snakes.iter().enumerate() {
@@ -272,18 +295,18 @@ impl Local {
                 }
 
                 // Already pushing this snake
-                if snake_pushing_indexes.contains(&other_index) {
+                if pushing_indexes.contains(&other_index) {
                     continue;
                 }
 
                 // If any pushing point is in the new snake, it's getting pushed too
-                if snake_pushing_points
+                if pushing_points
                     .iter()
                     .any(|p| self.snakes[other_index].points.contains(&p))
                 {
-                    snake_pushing_indexes.push(other_index);
+                    pushing_indexes.push(other_index);
 
-                    snake_pushing_points.extend(
+                    pushing_points.extend(
                         self.snakes[other_index]
                             .points
                             .iter()
@@ -299,7 +322,7 @@ impl Local {
 
         // No snake pushing points can hit anything (other than the original head)
         // TODO: Can you push a snake into the exit?
-        if snake_pushing_points
+        if pushing_points
             .iter()
             .skip(1)
             .any(|p| global.tile(*p) != Tile::Empty)
@@ -308,7 +331,7 @@ impl Local {
         }
 
         // If we have snakes to push, move them all
-        for snake_index in snake_pushing_indexes.iter() {
+        for snake_index in pushing_indexes.iter() {
             for point in self.snakes[*snake_index].points.iter_mut() {
                 *point = *point + direction;
             }
@@ -320,7 +343,7 @@ impl Local {
     fn try_gravity(&mut self, global: &Global) -> bool {
         // Apply gravity to all snakes
         'still_falling: loop {
-            // Calculate all snakes directly support
+            // Calculate all snakes directly supported
             let mut supported_indexes = Vec::new();
             
             'finding_support: loop {
@@ -660,6 +683,26 @@ mod local_move_tests {
         assert!(local.try_move(&global, 0, Direction::Right));
         assert!(!local.try_move(&global, 0, Direction::Right));
     }
+
+    #[test]
+    fn test_push_block() {
+        let input = "\
+--X-
+10X-
+####";
+        let (global, mut local) = Global::read(&mut std::io::Cursor::new(input)).unwrap();
+
+        assert!(local.try_move(&global, 0, Direction::Right));
+        assert_eq!(
+            local.snakes[0].points,
+            vec![Point { x: 2, y: 1 }, Point { x: 1, y: 1 }]
+        );
+        
+        assert!(local.snakes[1].points.len() == 2);
+        assert!(local.snakes[1].points.contains(&Point { x: 3, y: 0 }));
+        assert!(local.snakes[1].points.contains(&Point { x: 3, y: 1 }));
+    
+    }
 }
 
 impl State<Global, Step> for Local {
@@ -730,18 +773,20 @@ impl State<Global, Step> for Local {
                 for (i, snake) in self.snakes.iter().enumerate() {
                     for (j, pt) in snake.points.iter().enumerate() {
                         if pt.x == x && pt.y == y {
-                            c = match i {
-                                0 => ('0' as u8 + j as u8) as char,
-                                1 => ('a' as u8 + j as u8) as char,
-                                2 => ('A' as u8 + j as u8) as char,
-                                3 => ('{' as u8 + j as u8) as char,
-                                _ => unreachable!(),
+                            assert!(c == ' ', "Snake in non-empty tile");
+
+                            c = if self.snakes[i].is_statue {
+                                self.snakes[i].head
+                            } else {
+                                (self.snakes[i].head as u8 + j as u8) as char
                             };
                         }
                     }
                 }
 
                 if self.fruit.contains(&Point { x, y }) {
+                    assert!(c == ' ', "Fruit in non-empty tile");
+
                     c = '';
                 }
 
