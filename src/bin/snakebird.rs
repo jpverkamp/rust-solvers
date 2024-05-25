@@ -788,7 +788,7 @@ impl State<Global, Step> for Local {
                 for (i, snake) in self.snakes.iter().enumerate() {
                     for (j, pt) in snake.points.iter().enumerate() {
                         if pt.x == x && pt.y == y {
-                            assert!(c == ' ', "Snake in non-empty tile");
+                            assert!(c == ' ', "Snake in non-empty tile {c}");
 
                             c = if self.snakes[i].is_statue {
                                 self.snakes[i].head
