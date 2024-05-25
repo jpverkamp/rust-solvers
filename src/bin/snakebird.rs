@@ -1,6 +1,9 @@
 use anyhow::{anyhow, Result};
 use fxhash::FxHashMap;
-use std::{io::{BufRead, Read}, ops::Add};
+use std::{
+    io::{BufRead, Read},
+    ops::Add,
+};
 
 use solver::{Solver, State};
 
@@ -28,8 +31,9 @@ impl Global {
 
         let mut snakes = vec![
             vec![], // 0..=9
-            vec![], // a..=z
+            vec![], // a..=a
             vec![], // A..=Z
+            vec![], // {|}~
         ];
 
         let mut fruit = Vec::new();
@@ -73,6 +77,9 @@ impl Global {
                     'A'..='Z' => {
                         snakes[2].push((c, p));
                     }
+                    '{'..='~' => {
+                        snakes[3].push((c, p));
+                    }
                     _ => return Err(anyhow!("Invalid character {c} in map")),
                 }
             }
@@ -110,7 +117,10 @@ impl Global {
 
     // Check if a point is in bounds
     fn in_bounds(&self, point: Point) -> bool {
-        point.x >= 0 && point.x < self.width as isize && point.y >= 0 && point.y < self.height as isize
+        point.x >= 0
+            && point.x < self.width as isize
+            && point.y >= 0
+            && point.y < self.height as isize
     }
 }
 
@@ -140,10 +150,10 @@ enum Direction {
     Right,
 }
 
-impl Add<&Direction> for &Point {
+impl Add<Direction> for Point {
     type Output = Point;
 
-    fn add(self, direction: &Direction) -> Point {
+    fn add(self, direction: Direction) -> Point {
         match direction {
             Direction::Up => Point {
                 x: self.x,
@@ -163,7 +173,6 @@ impl Add<&Direction> for &Point {
             },
         }
     }
-
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -172,12 +181,470 @@ struct Step {
     direction: Direction,
 }
 
+impl Local {
+    fn try_move(&mut self, global: &Global, index: usize, direction: Direction) -> bool {
+        let head = self.snakes[index].points.first().unwrap().clone();
+        let new_head = head + direction;
+
+        // Cannot move out of bounds
+        if !global.in_bounds(new_head) {
+            return false;
+        }
+
+        // Cannot move into a wall
+        if global.tile(new_head) == Tile::Wall {
+            return false;
+        }
+
+        // Cannot move into yourself
+        if self.snakes[index].points.contains(&new_head) {
+            return false;
+        }
+
+        // If the currently moving snake moves onto the exit, check if it can leave
+        // Otherwise, we're going to move as normal; potentially eating fruit
+        if global.tile(new_head) == Tile::Exit {
+            // Check for exit
+
+            // Cannot exit (or even move onto exit) until all fruit is eaten
+            if !self.fruit.is_empty() {
+                return false;
+            }
+
+            // Otherwise, snake literally exits
+            // Bye bye snake
+            self.snakes.remove(index);
+        } else {
+            // Update the snake
+            self.snakes[index].points.insert(0, new_head);
+
+            // Potentially eat fruit; don't remove tail if fruit was eaten
+            if let Some(fruit_index) = self.fruit.iter().position(|fruit| fruit == &new_head) {
+                self.fruit.remove(fruit_index);
+            } else {
+                self.snakes[index].points.pop();
+            }
+        }
+
+        // Push any other snakes
+        // If any snake is pushed into a wall or out of bounds, the whole move is invalid
+        if !self.try_push(global, index, direction, new_head) {
+            return false;
+        }
+
+        // Apply gravity to all snakes; if any snakes fall out fo the world, the whole move is invalid
+        if !self.try_gravity(global) {
+            return false;
+        }
+
+        // If we made it here, the move was successful
+        true
+    }
+
+    fn try_push(
+        &mut self,
+        global: &Global,
+        index: usize,
+        direction: Direction,
+        new_head: Point,
+    ) -> bool {
+        // Attempt to push any snakes in the way
+        let mut snake_pushing_indexes = Vec::new();
+        let mut snake_pushing_points = vec![new_head];
+
+        'daisies_remain: loop {
+            for (other_index, _) in self.snakes.iter().enumerate() {
+                // TODO: What if we have a weird loop where we're pushing ourselves?
+                if index == other_index {
+                    continue;
+                }
+
+                // Already pushing this snake
+                if snake_pushing_indexes.contains(&other_index) {
+                    continue;
+                }
+
+                // If any pushing point is in the new snake, it's getting pushed too
+                if snake_pushing_points
+                    .iter()
+                    .any(|p| self.snakes[other_index].points.contains(&p))
+                {
+                    snake_pushing_indexes.push(other_index);
+
+                    snake_pushing_points.extend(
+                        self.snakes[other_index]
+                            .points
+                            .iter()
+                            .map(|p| *p + direction),
+                    );
+
+                    continue 'daisies_remain;
+                }
+            }
+
+            break;
+        }
+
+        // No snake pushing points can hit anything (other than the original head)
+        // TODO: Can you push a snake into the exit?
+        if snake_pushing_points
+            .iter()
+            .skip(1)
+            .any(|p| global.tile(*p) != Tile::Empty)
+        {
+            return false;
+        }
+
+        // No snake pushing points can be out of bounds
+        if snake_pushing_points
+            .iter()
+            .skip(1)
+            .any(|p| !global.in_bounds(*p))
+        {
+            return false;
+        }
+
+        // If we have snakes to push, move them all
+        for snake_index in snake_pushing_indexes.iter() {
+            for point in self.snakes[*snake_index].points.iter_mut() {
+                *point = *point + direction;
+            }
+        }
+
+        true
+    }
+
+    fn try_gravity(&mut self, global: &Global) -> bool {
+        // Apply gravity to all snakes
+        'still_falling: loop {
+            // Check if any snake can fall
+            for (falling_snake_index, _) in self.snakes.iter().enumerate() {
+                let can_fall = &self.snakes[falling_snake_index].points.iter().all(|point| {
+                    let below = *point + Direction::Down;
+
+                    // Apparently we can walk across fruit?
+                    if self.fruit.contains(&below) {
+                        return false;
+                    }
+
+                    // Otherwise, don't fall through walls
+                    if global.tile(below) == Tile::Wall {
+                        return false;
+                    }
+
+                    // And don't fall on *other* snakes (we can't support ourselves)
+                    for (other_snake_index, other_snake) in self.snakes.iter().enumerate() {
+                        if falling_snake_index == other_snake_index {
+                            continue;
+                        }
+
+                        if other_snake.points.contains(&below) {
+                            return false;
+                        }
+                    }
+
+                    true
+                });
+                if !can_fall {
+                    continue;
+                }
+
+                // If we can fall and we're on the bottom, bad things happen
+                // By that, I mean you lose
+                if self.snakes[falling_snake_index]
+                    .points
+                    .iter()
+                    .any(|point| !global.in_bounds(*point))
+                {
+                    return false;
+                }
+
+                // If we made it here, the snake is falling move down all points
+                for point in self.snakes[falling_snake_index].points.iter_mut() {
+                    point.y += 1;
+                }
+
+                continue 'still_falling;
+            }
+
+            // If we made it here, no snake can fall anymore
+            break;
+        }
+
+        // No snakes fell out of the world
+        true
+    }
+}
+
+#[cfg(test)]
+mod local_move_tests {
+    use super::*;
+
+    fn test_world_1() -> (Global, Local) {
+        let input = "\
+----
+10--
+###-";
+        Global::read(&mut std::io::Cursor::new(input)).unwrap()
+    }
+
+    fn test_world_2() -> (Global, Local) {
+        let input = "\
+----
+10#-
+###-";
+        Global::read(&mut std::io::Cursor::new(input)).unwrap()
+    }
+
+    fn test_big_world_1() -> (Global, Local) {
+        let input = "\
+------------
+------------
+------------
+3210--------
+######---###";
+        Global::read(&mut std::io::Cursor::new(input)).unwrap()
+    }
+
+    fn test_push_world_1() -> (Global, Local) {
+        let input = "\
+--a--
+10b--
+####-";
+        Global::read(&mut std::io::Cursor::new(input)).unwrap()
+    }
+
+    #[test]
+    fn test_move() {
+        let (global, mut local) = test_world_1();
+
+        assert!(local.try_move(&global, 0, Direction::Right));
+        assert_eq!(
+            local.snakes[0].points,
+            vec![Point { x: 2, y: 1 }, Point { x: 1, y: 1 }]
+        );
+    }
+
+    #[test]
+    fn test_move_up() {
+        let (global, mut local) = test_world_1();
+
+        assert!(local.try_move(&global, 0, Direction::Up));
+        assert_eq!(
+            local.snakes[0].points,
+            vec![Point { x: 1, y: 0 }, Point { x: 1, y: 1 }]
+        );
+    }
+
+    #[test]
+    fn test_right_up() {
+        let (global, mut local) = test_world_1();
+
+        assert!(local.try_move(&global, 0, Direction::Right));
+        assert!(local.try_move(&global, 0, Direction::Up));
+        assert_eq!(
+            local.snakes[0].points,
+            vec![Point { x: 2, y: 0 }, Point { x: 2, y: 1 }]
+        );
+    }
+
+    #[test]
+    fn test_not_into_ground() {
+        let (global, mut local) = test_world_1();
+
+        assert!(!local.try_move(&global, 0, Direction::Down));
+    }
+
+    #[test]
+    fn test_not_backtrack() {
+        let (global, mut local) = test_world_1();
+
+        assert!(!local.try_move(&global, 0, Direction::Left));
+    }
+
+    #[test]
+    fn test_not_into_wall() {
+        let (global, mut local) = test_world_2();
+
+        assert!(!local.try_move(&global, 0, Direction::Right));
+    }
+
+    #[test]
+    fn test_fall() {
+        let (global, mut local) = test_world_1();
+
+        // Move on platform
+        assert!(local.try_move(&global, 0, Direction::Right));
+
+        println!("{}", local.stringify(&global));
+
+        // Hang off platform
+        assert!(local.try_move(&global, 0, Direction::Right));
+
+        println!("{}", local.stringify(&global));
+
+        // Fall off
+        assert!(!local.try_move(&global, 0, Direction::Right));
+    }
+
+    #[test]
+    fn test_move_when_upright_fall() {
+        let (global, mut local) = test_world_1();
+
+        // Stand up
+        assert!(local.try_move(&global, 0, Direction::Up));
+
+        // Move over
+        assert!(local.try_move(&global, 0, Direction::Right));
+
+        assert_eq!(
+            local.snakes[0].points,
+            vec![Point { x: 2, y: 1 }, Point { x: 1, y: 1 }]
+        );
+    }
+
+    #[test]
+    fn test_turn_around() {
+        let (global, mut local) = test_world_1();
+
+        // Stand up
+        assert!(local.try_move(&global, 0, Direction::Up));
+
+        // Turn and fall back left
+        assert!(local.try_move(&global, 0, Direction::Left));
+
+        assert_eq!(
+            local.snakes[0].points,
+            vec![Point { x: 0, y: 1 }, Point { x: 1, y: 1 }]
+        );
+    }
+
+    #[test]
+    fn test_big_curl_up() {
+        let (global, mut local) = test_big_world_1();
+
+        assert!(local.try_move(&global, 0, Direction::Up));
+        assert!(local.try_move(&global, 0, Direction::Left));
+
+        assert_eq!(
+            local.snakes[0].points,
+            vec![
+                Point { x: 2, y: 2 },
+                Point { x: 3, y: 2 },
+                Point { x: 3, y: 3 },
+                Point { x: 2, y: 3 },
+            ]
+        );
+    }
+
+    #[test]
+    fn test_big_curl_up_too_much() {
+        let (global, mut local) = test_big_world_1();
+
+        assert!(local.try_move(&global, 0, Direction::Up));
+        assert!(local.try_move(&global, 0, Direction::Left));
+        assert!(!local.try_move(&global, 0, Direction::Down));
+    }
+
+    #[test]
+    fn test_big_cross_chasm() {
+        let (global, mut local) = test_big_world_1();
+
+        for _ in 0..8 {
+            assert!(local.try_move(&global, 0, Direction::Right));
+        }
+
+        assert!(local.try_move(&global, 0, Direction::Up));
+        assert!(local.try_move(&global, 0, Direction::Left));
+
+        assert_eq!(
+            local.snakes[0].points,
+            vec![
+                Point { x: 10, y: 2 },
+                Point { x: 11, y: 2 },
+                Point { x: 11, y: 3 },
+                Point { x: 10, y: 3 },
+            ]
+        );
+    }
+
+    #[test]
+    fn test_big_stand() {
+        let (global, mut local) = test_big_world_1();
+
+        assert!(local.try_move(&global, 0, Direction::Up));
+        assert!(local.try_move(&global, 0, Direction::Up));
+        assert!(local.try_move(&global, 0, Direction::Up));
+
+        assert_eq!(
+            local.snakes[0].points,
+            vec![
+                Point { x: 3, y: 0 },
+                Point { x: 3, y: 1 },
+                Point { x: 3, y: 2 },
+                Point { x: 3, y: 3 }
+            ]
+        );
+    }
+
+    #[test]
+    fn test_big_stand_and_fall() {
+        let (global, mut local) = test_big_world_1();
+
+        assert!(local.try_move(&global, 0, Direction::Up));
+        assert!(local.try_move(&global, 0, Direction::Up));
+        assert!(local.try_move(&global, 0, Direction::Up));
+
+        assert!(local.try_move(&global, 0, Direction::Right));
+        assert_eq!(local.snakes[0].points[0], Point { x: 4, y: 1 });
+
+        assert!(local.try_move(&global, 0, Direction::Right));
+        assert_eq!(local.snakes[0].points[0], Point { x: 5, y: 2 });
+
+        assert!(local.try_move(&global, 0, Direction::Right));
+        assert_eq!(local.snakes[0].points[0], Point { x: 6, y: 3 });
+
+        assert_eq!(
+            local.snakes[0].points,
+            vec![
+                Point { x: 6, y: 3 },
+                Point { x: 5, y: 3 },
+                Point { x: 4, y: 3 },
+                Point { x: 3, y: 3 }
+            ]
+        );
+    }
+
+    #[test]
+    fn test_push() {
+        let (global, mut local) = test_push_world_1();
+
+        assert!(local.try_move(&global, 0, Direction::Right));
+        assert_eq!(
+            local.snakes[0].points,
+            vec![Point { x: 2, y: 1 }, Point { x: 1, y: 1 }]
+        );
+        assert_eq!(
+            local.snakes[1].points,
+            vec![Point { x: 3, y: 0 }, Point { x: 3, y: 1 }]
+        );
+    }
+
+    #[test]
+    fn test_push_off() {
+        let (global, mut local) = test_push_world_1();
+
+        assert!(local.try_move(&global, 0, Direction::Right));
+        assert!(!local.try_move(&global, 0, Direction::Right));
+    }
+}
+
 impl State<Global, Step> for Local {
     fn is_valid(&self, global: &Global) -> bool {
         // All snakes must be in bounds
-        self.snakes.iter().all(|snake| {
-            snake.points.iter().all(|point| { global.in_bounds(*point) })
-        })
+        self.snakes
+            .iter()
+            .all(|snake| snake.points.iter().all(|point| global.in_bounds(*point)))
     }
 
     fn is_solved(&self, _map: &Global) -> bool {
@@ -188,9 +655,9 @@ impl State<Global, Step> for Local {
     fn next_states(&self, global: &Global) -> Option<Vec<(i64, Step, Local)>> {
         let mut next_states = Vec::new();
 
-        // Try to move each snake in each direction 
+        // Try to move each snake in each direction
         for (snake_index, _) in self.snakes.iter().enumerate() {
-            'one_direction: for direction in [
+            for direction in [
                 Direction::Up,
                 Direction::Down,
                 Direction::Left,
@@ -198,162 +665,19 @@ impl State<Global, Step> for Local {
             ]
             .iter()
             {
-                // Figure out where the moving snake's head will move to
+                // Generate a potential new local state
                 let step = Step {
                     snake: snake_index,
                     direction: *direction,
                 };
                 let mut new_local = self.clone();
-                let head = new_local.snakes[snake_index].points.first().unwrap().clone();
-                let new_head = &head + direction;
 
-                // Cannot move out of bounds
-                if !global.in_bounds(new_head) {
-                    continue 'one_direction;
+                // Try to move the snake
+                if !new_local.try_move(global, snake_index, *direction) {
+                    continue;
                 }
 
-                // Cannot move into a wall
-                if global.tile(new_head) == Tile::Wall {
-                    continue 'one_direction;
-                }
-
-                // Cannot move into yourself
-                if new_local.snakes[snake_index].points.contains(&new_head) {
-                    continue 'one_direction;
-                }
-
-                // If the currently moving snake moves onto the exit, check if it can leave
-                // Otherwise, we're going to move as normal; potentially eating fruit
-                if global.tile(new_head) == Tile::Exit {
-                    // Check for exit
-
-                    // Cannot exit (or even move onto exit) until all fruit is eaten
-                    if !new_local.fruit.is_empty() {
-                        continue 'one_direction;
-                    }
-
-                    // Otherwise, snake literally exits
-                    // Bye bye snake
-                    new_local.snakes.remove(snake_index);
-                } else {
-                    // Update the snake
-                    new_local.snakes[snake_index].points.insert(0, new_head);
-
-                    // Potentially eat fruit; don't remove tail if fruit was eaten
-                    if let Some(fruit_index) =
-                        new_local.fruit.iter().position(|fruit| fruit == &new_head)
-                    {
-                        new_local.fruit.remove(fruit_index);
-                    } else {
-                        new_local.snakes[snake_index].points.pop();
-                    }
-                }
-
-                // Attempt to push any snakes in the way
-                let mut snake_pushing_indexes = Vec::new();
-                let mut snake_pushing_points = vec![new_head];
-
-                'daisies_remain: loop {
-                    for (other_snake_index, _) in new_local.snakes.iter().enumerate() {
-                        // TODO: What if we have a weird loop where we're pushing ourselves? 
-                        if snake_index == other_snake_index {
-                            continue;
-                        }
-
-                        // Already pushing this snake
-                        if snake_pushing_indexes.contains(&other_snake_index) {
-                            continue;
-                        }
-
-                        // If any pushing point is in the new snake, it's getting pushed too
-                        if snake_pushing_points.iter().any(|p| new_local.snakes[other_snake_index].points.contains(&p)) {
-                            snake_pushing_indexes.push(other_snake_index);
-                            
-                            snake_pushing_points.extend(
-                                new_local.snakes[other_snake_index].points.iter().map(|p| p + direction)
-                            );
-
-                            continue 'daisies_remain;
-                        }
-                    }
-
-                    break;
-                }
-
-                // No snake pushing points can hit anything (other than the original head)
-                // TODO: Can you push a snake into the exit? 
-                if snake_pushing_points.iter().skip(1).any(|p| global.tile(*p) != Tile::Empty) {
-                    continue 'one_direction;
-                }
-
-                // No snake pushing points can be out of bounds
-                if snake_pushing_points.iter().skip(1).any(|p| !global.in_bounds(*p)) {
-                    continue 'one_direction;
-                }
-
-                // If we have snakes to push, move them all
-                for snake_index in snake_pushing_indexes.iter() {
-                    for point in new_local.snakes[*snake_index].points.iter_mut() {
-                        *point = &*point + direction;
-                    }
-                }
-
-                // Apply gravity to all snakes
-                'still_falling: loop {
-                    // Check if any snake can fall
-                    for (falling_snake_index, _) in new_local.snakes.iter().enumerate() {
-                        let can_fall = &new_local.snakes[falling_snake_index].points.iter().all(|point| {
-                            let below = point + &Direction::Down;
-
-                            // Apparently we can walk across fruit?
-                            if new_local.fruit.contains(&below) {
-                                return false;
-                            }
-
-                            // Otherwise, don't fall through walls
-                            if global.tile(below) == Tile::Wall {
-                                return false;
-                            }
-
-                            // And don't fall on *other* snakes (we can't support ourselves)
-                            for (other_snake_index, other_snake) in new_local.snakes.iter().enumerate() {
-                                if falling_snake_index == other_snake_index {
-                                    continue;
-                                }
-
-                                if other_snake.points.contains(&below) {
-                                    return false;
-                                }
-                            }
-
-                            true
-                        });
-                        if !can_fall {
-                            continue;
-                        }
-
-                        // If we can fall and we're on the bottom, bad things happen
-                        // By that, I mean you lose
-                        if new_local.snakes[falling_snake_index]
-                            .points
-                            .iter()
-                            .any(|point| !global.in_bounds(*point))
-                        {
-                            continue 'one_direction;
-                        }
-
-                        // If we made it here, the snake is falling move down all points
-                        for point in new_local.snakes[falling_snake_index].points.iter_mut() {
-                            point.y += 1;
-                        }
-
-                        continue 'still_falling;
-                    }
-
-                    // If we made it here, no snake can fall anymore
-                    break;
-                }
-
+                // If the move was successful, add it to the list of next states
                 next_states.push((1, step, new_local));
             }
         }
@@ -388,6 +712,7 @@ impl State<Global, Step> for Local {
                                 0 => ('0' as u8 + j as u8) as char,
                                 1 => ('a' as u8 + j as u8) as char,
                                 2 => ('A' as u8 + j as u8) as char,
+                                3 => ('{' as u8 + j as u8) as char,
                                 _ => unreachable!(),
                             };
                         }
@@ -451,6 +776,7 @@ fn main() {
             0 => '0',
             1 => 'a',
             2 => 'A',
+            3 => '{',
             _ => unreachable!(),
         };
         if snake != last_moved_snake {
@@ -490,4 +816,10 @@ done
 11	0↑a←←←←←↑←0↑←a←←0←↑
 12	0→→→→a↑0→a↑0→↑
 13	a→→↑↑→→→↓↓←↑←0→a←0↑a←←0↑←←
+14	0→→→↑←←←←a↑0←a←←0←←←
+15	0↑a←←↑←←←←0←←a↑0←a←0←←↑
+
+
+x1  0→→→↓↓←←↑←←↑←←↓↓→→↓↓↓→→↑↑↑→→↑↑←←↑←↑
+x2  A↑{→A←a→→A↑a↑{↑a→0↑A→→↑←←a→A↓0→a→{↓→a→→0↑
 */
