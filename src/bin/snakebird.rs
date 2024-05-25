@@ -383,6 +383,13 @@ impl Local {
             }) {
                 return false;
             }
+
+            // If any snakes fell onto spikes, the whole move is invalid
+            if self.snakes.iter().any(|snake| {
+                snake.points.iter().any(|point| global.tile(*point) == Tile::Spike)
+            }) {
+                return false;
+            }
         }
 
         true
