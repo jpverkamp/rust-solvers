@@ -12,6 +12,7 @@ enum Tile {
     Empty,
     Wall,
     Exit,
+    Spike,
 }
 
 #[derive(Debug, Clone)]
@@ -62,6 +63,9 @@ impl Global {
                     }
                     '=' => {
                         tiles.insert(p, Tile::Exit);
+                    }
+                    '!' => {
+                        tiles.insert(p, Tile::Spike);
                     }
                     // Fruit is stored in the local state
                     '+' => {
@@ -196,6 +200,11 @@ impl Local {
             return false;
         }
 
+        // Cannot move into a spike
+        if global.tile(new_head) == Tile::Spike {
+            return false;
+        }
+
         // Cannot move into yourself
         if self.snakes[index].points.contains(&new_head) {
             return false;
@@ -321,7 +330,7 @@ impl Local {
         })
     }
 
-    fn is_supported_by(&self, global: &Global, index_1: usize, index_2: usize) -> bool {
+    fn is_supported_by(&self, _: &Global, index_1: usize, index_2: usize) -> bool {
         self.snakes[index_1].points.iter().any(|point| {
             self.snakes[index_2].points.contains(&(*point + Direction::Down))
         })
@@ -346,7 +355,7 @@ impl Local {
                     }
 
                     // And don't fall on *other* snakes (we can't support ourselves)
-                    for (other_snake_index, other_snake) in self.snakes.iter().enumerate() {
+                    for (other_snake_index, _) in self.snakes.iter().enumerate() {
                         if falling_snake_index == other_snake_index {
                             continue;
                         }
@@ -382,6 +391,15 @@ impl Local {
                 // If we made it here, the snake is falling move down all points
                 for point in self.snakes[falling_snake_index].points.iter_mut() {
                     point.y += 1;
+                }
+
+                // Also, spikes
+                if self.snakes[falling_snake_index]
+                    .points
+                    .iter()
+                    .any(|point| global.tile(*point) == Tile::Spike)
+                {
+                    return false;
                 }
 
                 // If the snake's head is somehow on the exit, it ... exits? 
@@ -728,6 +746,7 @@ impl State<Global, Step> for Local {
                     Tile::Empty => ' ',
                     Tile::Wall => '█',
                     Tile::Exit => '⊛',
+                    Tile::Spike => '✴',
                 };
 
                 for (i, snake) in self.snakes.iter().enumerate() {
@@ -878,6 +897,9 @@ done
 14	0→→→↑←←←←a↑0←←a←0←←
 15	0↑a←←↑←←←←0←←a↑0←a←0←↑←
 16  0→→↑→a↑↑↑0↑↑↑←←↑→→→→→↑→→a→→→↑→→→0↑
+17  0→→→→→→↑↑←↑→→→→→→↑←←↑←←←←↑→↑↑←←←←←←↑←
+18  0↑←↑←←←←↑↑↑→→→→→↓←↓↓←←←↓→↓↓→→↑→→↓↓→→→→↑↑↑
+19  
 
 x1  0→→→↓↓←←↑←←↑←←↓↓→→↓↓↓→→↑↑↑→→↑↑←←↑←↑
 x2  A↑{→A←a→→A↑a↑{↑a→0↑A→→↑←←a→A↓0→a→{↓→a→→0↑
