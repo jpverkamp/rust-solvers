@@ -308,6 +308,23 @@ impl Local {
             return false;
         }
 
+        // If we ended up with snakes overlapping, something funny (and bad!) happened
+        if self
+            .snakes
+            .iter()
+            .enumerate()
+            .any(|(i, snake)| 
+                self
+                    .snakes
+                    .iter()
+                    .enumerate()
+                    .any(|(j, other_snake)| 
+                        i != j && snake.points.iter().any(|point| other_snake.points.contains(point))
+                    )
+                ) {
+            return false;
+        }
+
         // If we made it here, the move was successful
         true
     }
