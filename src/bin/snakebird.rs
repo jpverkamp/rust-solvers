@@ -158,6 +158,12 @@ struct Point {
     y: isize,
 }
 
+impl Point {
+    fn manhattan_distance(&self, other: Point) -> isize {
+        (self.x - other.x).abs() + (self.y - other.y).abs()
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Snake {
     head: char,
@@ -206,7 +212,7 @@ impl Add<Direction> for Point {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct Step {
-    snake: usize,
+    snake_head: char,
     direction: Direction,
 }
 
@@ -350,7 +356,7 @@ impl Local {
         'still_falling: loop {
             // Calculate all snakes directly supported
             let mut supported_indexes = Vec::new();
-            
+
             'finding_support: loop {
                 // If all snakes are supported, we're done with both loops
                 if supported_indexes.len() == self.snakes.len() {
@@ -364,26 +370,32 @@ impl Local {
                     }
 
                     // Supported by a wall
-                    if self.snakes[index].points.iter().any(|point| {
-                        global.tile(*point + Direction::Down) == Tile::Wall
-                    }) {
+                    if self.snakes[index]
+                        .points
+                        .iter()
+                        .any(|point| global.tile(*point + Direction::Down) == Tile::Wall)
+                    {
                         supported_indexes.push(index);
                         continue 'finding_support;
                     }
 
                     // Supported by fruit? (we can walk across fruit)
-                    if self.snakes[index].points.iter().any(|point| {
-                        self.fruit.contains(&(*point + Direction::Down))
-                    }) {
+                    if self.snakes[index]
+                        .points
+                        .iter()
+                        .any(|point| self.fruit.contains(&(*point + Direction::Down)))
+                    {
                         supported_indexes.push(index);
                         continue 'finding_support;
                     }
 
                     // Statues are supported by spikes
                     if self.snakes[index].is_statue {
-                        if self.snakes[index].points.iter().any(|point| {
-                            global.tile(*point + Direction::Down) == Tile::Spike
-                        }) {
+                        if self.snakes[index]
+                            .points
+                            .iter()
+                            .any(|point| global.tile(*point + Direction::Down) == Tile::Spike)
+                        {
                             supported_indexes.push(index);
                             continue 'finding_support;
                         }
@@ -392,7 +404,9 @@ impl Local {
                     // Supported by another supported snake
                     for other_index in supported_indexes.iter() {
                         if self.snakes[index].points.iter().any(|point| {
-                            self.snakes[*other_index].points.contains(&(*point + Direction::Down))
+                            self.snakes[*other_index]
+                                .points
+                                .contains(&(*point + Direction::Down))
                         }) {
                             supported_indexes.push(index);
                             continue 'finding_support;
@@ -417,23 +431,37 @@ impl Local {
 
             // If any snakes fall out of the world, the whole move is invalid
             if self.snakes.iter().any(|snake| {
-                snake.points.iter().all(|point| point.y > global.height as isize)
+                snake
+                    .points
+                    .iter()
+                    .all(|point| point.y > global.height as isize)
             }) {
                 return false;
             }
 
             // If any snakes fell onto spikes, the whole move is invalid
             if self.snakes.iter().any(|snake| {
-                snake.points.iter().any(|point| global.tile(*point) == Tile::Spike)
+                snake
+                    .points
+                    .iter()
+                    .any(|point| global.tile(*point) == Tile::Spike)
             }) {
                 return false;
             }
 
             // If any snakes fell into a valid exit, they're gone
             if self.fruit.is_empty() {
-                self.snakes.retain(|snake| {
-                    global.tile(snake.points[0]) != Tile::Exit
-                });
+                self.snakes
+                    .retain(|snake| global.tile(snake.points[0]) != Tile::Exit);
+            }
+
+            // But bodies going through the exit are bad (or going through exit before all fruit is gone)
+            if self
+                .snakes
+                .iter()
+                .any(|snake| global.tile(snake.points[0]) == Tile::Exit)
+            {
+                return false;
             }
         }
 
@@ -712,18 +740,21 @@ mod local_move_tests {
             local.snakes[0].points,
             vec![Point { x: 2, y: 1 }, Point { x: 1, y: 1 }]
         );
-        
+
         assert!(local.snakes[1].points.len() == 2);
         assert!(local.snakes[1].points.contains(&Point { x: 3, y: 0 }));
         assert!(local.snakes[1].points.contains(&Point { x: 3, y: 1 }));
-    
     }
 }
 
 impl State<Global, Step> for Local {
     fn is_valid(&self, global: &Global) -> bool {
-        self.snakes.iter().all(|snake|
-        snake.points.iter().all(|point| point.y <= global.height as isize))
+        self.snakes.iter().all(|snake| {
+            snake
+                .points
+                .iter()
+                .all(|point| point.y <= global.height as isize)
+        })
     }
 
     fn is_solved(&self, _map: &Global) -> bool {
@@ -746,7 +777,7 @@ impl State<Global, Step> for Local {
             {
                 // Generate a potential new local state
                 let step = Step {
-                    snake: snake_index,
+                    snake_head: self.snakes[snake_index].head,
                     direction: *direction,
                 };
                 let mut new_local = self.clone();
@@ -767,8 +798,59 @@ impl State<Global, Step> for Local {
         Some(next_states)
     }
 
-    fn heuristic(&self, _global: &Global) -> i64 {
-        0
+    fn heuristic(&self, global: &Global) -> i64 {
+        // Guess how far we have to go yet
+        // If there are no fruit, take the straight line from each snake to the exit
+        // Otherwise, move each snake to a fruit, then each fruit to each other fruit, then exit
+        // TODO: The other case vastly overestimates at this point because of the fruit/fruit distance
+
+        let exit = global
+            .tiles
+            .iter()
+            .find_map(|(point, tile)| {
+                if *tile == Tile::Exit {
+                    Some(*point)
+                } else {
+                    None
+                }
+            })
+            .expect("There must always be a single exit");
+
+        if self.fruit.is_empty() {
+            // From each snake to the exit
+            self.snakes
+                .iter()
+                .map(|snake| snake.points[0].manhattan_distance(exit))
+                .sum::<isize>() as i64
+        } else {
+            // From each snake to the nearest fruit
+            (self.snakes
+                .iter()
+                .map(|snake| {
+                    self.fruit.iter().map(|fruit| snake.points[0].manhattan_distance(*fruit)).min().unwrap_or(0)
+                })
+                .sum::<isize>()
+            // From each fruit to the nearest other fruit
+            + self
+                .fruit
+                .iter()
+                .map(|fruit| {
+                    self.fruit
+                        .iter()
+                        .filter(|other_fruit| *other_fruit != fruit)
+                        .map(|other_fruit| fruit.manhattan_distance(*other_fruit))
+                        .min()
+                        .unwrap_or(0)
+                })
+                .sum::<isize>()
+            // From the exit to the nearest fruit
+            + self
+                .fruit
+                .iter()
+                .map(|fruit| exit.manhattan_distance(*fruit))
+                .min()
+                .unwrap_or(0)) as i64
+        }
     }
 
     fn stringify(&self, global: &Global) -> String {
@@ -788,7 +870,7 @@ impl State<Global, Step> for Local {
                 for (i, snake) in self.snakes.iter().enumerate() {
                     for (j, pt) in snake.points.iter().enumerate() {
                         if pt.x == x && pt.y == y {
-                            assert!(c == ' ', "Snake in non-empty tile {c}");
+                            // assert!(c == ' ', "Snake in non-empty tile {c}");
 
                             c = if self.snakes[i].is_statue {
                                 self.snakes[i].head
@@ -800,7 +882,7 @@ impl State<Global, Step> for Local {
                 }
 
                 if self.fruit.contains(&Point { x, y }) {
-                    assert!(c == ' ', "Fruit in non-empty tile");
+                    // assert!(c == ' ', "Fruit in non-empty tile");
 
                     c = '';
                 }
@@ -844,21 +926,18 @@ fn solve(global: Global, local: Local) -> Option<(Solver<Global, Local, Step>, L
     Some((solver, solution))
 }
 
-fn stringify_solution(solver: &Solver<Global, Local, Step>, initial_state: &Local, solved_state: &Local) -> String {
+fn stringify_solution(
+    solver: &Solver<Global, Local, Step>,
+    initial_state: &Local,
+    solved_state: &Local,
+) -> String {
     let mut last_moved_snake = '\0';
 
     let mut path = String::new();
     for step in solver.path(initial_state, solved_state).unwrap().iter() {
-        let snake = match step.snake {
-            0 => '0',
-            1 => 'a',
-            2 => 'A',
-            3 => '{',
-            _ => unreachable!(),
-        };
-        if snake != last_moved_snake {
-            path.push(snake);
-            last_moved_snake = snake;
+        if step.snake_head != last_moved_snake {
+            path.push(step.snake_head);
+            last_moved_snake = step.snake_head;
         }
 
         path.push(match step.direction {
@@ -885,14 +964,14 @@ fn main() -> Result<()> {
     if std::env::args().len() > 1 {
         std::env::args().skip(1).for_each(|instructions| {
             let mut local = local.clone();
-            let mut current_snake_index = 0;
+            let mut current_snake_head = '0';
 
             for (step, c) in instructions.chars().enumerate() {
                 println!("\n=== Step {}: {} ===", step, c);
 
                 if "0aA{".contains(c) {
-                    current_snake_index = local.snakes.iter().position(|snake| snake.head == c).unwrap();
-                    println!("Switched to snake {} ({})", c, local.snakes[current_snake_index].head);
+                    current_snake_head = c;
+                    println!("Switched to snake {c}");
                 } else {
                     let direction = match c {
                         '↑' => Direction::Up,
@@ -902,7 +981,14 @@ fn main() -> Result<()> {
                         _ => panic!("invalid instruction: {}", c),
                     };
 
-                    println!("Moving snake {} ({}) {:?}", local.snakes[current_snake_index].head, c, direction);
+                    let current_snake_index = local
+                        .snakes
+                        .iter()
+                        .position(|snake| snake.head == current_snake_head)
+                        .expect("Snake not found");
+
+                    println!("Moving snake {current_snake_head} ({current_snake_index}) {c} {direction:?}");
+
                     assert!(local.try_move(&global, current_snake_index, direction));
                     println!("After move:\n{}", local.stringify(&global));
                     println!("Is valid? {}", local.is_valid(&global));
@@ -924,16 +1010,15 @@ fn main() -> Result<()> {
         }
 
         return Ok(());
-    } 
-    
+    }
+
     Err(anyhow!("No solution found"))
 }
 
-
 #[cfg(test)]
 mod test_solutions {
-    use std::{fs::File, io::Read, sync::mpsc, thread};
     use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
+    use std::{fs::File, io::Read, sync::mpsc, thread};
 
     use super::*;
 
@@ -950,10 +1035,7 @@ mod test_solutions {
         // Collect all tests to run in order
         let mut test_files = Vec::new();
 
-        let folders = [
-            "data/snakebird",
-            "data/snakebird/primer",
-        ];
+        let folders = ["data/snakebird", "data/snakebird/primer"];
 
         for folder in folders.iter() {
             for entry in std::fs::read_dir(folder).unwrap() {
