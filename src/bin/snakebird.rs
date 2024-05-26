@@ -2,7 +2,7 @@ use anyhow::{anyhow, Result};
 use fxhash::FxHashMap;
 use std::{
     io::{BufRead, Read},
-    ops::Add,
+    ops::{Add, Sub},
 };
 
 use solver::{Solver, State};
@@ -13,6 +13,7 @@ enum Tile {
     Wall,
     Exit,
     Spike,
+    Portal,
 }
 
 #[derive(Debug, Clone)]
@@ -83,6 +84,9 @@ impl Global {
                     }
                     '!' => {
                         tiles.insert(p, Tile::Spike);
+                    }
+                    '@' => {
+                        tiles.insert(p, Tile::Portal);
                     }
                     // Fruit is stored in the local state
                     '+' => {
@@ -167,6 +171,28 @@ struct Point {
 impl Point {
     fn manhattan_distance(&self, other: Point) -> isize {
         (self.x - other.x).abs() + (self.y - other.y).abs()
+    }
+}
+
+impl Add<Point> for Point {
+    type Output = Point;
+
+    fn add(self, other: Point) -> Point {
+        Point {
+            x: self.x + other.x,
+            y: self.y + other.y,
+        }
+    }
+}
+
+impl Sub<Point> for Point {
+    type Output = Point;
+
+    fn sub(self, other: Point) -> Point {
+        Point {
+            x: self.x - other.x,
+            y: self.y - other.y,
+        }
     }
 }
 
@@ -264,6 +290,13 @@ impl Local {
             }
         }
 
+        // Apply portals
+        // If a portal fails, we just don't go through it; this is still a valid move
+        // TODO: Push through portals?
+        if global.tile(new_head) == Tile::Portal {
+            let _ = self.try_portal(global, index, new_head);
+        }
+
         // Push any other snakes
         // If any snake is pushed into a wall, the whole move is invalid
         if !self.try_push(global, index, direction, new_head) {
@@ -329,7 +362,11 @@ impl Local {
         if pushing_points
             .iter()
             .skip(1)
-            .any(|p| !(global.tile(*p) == Tile::Empty || global.tile(*p) == Tile::Exit))
+            .any(|p| !(
+                global.tile(*p) == Tile::Empty 
+                || global.tile(*p) == Tile::Exit
+                || global.tile(*p) == Tile::Portal
+            ))
         {
             return false;
         }
@@ -343,6 +380,22 @@ impl Local {
         for snake_index in pushing_indexes.iter() {
             for point in self.snakes[*snake_index].points.iter_mut() {
                 *point = *point + direction;
+            }
+        }
+
+        // If any snake ends up on a portal, try to portal it
+        for snake_index in pushing_indexes.iter() {
+            if let Some(portal_index) = self.snakes[*snake_index]
+                .points
+                .iter()
+                .position(|point| global.tile(*point) == Tile::Portal)
+            {
+                // If going through the portal fails, that's okay! Just don't use it. 
+                let _ = self.try_portal(
+                    global,
+                    *snake_index,
+                    self.snakes[*snake_index].points[portal_index],
+                );
             }
         }
 
@@ -425,6 +478,21 @@ impl Local {
                 for point in self.snakes[index].points.iter_mut() {
                     *point = *point + Direction::Down;
                 }
+
+                // If a snake falls onto a portal, go through it
+                // This applies even if it isn't their head
+                if let Some(portal_index) = self.snakes[index]
+                    .points
+                    .iter()
+                    .position(|point| global.tile(*point) == Tile::Portal)
+                {
+                    // If going through the portal fails, that's okay! Just don't use it. 
+                    let _ = self.try_portal(
+                        global,
+                        index,
+                        self.snakes[index].points[portal_index],
+                    );
+                }
             }
 
             // If any snakes fall out of the world, the whole move is invalid
@@ -462,6 +530,57 @@ impl Local {
             //     return false;
             // }
         }
+
+        true
+    }
+
+    fn try_portal(&mut self, global: &Global, index: usize, portal_point: Point) -> bool {
+        let other_portal = global
+            .tiles
+            .iter()
+            .find_map(|(point, tile)| {
+                if *tile == Tile::Portal && *point != portal_point {
+                    Some(*point)
+                } else {
+                    None
+                }
+            })
+            .expect("There must always be a pair of portals");
+
+        // Verify that the other end of the portal is empty
+        if self.snakes[index].points.iter().any(|point| {
+            let target = *point - portal_point + other_portal;
+
+            // Jumping onto a wall or spike
+            if global.tile(target) == Tile::Wall || global.tile(target) == Tile::Spike {
+                return true;
+            }
+
+            // Jumping onto fruit
+            // TODO: Is this fine?
+            if self.fruit.contains(&target) {
+                return true;
+            }
+
+            // Jumping onto another snake
+            if self
+                .snakes
+                .iter()
+                .any(|snake| snake.points.contains(&target))
+            {
+                return true;
+            }
+
+            // This point is fine to portal
+            false
+        }) {
+            return false;
+        }
+
+        // Move the snake to the other portal
+        self.snakes[index].points.iter_mut().for_each(|point| {
+            *point = *point - portal_point + other_portal;
+        });
 
         true
     }
@@ -863,6 +982,7 @@ impl State<Global, Step> for Local {
                     Tile::Wall => '█',
                     Tile::Exit => '⊛',
                     Tile::Spike => '✴',
+                    Tile::Portal => '@',
                 };
 
                 for (i, snake) in self.snakes.iter().enumerate() {
