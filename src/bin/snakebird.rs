@@ -486,25 +486,21 @@ impl Local {
                 break 'finding_support;
             }
 
-            // If a portal is covered before falling and after, it doesn't trigger
-            let mut hidden_portals = Vec::new();
-            for index in 0..self.snakes.len() {
-                if supported_indexes.contains(&index) {
-                    continue;
-                }
-
-                for point in self.snakes[index].points.iter() {
-                    if global.tile(*point) == Tile::Portal {
-                        hidden_portals.push(*point);
-                    }
-                }
-            }
-
             // Otherwise, all non supported snakes fall by one
             for index in 0..self.snakes.len() {
                 if supported_indexes.contains(&index) {
                     continue;
                 }
+
+                // Any portals that we're covering before moving don't double trigger
+                // If a portal is covered before falling and after, it doesn't trigger
+                let hidden_portals = self
+                    .snakes[index]
+                    .points
+                    .iter()
+                    .filter(|point| global.tile(**point) == Tile::Portal)
+                    .map(|point| *point)
+                    .collect::<Vec<_>>();
 
                 for point in self.snakes[index].points.iter_mut() {
                     *point = *point + Direction::Down;
