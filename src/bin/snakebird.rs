@@ -481,6 +481,15 @@ impl Local {
 
                 // If a snake falls onto a portal, go through it
                 // This applies even if it isn't their head
+                // TODO: This currently fails on x5 because of this:
+                /*
+                 * --@--
+                 * 210--
+                 * #####
+                 */
+                // If the snake goes straight up through the portal (assume it has to be vertical)
+                // It will trigger the fall when the snake goes up three times (sort of jumping)
+                // But the game doesn't actually trigger here
                 if let Some(portal_index) = self.snakes[index]
                     .points
                     .iter()
