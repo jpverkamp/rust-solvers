@@ -486,6 +486,20 @@ impl Local {
                 break 'finding_support;
             }
 
+            // If a portal is covered before falling and after, it doesn't trigger
+            let mut hidden_portals = Vec::new();
+            for index in 0..self.snakes.len() {
+                if supported_indexes.contains(&index) {
+                    continue;
+                }
+
+                for point in self.snakes[index].points.iter() {
+                    if global.tile(*point) == Tile::Portal {
+                        hidden_portals.push(*point);
+                    }
+                }
+            }
+
             // Otherwise, all non supported snakes fall by one
             for index in 0..self.snakes.len() {
                 if supported_indexes.contains(&index) {
@@ -507,10 +521,16 @@ impl Local {
                 // If the snake goes straight up through the portal (assume it has to be vertical)
                 // It will trigger the fall when the snake goes up three times (sort of jumping)
                 // But the game doesn't actually trigger here
+                // 
+                // Also: If a snake was already covering a portal, it can't trigger by falling
+                // TODO: Did this fix the above error? 
                 if let Some(portal_index) = self.snakes[index]
                     .points
                     .iter()
-                    .position(|point| global.tile(*point) == Tile::Portal)
+                    .position(|point| 
+                        global.tile(*point) == Tile::Portal
+                        && !hidden_portals.contains(point)
+                    )
                 {
                     // If going through the portal fails, that's okay! Just don't use it. 
                     let _ = self.try_portal(
