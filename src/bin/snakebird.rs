@@ -25,15 +25,21 @@ struct Global {
 
 // Stores the minimum and maximum character for each snake type
 // Third is true if the snake is actually a block
-const SNAKE_COUNT: usize = 7;
+const SNAKE_COUNT: usize = 13;
 const SNAKE_RANGES: [(char, char, bool); SNAKE_COUNT] = [
     ('0', '9', false),
     ('a', 'j', false),
     ('A', 'J', false),
     ('{', '~', false),
+    ('W', 'W', true),
     ('X', 'X', true),
     ('Y', 'Y', true),
     ('Z', 'Z', true),
+    ('w', 'w', true),
+    ('x', 'x', true),
+    ('y', 'y', true),
+    ('z', 'z', true),
+    ('?', '?', true),
 ];
 
 impl Global {
