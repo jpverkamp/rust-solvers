@@ -248,18 +248,9 @@ impl Local {
             return false;
         }
 
-        // If the currently moving snake moves onto the exit, check if it can leave
-        // Otherwise, we're going to move as normal; potentially eating fruit
-        if global.tile(new_head) == Tile::Exit {
-            // Check for exit
-
-            // Cannot exit (or even move onto exit) until all fruit is eaten
-            if !self.fruit.is_empty() {
-                return false;
-            }
-
-            // Otherwise, snake literally exits
-            // Bye bye snake
+        // If we've eaten all the fruit and we're on the exit, we can leave
+        // Otherwise, treat exits as empty space
+        if self.fruit.is_empty() && global.tile(new_head) == Tile::Exit {
             self.snakes.remove(index);
         } else {
             // Update the snake
@@ -333,11 +324,12 @@ impl Local {
         }
 
         // No snake pushing points can hit anything (other than the original head)
-        // TODO: Can you push a snake into the exit?
+        // Treat exits as empty space when pushing
+        // TODO: Is this correct?
         if pushing_points
             .iter()
             .skip(1)
-            .any(|p| global.tile(*p) != Tile::Empty)
+            .any(|p| !(global.tile(*p) == Tile::Empty || global.tile(*p) == Tile::Exit))
         {
             return false;
         }
@@ -462,13 +454,13 @@ impl Local {
             }
 
             // But bodies going through the exit are bad (or going through exit before all fruit is gone)
-            if self
-                .snakes
-                .iter()
-                .any(|snake| global.tile(snake.points[0]) == Tile::Exit)
-            {
-                return false;
-            }
+            // if self
+            //     .snakes
+            //     .iter()
+            //     .any(|snake| global.tile(snake.points[0]) == Tile::Exit)
+            // {
+            //     return false;
+            // }
         }
 
         true
