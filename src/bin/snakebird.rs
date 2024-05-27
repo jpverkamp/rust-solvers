@@ -29,8 +29,8 @@ struct Global {
 const SNAKE_COUNT: usize = 13;
 const SNAKE_RANGES: [(char, char, bool); SNAKE_COUNT] = [
     ('0', '9', false),
-    ('a', 'j', false),
-    ('A', 'J', false),
+    ('a', 'm', false),
+    ('A', 'M', false),
     ('{', '~', false),
     ('W', 'W', true),
     ('X', 'X', true),
@@ -1129,15 +1129,19 @@ fn main() -> Result<()> {
             for (step, c) in instructions.chars().enumerate() {
                 println!("\n=== Step {}: {} ===", step, c);
 
+                if c == '\n' {
+                    continue;
+                }
+
                 if "0aA{".contains(c) {
                     current_snake_head = c;
                     println!("Switched to snake {c}");
                 } else {
                     let direction = match c {
-                        '↑' => Direction::Up,
-                        '↓' => Direction::Down,
-                        '←' => Direction::Left,
-                        '→' => Direction::Right,
+                        '↑' | 'U' | 'u' => Direction::Up,
+                        '↓' | 'D' | 'd' => Direction::Down,
+                        '←' | 'L' | 'l' => Direction::Left,
+                        '→' | 'R' | 'r' => Direction::Right,
                         _ => panic!("invalid instruction: {}", c),
                     };
 
