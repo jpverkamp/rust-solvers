@@ -538,13 +538,27 @@ impl Local {
             }
 
             // If any snakes fall out of the world, the whole move is invalid
-            if self.snakes.iter().any(|snake| {
-                snake
+            // Statues are allowed to fall out of the world
+            let mut statues_to_remove = Vec::new();
+            
+            for index in 0..self.snakes.len() {
+                if self
+                    .snakes[index]
                     .points
                     .iter()
-                    .all(|point| point.y > global.height as isize)
-            }) {
-                return false;
+                    .all(|point| point.y > global.height as isize) {
+
+                    if self.snakes[index].is_statue {
+                        statues_to_remove.push(index);
+                    } else {
+                        return false;
+                    }
+                }
+            }
+
+            // Remove statues that fell out of the world
+            for index in statues_to_remove.iter().rev() {
+                self.snakes.remove(*index);
             }
 
             // If any snakes fell onto spikes, the whole move is invalid
