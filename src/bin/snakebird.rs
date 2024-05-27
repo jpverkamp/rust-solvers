@@ -344,7 +344,13 @@ impl Local {
             for (other_index, _) in self.snakes.iter().enumerate() {
                 // TODO: What if we have a weird loop where we're pushing ourselves?
                 if index == other_index {
-                    continue;
+                    if pushing_points
+                        .iter()
+                        .any(|p| *p != self.snakes[other_index].points[0] && self.snakes[other_index].points.contains(&p)) {
+                        return false;
+                    } else {
+                        continue;
+                    }
                 }
 
                 // Already pushing this snake

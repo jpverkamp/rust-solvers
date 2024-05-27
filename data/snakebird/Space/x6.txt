@@ -1,0 +1,20 @@
+----=---
+--------
+----#---
+XX------
+#-----#-
+##----#-
+------##
+YY------
+##------
+##-ZZ##-
+##----#-
+012ZZZ--
+cba##ABC
+########
+#######-
+---###--
+
+// https://steamcommunity.com/sharedfiles/filedetails/?id=2911763115
+// Start with Red
+// L_UURRR_ULUU__RRDLU LLLLU LLLDR RRRR_L__RRURR UULUU LLLL_UU__LULUL LURRR RDDLU LULUR RRRD_RR__LULLL__URRRUR__DLULU LURU_RUU_DRRR__LUU_DLURUU_RRUUL UULL__R_DLURD RURRU ULUUL LLLUU RU_RRURR UULUU LLLLU URURR UURUR RUULU ULLLL UURU
