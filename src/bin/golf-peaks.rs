@@ -485,11 +485,11 @@ impl State<Global, Step> for Local {
                         // Invalid state, try next direction
                         continue;
                     }
+
+                    // Apply slopes
+                    next_state.try_slopes(global);
                 }
-
-                // Apply slopes
-                next_state.try_slopes(global);
-
+                
                 next_states.push((1, Step { card: *card, direction }, next_state));
             }
         }
@@ -649,10 +649,10 @@ fn main() -> Result<()> {
                     if !success {
                         panic!("Invalid move in step `{step}`")
                     }
-                }
 
-                if !local.try_slopes(&global) {
-                    panic!("Invalid after in step `{step}`")
+                    if !local.try_slopes(&global) {
+                       panic!("Invalid after slide in step `{step}`")
+                    }
                 }
 
                 log::info!("After: {}", local.stringify(&global));
