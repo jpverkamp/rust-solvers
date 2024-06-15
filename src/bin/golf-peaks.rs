@@ -118,9 +118,64 @@ struct Global {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum Card {
+enum CardStep {
     Move(usize),
     Jump(usize),
+    None,
+}
+
+const CARD_MAX_STEPS: usize = 10;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+struct Card([CardStep;CARD_MAX_STEPS]);
+
+impl From<&str> for Card {
+    fn from(value: &str) -> Card {
+        let mut card = Card([CardStep::None; CARD_MAX_STEPS]);
+        let mut index = 0;
+
+        // As soon as the string is empty, we're done
+        let mut value = value;
+        while !value.is_empty() {
+            // The first part will be a number of strength
+            let strength = value.chars().take_while(|c| c.is_ascii_digit()).collect::<String>();
+            let rest = &value[strength.len()..];
+
+            let strength = strength.parse().expect("Invalid card strength");
+
+            // The next part will be a card type
+            match rest.chars().next().expect("Invalid card type") {
+                '-' => { card.0[index] = CardStep::Move(strength) },
+                '/' => { card.0[index] = CardStep::Jump(strength) },
+                _ => panic!("Invalid card type"),
+            }
+
+            // Advance rest + 1 and index
+            value = &rest[1..];
+            index += 1;
+            if index >= CARD_MAX_STEPS {
+                panic!("Too many steps in card, max is {CARD_MAX_STEPS}");
+            }
+        }
+
+        card
+    }
+}
+
+impl From<Card> for String {
+    fn from(value: Card) -> Self {
+        let mut output = String::new();
+
+        for step in value.0.iter() {
+            match step {
+                CardStep::Move(strength) => output.push_str(&format!("{strength}-")),
+                CardStep::Jump(strength) => output.push_str(&format!("{strength}/")),
+                CardStep::None => break,
+            }
+        }
+
+        output
+    }
 }
 
 #[derive(Debug, Clone, Hash, PartialEq, Eq)]
@@ -149,8 +204,6 @@ impl Global {
             .map(|v| v.parse().expect("Invalid size"))
             .collect::<Vec<usize>>();
         assert!(size.len() == 2, "Invalid size line");
-
-        dbg!(&size);
 
         let width: usize = size[0];
         let height: usize = size[1];
@@ -247,14 +300,7 @@ impl Global {
             .expect("Missing card line");
 
         for card in line.split_ascii_whitespace() {
-            assert!(card.len() == 2, "Invalid card: {card}");
-
-            let count = card[0..1].parse().expect("Invalid card count");
-            cards.push(match card.chars().nth(1).expect("No card type") {
-                '-' => Card::Move(count),
-                '/' => Card::Jump(count),
-                _ => panic!("Invalid card type: {card}"),
-            });
+            cards.push(Card::from(card));
         }
 
         // Read another empty line then any solutions
@@ -429,12 +475,16 @@ impl State<Global, Step> for Local {
                 let mut next_state = self.clone();
                 next_state.cards.remove(i);
 
-                if !match card {
-                    Card::Move(strength) => next_state.try_move(global, direction, *strength),
-                    Card::Jump(strength) => next_state.try_jump(global, direction, *strength),
-                } {
-                    // Invalid state, try next direction
-                    continue;
+                for card_step in card.0.iter() {
+                    let step_success = match card_step {
+                        CardStep::Move(strength) => next_state.try_move(global, direction, *strength),
+                        CardStep::Jump(strength) => next_state.try_jump(global, direction, *strength),
+                        CardStep::None => break,
+                    };
+                    if !step_success {
+                        // Invalid state, try next direction
+                        continue;
+                    }
                 }
 
                 // Apply slopes
@@ -547,11 +597,7 @@ fn stringify_solution(
     let mut path = String::new();
     
     for step in solver.path(initial_state, solved_state).unwrap().iter() {
-        let (c, s) = match step.card {
-            Card::Move(strength) => ('-', strength),
-            Card::Jump(strength) => ('/', strength),
-        };
-
+        let c = String::from(step.card);
         let d = match step.direction {
             Direction::Up => '↗',
             Direction::Down => '↙',
@@ -559,7 +605,7 @@ fn stringify_solution(
             Direction::Right => '↘',
         };
 
-        path.push_str(&format!("{s}{c}{d} "));
+        path.push_str(&format!("{c}{d} "));
     }
 
     path.trim().to_string()
@@ -583,14 +629,8 @@ fn main() -> Result<()> {
             for step in instructions.split_ascii_whitespace() {
                 log::info!("Step: {step} on {}", local.stringify(&global));
 
-                let s = step[0..1].parse().expect("Invalid card count");
-                let card = match step.chars().nth(1).expect("No card type") {
-                    '-' => Card::Move(s),
-                    '/' => Card::Jump(s),
-                    _ => panic!("Invalid card  in step `{step}`"),
-                };
-
-                let d = match step.chars().nth(2).expect("No direction") {
+                let card = Card::from(&step[0..step.len() - 1]);
+                let d = match step.chars().last().expect("No direction") {
                     '↗' => Direction::Up,
                     '↙' => Direction::Down,
                     '↖' => Direction::Left,
@@ -600,13 +640,14 @@ fn main() -> Result<()> {
 
                 assert!(local.cards.contains(&card), "Card doesn't exist in step `{step}`");
 
-                if card == Card::Move(s) {
-                    if !(local.try_move(&global, d, s)) {
+                for card_step in card.0.iter() {
+                    let success = match card_step {
+                        CardStep::Move(s) => local.try_move(&global, d, *s),
+                        CardStep::Jump(s) => local.try_jump(&global, d, *s),
+                        CardStep::None => break,
+                    };
+                    if !success {
                         panic!("Invalid move in step `{step}`")
-                    }
-                } else {
-                    if !(local.try_jump(&global, d, s)) {
-                        panic!("Invalid jump in step `{step}`")
                     }
                 }
 
@@ -664,20 +705,12 @@ mod test_solutions {
             for entry in std::fs::read_dir(folder).unwrap() {
                 let entry = entry.unwrap();
                 let path = entry.path();
-                if !path.is_dir() {
+                
+                if path.extension().is_none() || path.extension().unwrap() != "txt" {
                     continue;
                 }
 
-                for entry in std::fs::read_dir(&path).unwrap() {
-                    let entry = entry.unwrap();
-                    let path = entry.path();
-
-                    if path.extension().is_none() || path.extension().unwrap() != "txt" {
-                        continue;
-                    }
-
-                    test_files.push(path);
-                }
+                test_files.push(path);
             }
         }
         test_files.sort();
