@@ -565,10 +565,23 @@ impl Local {
             next_tile = Tile::Flat(height);
         }
 
+        // If we move/fall onto a spring, treat the rest of the move as a jump
+        if let Tile::Spring(height) = next_tile {
+            if height <= current_height {
+                self.last_safe = self.ball;
+                self.ball = next_point;
+                return self.try_jump(global, direction, strength - 1);
+            }
+        }
+
         // Normal flat tile (or equivalent, like quicksand or springs)
         // Angles here mean that they're at a different height, so treated as a wall or fallen onto
         match next_tile {
-            Tile::Flat(height) | Tile::Quicksand(height) | Tile::Angle(height, _) => {
+            Tile::Flat(height) 
+            | Tile::Quicksand(height) 
+            | Tile::Angle(height, _) 
+            | Tile::Spring(height)
+            => {
                 // On the same level, just move
                 if height == current_height {
                     self.ball = next_point;
@@ -603,12 +616,6 @@ impl Local {
             return true;
         }
 
-        // If we move onto a spring, treat the rest of the move as a jump
-        if let Tile::Spring(_) = next_tile {
-            self.last_safe = self.ball;
-            self.ball = next_point;
-            return self.try_jump(global, direction, strength - 1);
-        }
 
         // Normal flat tile, recur
         self.ball = self.ball + direction.into();

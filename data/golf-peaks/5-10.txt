@@ -1,0 +1,13 @@
+8x8
+2       2       2       2       2       2       2       2
+2       1       0,sand  0,sand  0,sand  2,right 1,flag  1,sand
+2       1       0       2       1,boing 0       1,up    1,sand
+2       0,/tl   0       0       0       0       0       1,sand
+2       0       1,boing 0       1,boing 0       1       1
+2       0       1       0       1       0,/bl   0,boing 2
+2       0,ball  1       0,boing 1,boing 1       1,boing 2
+2       1,sand  1,sand  1,sand  2       2       2       2
+
+2- 2- 3- 3- 3- 5-
+
+2-↗ 2-↗ 3-↘ 3-↙ 5-↙
