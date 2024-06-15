@@ -1,5 +1,4 @@
 use anyhow::{anyhow, Result};
-use fxhash::FxHashMap;
 use std::{
     io::{BufRead, Read},
     ops::{Add, Mul, Sub},
@@ -14,6 +13,7 @@ struct Point {
 }
 
 impl Point {
+    #[allow(dead_code)]
     fn manhattan_distance(&self, other: Point) -> isize {
         (self.x - other.x).abs() + (self.y - other.y).abs()
     }
@@ -106,8 +106,6 @@ enum Tile {
     Empty,
     Flat(usize),
     Slope(usize, Direction),
-    Water(usize),
-    Sand(usize),
 }
 
 #[derive(Debug, Clone)]
@@ -164,7 +162,7 @@ impl Global {
 
         // Read tiles (plus flag and ball)
         for y in 0..height {
-            let mut line = lines
+            let line = lines
                 .next()
                 .expect("Missing tile line")
                 .expect("Missing tile line");
@@ -259,6 +257,14 @@ impl Global {
             });
         }
 
+        // Read another empty line then any solutions
+        lines.next();
+
+        for line in lines {
+            let line = line.expect("Missing solution line");
+            solutions.push(line);
+        }
+
         Ok((
             Global {
                 width,
@@ -290,17 +296,23 @@ impl Local {
     fn try_move(&mut self, global: &Global, direction: Direction, strength: usize) -> bool {
         // No more moving to do, we're done
         if strength == 0 {
+            log::debug!("try_move({self:?}, {direction:?}, {strength}), base case");
             return true;
         }
 
         let current_height = match global.tile_at(self.ball) {
             Tile::Empty => unreachable!(),
             Tile::Flat(height) => height,
-            Tile::Slope(height, _) => height,
-            Tile::Water(_) => todo!(),
-            Tile::Sand(_) => todo!(),
+            Tile::Slope(height, slope_direction) => if direction == slope_direction {
+                height
+            } else if direction == slope_direction.flip() {
+                height + 1 // TODO: Is this correct?
+            } else {
+                return false; // TODO: Support this? 
+            },
         };
-        
+
+        log::debug!("try_move({self:?}, {direction:?}, {strength}), height={current_height}, tile={:?}", global.tile_at(self.ball));
 
         let next_point = self.ball + Point::from(direction);
         let next_tile = global.tile_at(next_point);
@@ -311,8 +323,30 @@ impl Local {
         }
 
         // TODO: Slopes
-        if let Tile::Slope(_, slope_direction) = next_tile {
-            todo!();
+        if let Tile::Slope(height, slope_direction) = next_tile {
+            println!("Slope: {height}, {slope_direction:?}, {direction:?}, {current_height}");
+
+            // Sliding down at the proper height
+            if height == current_height && slope_direction == direction {
+                self.ball = next_point;
+                return self.try_move(global, direction, strength - 1);
+            }
+
+            // Sliding up at the proper height
+            if height == current_height + 1 && slope_direction == direction.flip() {
+                self.ball = next_point;
+                return self.try_move(global, direction, strength - 1);
+            }
+
+            // Dropping down onto a slope
+            if height < current_height {
+                self.ball = next_point;
+                return self.try_move(global, direction, strength - 1);
+            }
+
+            // Anything else we don't support for now
+            // TODO: Support this?
+            return false;
         }
 
         // Normal flat tile
@@ -329,9 +363,10 @@ impl Local {
                 return self.try_move(global, direction.flip(), strength - 1);
             }
 
-            // New tile is lower, fall?
+            // New tile is lower, fall onto that level and continue
             if height < current_height {
-                todo!()
+                self.ball = next_point;
+                return self.try_move(global, direction, strength - 1);
             }
 
             unreachable!();
@@ -343,6 +378,8 @@ impl Local {
     }
 
     fn try_jump(&mut self, global: &Global, direction: Direction, strength: usize) -> bool {
+        log::debug!("try_jump({self:?}, {direction:?}, {strength})");
+
         let next_point = self.ball + Point::from(direction) * strength as isize;
         let next_tile = global.tile_at(next_point);
 
@@ -353,6 +390,27 @@ impl Local {
 
         // Otherwise, it always works
         self.ball = next_point;
+        true
+    }
+
+    fn try_slopes(&mut self, global: &Global) -> bool {
+        let current_tile = global.tile_at(self.ball);
+        if current_tile == Tile::Empty {
+            return false;
+        }
+
+        log::debug!("try_slopes({self:?}) @ {current_tile:?}");
+
+        // Slopes apply a single tile move than recur
+        if let Tile::Slope(_, slope_direction) = current_tile {
+            if !self.try_move(global, slope_direction, 1) {
+                return false;
+            }
+            
+            return self.try_slopes(global);
+        }
+
+        // Any non-slopes just don't slide
         true
     }
 }
@@ -376,6 +434,9 @@ impl State<Global, Step> for Local {
                     // Invalid state, try next direction
                     continue;
                 }
+
+                // Apply slopes
+                next_state.try_slopes(global);
 
                 next_states.push((1, Step { card: *card, direction }, next_state));
             }
@@ -425,8 +486,6 @@ impl State<Global, Step> for Local {
                     Tile::Slope(_, Direction::Right) => '>',
                     Tile::Slope(_, Direction::Down) => 'v',
                     Tile::Slope(_, Direction::Left) => '<',
-                    Tile::Water(_) => todo!(),
-                    Tile::Sand(_) => todo!(),
                 });
 
                 if self.ball.x == x as isize && self.ball.y == y as isize {
@@ -485,12 +544,23 @@ fn stringify_solution(
 ) -> String {
     let mut path = String::new();
     
-    let mut path = String::new();
     for step in solver.path(initial_state, solved_state).unwrap().iter() {
-        path.push_str(&format!("{step:?}\n"));
+        let (c, s) = match step.card {
+            Card::Move(strength) => ('-', strength),
+            Card::Jump(strength) => ('/', strength),
+        };
+
+        let d = match step.direction {
+            Direction::Up => '↗',
+            Direction::Down => '↙',
+            Direction::Left => '↖',
+            Direction::Right => '↘',
+        };
+
+        path.push_str(&format!("{s}{c}{d} "));
     }
 
-    path
+    path.trim().to_string()
 }
 
 fn main() -> Result<()> {
@@ -500,14 +570,52 @@ fn main() -> Result<()> {
     let mut reader = stdin.lock();
 
     let (global, local) = Global::read(&mut reader).unwrap();
-    dbg!(&global, &local);
 
     log::info!("Initial state:\n{}", local.stringify(&global));
 
     // If there is an arg, assume it's a test case and run it
     if std::env::args().len() > 1 {
         std::env::args().skip(1).for_each(|instructions| {
-            todo!();
+            let mut local = local.clone();
+
+            for step in instructions.split_ascii_whitespace() {
+                log::info!("Step: {step} on {}", local.stringify(&global));
+
+                let s = step[0..1].parse().expect("Invalid card count");
+                let card = match step.chars().nth(1).expect("No card type") {
+                    '-' => Card::Move(s),
+                    '/' => Card::Jump(s),
+                    _ => panic!("Invalid card  in step `{step}`"),
+                };
+
+                let d = match step.chars().nth(2).expect("No direction") {
+                    '↗' => Direction::Up,
+                    '↙' => Direction::Down,
+                    '↖' => Direction::Left,
+                    '↘' => Direction::Right,
+                    _ => panic!("Invalid direction in step `{step}`"),
+                };
+
+                assert!(local.cards.contains(&card), "Card doesn't exist in step `{step}`");
+
+                if card == Card::Move(s) {
+                    if !(local.try_move(&global, d, s)) {
+                        panic!("Invalid move in step `{step}`")
+                    }
+                } else {
+                    if !(local.try_jump(&global, d, s)) {
+                        panic!("Invalid jump in step `{step}`")
+                    }
+                }
+
+                if !local.try_slopes(&global) {
+                    panic!("Invalid after in step `{step}`")
+                }
+
+                log::info!("After: {}", local.stringify(&global));
+            }
+
+            assert!(local.ball == global.flag, "Ball not at flag")
         });
         return Ok(());
     }
@@ -548,7 +656,7 @@ mod test_solutions {
         // Collect all tests to run in order
         let mut test_files = Vec::new();
 
-        let folders = ["data/GOLF_PEAKS", "data/GOLF_PEAKS/primer"];
+        let folders = ["data/golf-peaks"];
 
         for folder in folders.iter() {
             for entry in std::fs::read_dir(folder).unwrap() {

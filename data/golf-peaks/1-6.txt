@@ -1,6 +1,8 @@
 3x3
-1,right 2,right 3,down 
-0,up    7,flag  4,down
-0,ball  6,up    5,left
+6,right 5,right 4,down 
+7,up    0,flag  3,down
+7,ball  1,up    2,left
 
 1-
+
+1-↗
