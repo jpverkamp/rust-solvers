@@ -549,7 +549,7 @@ impl State<Global, Step> for Local {
         let mut next_states = Vec::new();
 
         for (i, card) in self.cards.iter().enumerate() {
-            for direction in Direction::all() {
+            'next_direction: for direction in Direction::all() {
                 let mut next_state = self.clone();
                 next_state.cards.remove(i);
 
@@ -561,7 +561,7 @@ impl State<Global, Step> for Local {
                     };
                     if !step_success {
                         // Invalid state, try next direction
-                        continue;
+                        continue 'next_direction;
                     }
 
                     // Apply slopes
