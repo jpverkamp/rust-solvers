@@ -524,10 +524,12 @@ impl Local {
 
         // If we're currently on an angled tile, we need to reflect
         // When this recurs, we'll be moving 'out' of the tile so won't trigger it twice
-        // TODO: Can you fall onto an angled tile?
-        if let Tile::Angle(_, a_type) = current_tile {
-            if let Some(new_direction) = a_type.try_reflect(direction) {
-                return self.try_move(global, new_direction, strength);
+        // If we're at a different height than the angle, treat it as flat
+        if let Tile::Angle(height, a_type) = current_tile {
+            if height == current_height {
+                if let Some(new_direction) = a_type.try_reflect(direction) {
+                    return self.try_move(global, new_direction, strength);
+                }
             }
         }
 
@@ -564,8 +566,9 @@ impl Local {
         }
 
         // Normal flat tile (or equivalent, like quicksand or springs)
+        // Angles here mean that they're at a different height, so treated as a wall or fallen onto
         match next_tile {
-            Tile::Flat(height) | Tile::Quicksand(height) => {
+            Tile::Flat(height) | Tile::Quicksand(height) | Tile::Angle(height, _) => {
                 // On the same level, just move
                 if height == current_height {
                     self.ball = next_point;
