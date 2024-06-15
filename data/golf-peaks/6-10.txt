@@ -1,0 +1,14 @@
+9x9
+0,water 0       1       0,water 0,boing 0,water 0,water 0,sand  0
+0,warp0 0,boing 0,flag  0,water 1,up    0,water 0,sand  0,water 0,sand
+1       0       0,water 0,water 0,water 0,water 0,warp1 0,sand  0,water
+0,water 0,water 0,water 0,water 0,warp2 0,water 0,water 0,water 0,water
+1,right 0       0,water 0,warp3 0,ball  0,warp2 0,water 0       1,left
+0,water 0,water 0,water 0,water 0,warp1 0,water 0,water 0,water 0,water
+0,water 0,sand  0       0,water 0,water 0,water 0,warp3 0,water 0,sand
+0,sand  0,water 0,sand  0,water 1,down  0,water 0,water 0,water 1,quick
+0,warp0 0,sand  0,water 0,water 0,boing 0,water 0,sand  0,quick 0
+
+1- 2- 1/ 2/ 2/3-
+
+1-↖ 2/↙ 2/3-↖ 1/↖ 2-↘

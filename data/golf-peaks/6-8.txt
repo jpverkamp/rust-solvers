@@ -1,0 +1,12 @@
+7x7
+4,ball  4,right 3,right 2,right 1       0,boing 3
+4,down  2,warp0 2,down  1,down  0       0       2
+3,down  2,down  0,warp1 0,quick 0,quick 0,quick 1,warp2
+2,down  1,right 0,quick 0,sand  0,sand  0,sand  0,boing
+1,down  0       0,quick 0,sand  x       x       x
+0,warp0 0       0,quick 0,sand  x       x       0
+3,warp1 2       1       0,warp2 x       0       0,flag
+
+2- 3- 4- 5-
+
+5-↙ 2-↖ 3-↘ 4-↙
