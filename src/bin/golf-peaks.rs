@@ -493,34 +493,7 @@ impl Local {
                 bouncing = true;
             }
 
-            // If we're on a warp after any card part, transport to the other half
-            if let Tile::Warp(_, warp_index) = global.tile_at(self.ball) {
-                let ball_index = self.ball.y as usize * global.width + self.ball.x as usize;
-
-                let other_warp_map_index = global
-                    .tiles
-                    .iter()
-                    .enumerate()
-                    .find_map(|(other_index, tile)| {
-                        if other_index == ball_index {
-                            None
-                        } else if let Tile::Warp(_, other_warp_index) = tile {
-                            if *other_warp_index == warp_index {
-                                return Some(other_index);
-                            } else {
-                                None
-                            }
-                        } else {
-                            None
-                        }
-                    })
-                    .expect("No other warp in map");
-
-                self.ball = Point {
-                    x: (other_warp_map_index % global.width) as isize,
-                    y: (other_warp_map_index / global.width) as isize,
-                };
-            }
+            self.try_warp(global);
 
             // If we end on the flag, we don't have to finish this card
             if self.ball == global.flag {
@@ -726,11 +699,44 @@ impl Local {
                 return false;
             }
 
+            self.try_warp(global);
+
             return self.try_slopes(global);
         }
 
         // Any non-slopes just don't slide
         true
+    }
+
+    fn try_warp(&mut self, global: &Global) {
+        // If we're on a warp after any card part, transport to the other half
+        if let Tile::Warp(_, warp_index) = global.tile_at(self.ball) {
+            let ball_index = self.ball.y as usize * global.width + self.ball.x as usize;
+
+            let other_warp_map_index = global
+                .tiles
+                .iter()
+                .enumerate()
+                .find_map(|(other_index, tile)| {
+                    if other_index == ball_index {
+                        None
+                    } else if let Tile::Warp(_, other_warp_index) = tile {
+                        if *other_warp_index == warp_index {
+                            return Some(other_index);
+                        } else {
+                            None
+                        }
+                    } else {
+                        None
+                    }
+                })
+                .expect("No other warp in map");
+
+            self.ball = Point {
+                x: (other_warp_map_index % global.width) as isize,
+                y: (other_warp_map_index / global.width) as isize,
+            };
+        }
     }
 }
 

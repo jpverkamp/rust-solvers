@@ -1,0 +1,10 @@
+5x5
+1       0,boing 1       0,boing 1,ball
+0,warp0 1       0,warp1 1       0,boing
+1       0,boing 1       0,boing 1
+0,boing 1       0,warp0 1       0,warp1
+1,flag  0,boing 1       0,boing 1
+
+1- 2- 1/1- 2/1-
+
+2-↙ 1-↖ 2/1-↖ 1/1-↙
