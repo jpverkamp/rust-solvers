@@ -441,6 +441,15 @@ impl Local {
 
         log::debug!("try_move({self:?}, {direction:?}, {strength}), height={current_height}, tile={:?}", global.tile_at(self.ball));
 
+        // If we're currently on an angled tile, we need to reflect
+        // When this recurs, we'll be moving 'out' of the tile so won't trigger it twice
+        // TODO: Can you fall onto an angled tile?
+        if let Tile::Angle(_, a_type) = current_tile {
+            if let Some(new_direction) = a_type.try_reflect(direction) {
+                return self.try_move(global, new_direction, strength);
+            }
+        }
+
         let next_point = self.ball + Point::from(direction);
         let mut next_tile = global.tile_at(next_point);
 
@@ -480,21 +489,21 @@ impl Local {
             return false;
         }
 
-        // Angled tiles
-        // On either of their angled sides, reflect to the other
-        // On the other two, treat them as a wall
-        if let Tile::Angle(height, a_type) = next_tile {
-            // If we're on the same height or above and reflect
-            if height <= current_height {
-                if let Some(new_direction) = a_type.try_reflect(direction) {
-                    self.ball = next_point;
-                    return self.try_move(global, new_direction, strength - 1);
-                }
-            }
+        // // Angled tiles
+        // // On either of their angled sides, reflect to the other
+        // // On the other two, treat them as a wall
+        // if let Tile::Angle(height, a_type) = next_tile {
+        //     // If we're on the same height or above and reflect
+        //     if height <= current_height {
+        //         if let Some(new_direction) = a_type.try_reflect(direction) {
+        //             self.ball = next_point;
+        //             return self.try_move(global, new_direction, strength - 1);
+        //         }
+        //     }
 
-            // Otherwise, always treat this as a wall one height (fall through)
-            next_tile = Tile::Flat(height + 1);
-        }
+        //     // Otherwise, always treat this as a wall one height (fall through)
+        //     next_tile = Tile::Flat(height + 1);
+        // }
 
         // Normal flat tile
         if let Tile::Flat(height) = next_tile {
