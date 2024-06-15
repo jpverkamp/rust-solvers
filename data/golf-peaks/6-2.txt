@@ -1,7 +1,7 @@
 5x5
 x       x       0       0       1,flag
 x       x       x       0       0
-0,hole  x       x       x       0,hole
+0,warp  x       x       x       0,warp
 0,water 0,water x       x       x
 0,ball  0,water 0       x       x
 

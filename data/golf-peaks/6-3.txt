@@ -1,9 +1,9 @@
 6x6
-0,hole0 0,/tr   x       x       0,hole0 0,/tr
-0,/bl   0,hole1 x       x       0       0,flag
+0,warp0 0,/tr   x       x       0,warp0 0,/tr
+0,/bl   0,warp1 x       x       0       0,flag
 x       x       x       x       x       x
 x       x       x       x       x       x
-0       0,hole1 x       x       x       x
+0       0,warp1 x       x       x       x
 0,/bl   0,ball  x       x       x       x
 
 2- 1/ 1/1-
