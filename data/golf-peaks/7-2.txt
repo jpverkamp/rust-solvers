@@ -1,0 +1,10 @@
+5x5
+0,flag  1,left  2,left  3,left  5
+1,up    5,warp0 5,boing 5,boing 5,sand
+2,up    5,boing 5,warp0 5,water 5
+3,up    5,boing 5,water 5,ball  5,sand
+5       5,sand  5       5,sand  5,sand
+
+2- 1/1- 1/1- 1/2-
+
+1/2-↘ 1/1-↗ 1/1-↖ 2-↖

@@ -623,7 +623,8 @@ impl Local {
             | Tile::Quicksand(height)
             | Tile::Angle(height, _)
             | Tile::Spring(height)
-            | Tile::Warp(height, _) => {
+            | Tile::Warp(height, _)
+            | Tile::Sand(height) => {
                 // On the same level, just move
                 if height == current_height {
                     self.ball = next_point;

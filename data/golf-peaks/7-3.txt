@@ -1,0 +1,14 @@
+7x7
+6,flag  x       6       x       6,down  x       7,/tr
+x       x       5,down  x       5,down  x       6
+6       5       4,boing x       4,boing x       5
+x       x       x       x       3       x       3,down
+6       5,boing 4       3,right 2,boing x       2
+x       x       x       x       x       x       1,down
+6,/bl   5,right 4       3       2,right 1       0,ball
+
+1- 2/ 2/ 2/ 2/ 2/3-
+
+2/↗ 2/3-↖ 1-↘ 2/↗ 2/↖ 2/↗
+
+# There's something wrong with the right side with a slope and a skip up to the next level like `4 3,right`, needed to change it to `5 3,right`

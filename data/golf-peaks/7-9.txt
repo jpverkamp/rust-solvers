@@ -1,0 +1,12 @@
+7x7
+7,flag  7       7,right 6,right 5,right 4       4
+7,down  7,right 6,right 5       5,down  4       4
+6,down  5,right 4       5,down  4       4,down  4,down
+5,down  5,down  4       4,down  4,down  3       3
+4       4,down  4,down  3       3       3       3,down
+4,right 3       3       3,down  3,down  2,right 2,down
+4       4,right 3,right 2       2       2,right 1,ball
+
+2- 2- 2- 3- 3- 4-
+
+2-↖ 2-↖ 2-↗ 3-↗ 3-↖ 4-↗

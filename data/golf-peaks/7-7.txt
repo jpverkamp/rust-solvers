@@ -1,0 +1,15 @@
+10x10
+0       0       0       0       0       0       0       0       0       0
+0       0,water 0       0,water 0,water 0       0,water 0       0,water 0
+0       0,water 0       0       0       0       0,water 0,water 0,water 0
+0       0,water 0       0,water 0,water 0       0       0       0       0
+0       0       0       0       0,water 0,ball  0,water 0       0,water 0,water
+0       0,water 0,water 0       0,water 1,flag  0,water 0       0       0
+0       0       0       0       0,water x       0,water 0       0,water 0
+0,water 0       0,water 0,water 0,water 0,boing 0,water 0       0       0
+0,water 0       0       0       0       0       0,water 0,water 0,water 0
+0,water 0       0,water 0,water 0,water 0       0       0       0       0
+
+2- 2- 2- 2- 3- 4- 4- 4-
+
+2-↙ 2-↘ 2-↙ 2-↘ 4-↙ 4-↖ 4-↗
