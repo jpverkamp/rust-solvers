@@ -69,7 +69,6 @@ impl From<Direction> for Point {
             Direction::Right => Point { x: 1, y: 0 },
         }
     }
-
 }
 
 impl Direction {
@@ -102,10 +101,46 @@ impl TryFrom<&str> for Direction {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+enum AngleType {
+    TopLeft,
+    TopRight,
+    BottomLeft,
+    BottomRight,
+}
+
+impl AngleType {
+    fn try_reflect(&self, direction: Direction) -> Option<Direction> {
+        match self {
+            AngleType::TopLeft => match direction {
+                Direction::Up => Some(Direction::Right),
+                Direction::Left => Some(Direction::Down),
+                _ => None,
+            },
+            AngleType::TopRight => match direction {
+                Direction::Up => Some(Direction::Left),
+                Direction::Right => Some(Direction::Down),
+                _ => None,
+            },
+            AngleType::BottomLeft => match direction {
+                Direction::Down => Some(Direction::Right),
+                Direction::Left => Some(Direction::Up),
+                _ => None,
+            },
+            AngleType::BottomRight => match direction {
+                Direction::Down => Some(Direction::Left),
+                Direction::Right => Some(Direction::Up),
+                _ => None,
+            },
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum Tile {
     Empty,
     Flat(usize),
     Slope(usize, Direction),
+    Angle(usize, AngleType),
 }
 
 #[derive(Debug, Clone)]
@@ -124,7 +159,7 @@ enum CardStep {
     None,
 }
 
-const CARD_MAX_STEPS: usize = 10;
+const CARD_MAX_STEPS: usize = 3;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct Card([CardStep;CARD_MAX_STEPS]);
@@ -232,6 +267,8 @@ impl Global {
                 let mut is_flag = false;
                 let mut is_ball = false;
                 let mut is_slope = false;
+                let mut is_angle = false;
+                let mut which_angle = AngleType::TopLeft;
                 let mut slope_direction = Direction::Up;
 
                 while !definition.is_empty() {
@@ -267,12 +304,36 @@ impl Global {
                         continue;
                     }
 
+                    // Contains an angle
+                    if part == "/tl" {
+                        is_angle = true;
+                        which_angle = AngleType::TopLeft;
+                        continue;
+                    }
+                    if part == "/tr" {
+                        is_angle = true;
+                        which_angle = AngleType::TopRight;
+                        continue;
+                    }
+                    if part == "/bl" {
+                        is_angle = true;
+                        which_angle = AngleType::BottomLeft;
+                        continue;
+                    }
+                    if part == "/br" {
+                        is_angle = true;
+                        which_angle = AngleType::BottomRight;
+                        continue;
+                    }
+
                     // Not something we know yet
                     return Err(anyhow!("Unknown tile definition `{part}` in `{line}`"));
                 }
             
                 if is_slope {
                     tiles[y * width + x] = Tile::Slope(height, slope_direction);
+                } else if is_angle {
+                    tiles[y * width + x] = Tile::Angle(height, which_angle);
                 } else {
                     tiles[y * width + x] = Tile::Flat(height);
                 }
@@ -360,12 +421,13 @@ impl Local {
             } else {
                 return false; // TODO: Support this? 
             },
+            Tile::Angle(height, _) => height,
         };
 
         log::debug!("try_move({self:?}, {direction:?}, {strength}), height={current_height}, tile={:?}", global.tile_at(self.ball));
 
         let next_point = self.ball + Point::from(direction);
-        let next_tile = global.tile_at(next_point);
+        let mut next_tile = global.tile_at(next_point);
 
         // Trying to move into empty space/out of bounds
         if let Tile::Empty = next_tile {
@@ -395,6 +457,22 @@ impl Local {
             // Anything else we don't support for now
             // TODO: Support this?
             return false;
+        }
+
+        // Angled tiles
+        // On either of their angled sides, reflect to the other
+        // On the other two, treat them as a wall
+        if let Tile::Angle(height, a_type) = next_tile {
+            // If we're on the same height and reflect
+            if height == current_height {
+                if let Some(new_direction) = a_type.try_reflect(direction) {
+                    self.ball = next_point;
+                    return self.try_move(global, new_direction, strength - 1);
+                }
+            }
+
+            // Otherwise, always treat this as a wall one height (fall through)
+            next_tile = Tile::Flat(height + 1);
         }
 
         // Normal flat tile
@@ -538,6 +616,11 @@ impl State<Global, Step> for Local {
                     Tile::Slope(_, Direction::Right) => '>',
                     Tile::Slope(_, Direction::Down) => 'v',
                     Tile::Slope(_, Direction::Left) => '<',
+
+                    Tile::Angle(_, AngleType::TopLeft) => '◤',
+                    Tile::Angle(_, AngleType::TopRight) => '◥',
+                    Tile::Angle(_, AngleType::BottomLeft) => '◣',
+                    Tile::Angle(_, AngleType::BottomRight) => '◢',
                 });
 
                 if self.ball.x == x as isize && self.ball.y == y as isize {
@@ -552,7 +635,7 @@ impl State<Global, Step> for Local {
             output.push('\n');
         }
 
-        output.push_str(&format!("Cards: {:?}", self.cards));
+        output.push_str(&format!("Cards: {}", self.cards.iter().map(|c| String::from(*c)).collect::<Vec<String>>().join(" ")));
 
         output
     }
@@ -629,15 +712,17 @@ fn main() -> Result<()> {
             for step in instructions.split_ascii_whitespace() {
                 log::info!("Step: {step} on {}", local.stringify(&global));
 
-                let card = Card::from(&step[0..step.len() - 1]);
-                let d = match step.chars().last().expect("No direction") {
+                // All of the unicode chars except the last encode a card
+                let mut chars = step.chars();
+                let d = match chars.next_back().expect("No direction") {
                     '↗' => Direction::Up,
                     '↙' => Direction::Down,
                     '↖' => Direction::Left,
                     '↘' => Direction::Right,
-                    _ => panic!("Invalid direction in step `{step}`"),
+                    _ => panic!("Invalid direction"),
                 };
-
+                let card = Card::from(chars.as_str());
+                
                 assert!(local.cards.contains(&card), "Card doesn't exist in step `{step}`");
 
                 for card_step in card.0.iter() {
