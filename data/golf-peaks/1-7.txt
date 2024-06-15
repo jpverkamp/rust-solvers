@@ -1,0 +1,6 @@
+4x3
+0,flag  0,right 1   1
+x       x       x   1,down
+x       x       x   2,ball
+
+2- 2- 2-

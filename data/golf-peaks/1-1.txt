@@ -1,0 +1,6 @@
+3x3
+x 0,flag x
+0 0,ball 0
+x 0      x
+
+1-
