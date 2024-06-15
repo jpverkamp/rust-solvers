@@ -441,6 +441,12 @@ impl Local {
 
         log::debug!("try_move({self:?}, {direction:?}, {strength}), height={current_height}, tile={:?}", global.tile_at(self.ball));
 
+        // Cannot slide out of sand, just stop moving
+        // But return true, this isn't an error, just stopping
+        if let Tile::Sand(_) = current_tile {
+            return true;
+        }
+
         // If we're currently on an angled tile, we need to reflect
         // When this recurs, we'll be moving 'out' of the tile so won't trigger it twice
         // TODO: Can you fall onto an angled tile?
@@ -451,17 +457,11 @@ impl Local {
         }
 
         let next_point = self.ball + Point::from(direction);
-        let mut next_tile = global.tile_at(next_point);
+        let next_tile = global.tile_at(next_point);
 
         // Trying to move into empty space/out of bounds
         if let Tile::Empty = next_tile {
             return false;
-        }
-
-        // Cannot slide out of sand, just stop moving
-        // But return true, this isn't an error, just stopping
-        if let Tile::Sand(_) = current_tile {
-            return true;
         }
 
         // Trying to move into/up/down a slope
