@@ -462,6 +462,11 @@ impl Local {
             if let Tile::Spring(_) = global.tile_at(self.ball) {
                 bouncing = true;
             }
+
+            // If we end on the flag, we don't have to finish this card
+            if self.ball == global.flag {
+                return true;
+            }
         }
 
         if !self.try_slopes(global) {
