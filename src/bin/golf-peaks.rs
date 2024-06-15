@@ -276,7 +276,7 @@ impl Global {
 
                 let mut part;
 
-                enum ParsedType { 
+                enum ParsedType {
                     Flat,
                     Flag,
                     Ball,
@@ -285,7 +285,7 @@ impl Global {
                     Sand,
                     Quicksand,
                     Water,
-                    Spring
+                    Spring,
                 }
 
                 let mut height = 0;
@@ -318,20 +318,20 @@ impl Global {
                             "/tl" => {
                                 current_type = ParsedType::Angle;
                                 which_angle = AngleType::TopLeft;
-                            },
+                            }
                             "/tr" => {
                                 current_type = ParsedType::Angle;
                                 which_angle = AngleType::TopRight;
-                            },
+                            }
                             "/bl" => {
                                 current_type = ParsedType::Angle;
                                 which_angle = AngleType::BottomLeft;
-                            },
+                            }
                             "/br" => {
                                 current_type = ParsedType::Angle;
                                 which_angle = AngleType::BottomRight;
-                            },
-                            _ => panic!("Unknown tile definition `{part}` in `{line}`")
+                            }
+                            _ => panic!("Unknown tile definition `{part}` in `{line}`"),
                         }
                     }
                 }
@@ -345,15 +345,15 @@ impl Global {
                             y: y as isize,
                         });
                         Tile::Flat(height)
-                    },
+                    }
                     ParsedType::Ball => {
-                                            assert!(ball.is_none(), "Multiple balls in map");
+                        assert!(ball.is_none(), "Multiple balls in map");
                         ball = Some(Point {
                             x: x as isize,
                             y: y as isize,
                         });
                         Tile::Flat(height)
-                    },
+                    }
                     ParsedType::Slope => Tile::Slope(height, slope_direction),
                     ParsedType::Angle => Tile::Angle(height, which_angle),
                     ParsedType::Sand => Tile::Sand(height),
@@ -430,14 +430,19 @@ impl Local {
         let mut bouncing = false;
 
         for card_step in card.0.iter() {
-            log::debug!("try_card({:?}, {card:?}, {direction:?}), step={card_step:?}", self.ball);
+            log::debug!(
+                "try_card({:?}, {card:?}, {direction:?}), step={card_step:?}",
+                self.ball
+            );
 
             let success = match card_step {
-                CardStep::Move(strength) => if bouncing {
-                    self.try_jump(global, direction, *strength)
-                } else {
-                    self.try_move(global, direction, *strength)
-                },
+                CardStep::Move(strength) => {
+                    if bouncing {
+                        self.try_jump(global, direction, *strength)
+                    } else {
+                        self.try_move(global, direction, *strength)
+                    }
+                }
                 CardStep::Jump(strength) => self.try_jump(global, direction, *strength),
                 CardStep::None => break,
             };
@@ -491,20 +496,23 @@ impl Local {
 
         // No more moving to do, we're done
         if strength == 0 {
-            log::debug!("try_move({:?}, {direction:?}, {strength}), base case", self.ball);
+            log::debug!(
+                "try_move({:?}, {direction:?}, {strength}), base case",
+                self.ball
+            );
             return true;
         }
 
         let current_height = match current_tile {
             Tile::Empty => unreachable!(),
-            
+
             Tile::Flat(height)
             | Tile::Angle(height, _)
             | Tile::Sand(height)
             | Tile::Quicksand(height)
-            | Tile::Water(height) 
+            | Tile::Water(height)
             | Tile::Spring(height) => height,
-            
+
             Tile::Slope(height, slope_direction) => {
                 if direction == slope_direction {
                     height
@@ -582,11 +590,10 @@ impl Local {
         // Normal flat tile (or equivalent, like quicksand or springs)
         // Angles here mean that they're at a different height, so treated as a wall or fallen onto
         match next_tile {
-            Tile::Flat(height) 
-            | Tile::Quicksand(height) 
-            | Tile::Angle(height, _) 
-            | Tile::Spring(height)
-            => {
+            Tile::Flat(height)
+            | Tile::Quicksand(height)
+            | Tile::Angle(height, _)
+            | Tile::Spring(height) => {
                 // On the same level, just move
                 if height == current_height {
                     self.ball = next_point;
@@ -620,7 +627,6 @@ impl Local {
             self.ball = self.last_safe;
             return true;
         }
-
 
         // Normal flat tile, recur
         self.ball = self.ball + direction.into();
