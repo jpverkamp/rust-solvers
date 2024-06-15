@@ -463,8 +463,8 @@ impl Local {
         // On either of their angled sides, reflect to the other
         // On the other two, treat them as a wall
         if let Tile::Angle(height, a_type) = next_tile {
-            // If we're on the same height and reflect
-            if height == current_height {
+            // If we're on the same height or above and reflect
+            if height <= current_height {
                 if let Some(new_direction) = a_type.try_reflect(direction) {
                     self.ball = next_point;
                     return self.try_move(global, new_direction, strength - 1);
