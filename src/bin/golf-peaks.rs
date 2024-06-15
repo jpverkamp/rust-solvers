@@ -141,6 +141,7 @@ enum Tile {
     Flat(usize),
     Slope(usize, Direction),
     Angle(usize, AngleType),
+    Sand(usize),
 }
 
 #[derive(Debug, Clone)]
@@ -268,6 +269,7 @@ impl Global {
                 let mut is_ball = false;
                 let mut is_slope = false;
                 let mut is_angle = false;
+                let mut is_sand = false;
                 let mut which_angle = AngleType::TopLeft;
                 let mut slope_direction = Direction::Up;
 
@@ -326,14 +328,27 @@ impl Global {
                         continue;
                     }
 
+                    // Is a sand trap
+                    if part == "sand" {
+                        is_sand = true;
+                        continue;
+                    }
+
                     // Not something we know yet
                     return Err(anyhow!("Unknown tile definition `{part}` in `{line}`"));
                 }
-            
+
+                assert!(
+                    [is_flag, is_ball, is_slope, is_angle, is_sand].iter().filter(|v| **v).count() <= 1,
+                    "Multiple tile types in line `{definition}`",
+                );
+
                 if is_slope {
                     tiles[y * width + x] = Tile::Slope(height, slope_direction);
                 } else if is_angle {
                     tiles[y * width + x] = Tile::Angle(height, which_angle);
+                } else if is_sand {
+                    tiles[y * width + x] = Tile::Sand(height);
                 } else {
                     tiles[y * width + x] = Tile::Flat(height);
                 }
@@ -411,9 +426,10 @@ impl Local {
             return true;
         }
 
-        let current_height = match global.tile_at(self.ball) {
+        let current_tile = global.tile_at(self.ball);
+        let current_height = match current_tile {
             Tile::Empty => unreachable!(),
-            Tile::Flat(height) => height,
+            Tile::Flat(height) | Tile::Angle(height, _) | Tile::Sand(height) => height,
             Tile::Slope(height, slope_direction) => if direction == slope_direction {
                 height
             } else if direction == slope_direction.flip() {
@@ -421,7 +437,6 @@ impl Local {
             } else {
                 return false; // TODO: Support this? 
             },
-            Tile::Angle(height, _) => height,
         };
 
         log::debug!("try_move({self:?}, {direction:?}, {strength}), height={current_height}, tile={:?}", global.tile_at(self.ball));
@@ -432,6 +447,12 @@ impl Local {
         // Trying to move into empty space/out of bounds
         if let Tile::Empty = next_tile {
             return false;
+        }
+
+        // Cannot slide out of sand, just stop moving
+        // But return true, this isn't an error, just stopping
+        if let Tile::Sand(_) = current_tile {
+            return true;
         }
 
         // Trying to move into/up/down a slope
@@ -621,6 +642,8 @@ impl State<Global, Step> for Local {
                     Tile::Angle(_, AngleType::TopRight) => '◥',
                     Tile::Angle(_, AngleType::BottomLeft) => '◣',
                     Tile::Angle(_, AngleType::BottomRight) => '◢',
+
+                    Tile::Sand(_) => '▒',
                 });
 
                 if self.ball.x == x as isize && self.ball.y == y as isize {
