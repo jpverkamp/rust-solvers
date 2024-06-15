@@ -150,6 +150,7 @@ enum Tile {
     Quicksand(usize),
     Water(usize),
     Spring(usize),
+    Hole(usize),
 }
 
 #[derive(Debug, Clone)]
@@ -286,6 +287,7 @@ impl Global {
                     Quicksand,
                     Water,
                     Spring,
+                    Hole,
                 }
 
                 let mut height = 0;
@@ -315,6 +317,7 @@ impl Global {
                             "quick" => current_type = ParsedType::Quicksand,
                             "water" => current_type = ParsedType::Water,
                             "boing" => current_type = ParsedType::Spring,
+                            "hole" => current_type = ParsedType::Hole,
                             "/tl" => {
                                 current_type = ParsedType::Angle;
                                 which_angle = AngleType::TopLeft;
@@ -360,9 +363,14 @@ impl Global {
                     ParsedType::Quicksand => Tile::Quicksand(height),
                     ParsedType::Water => Tile::Water(height),
                     ParsedType::Spring => Tile::Spring(height),
+                    ParsedType::Hole => Tile::Hole(height),
                 };
             }
         }
+
+        // Verify there are exactly 0 or 2 teleporting holes
+        let hole_count = tiles.iter().filter(|t| matches!(t, Tile::Hole(_))).count();
+        assert!(hole_count == 0 || hole_count == 2, "Invalid hole count, must be 0 or 2");
 
         // Read an empty line before cards
         lines.next();
@@ -468,10 +476,36 @@ impl Local {
                 bouncing = true;
             }
 
+            // If we're on a hole after any card part, transport to the other half
+            if let Tile::Hole(_) = global.tile_at(self.ball) {
+                let ball_index = self.ball.y as usize * global.width + self.ball.x as usize;
+
+                let other_hole_index = global
+                    .tiles
+                    .iter()
+                    .enumerate()
+                    .find_map(|(other_index, tile)| {
+                        if other_index == ball_index {
+                            None
+                        } else if let Tile::Hole(_) = tile {
+                            Some(other_index)
+                        } else {
+                            None
+                        }
+                    })
+                    .expect("No other hole in map");
+
+                self.ball = Point {
+                    x: (other_hole_index % global.width) as isize,
+                    y: (other_hole_index / global.width) as isize,
+                };
+            }
+
             // If we end on the flag, we don't have to finish this card
             if self.ball == global.flag {
                 return true;
             }
+
         }
 
         if !self.try_slopes(global) {
@@ -511,7 +545,8 @@ impl Local {
             | Tile::Sand(height)
             | Tile::Quicksand(height)
             | Tile::Water(height)
-            | Tile::Spring(height) => height,
+            | Tile::Spring(height)
+            | Tile::Hole(height) => height,
 
             Tile::Slope(height, slope_direction) => {
                 if direction == slope_direction {
@@ -756,6 +791,7 @@ impl State<Global, Step> for Local {
                     Tile::Quicksand(_) => '▓',
                     Tile::Water(_) => '≈',
                     Tile::Spring(_) => '⌉',
+                    Tile::Hole(_) => 'O',
                 });
 
                 if self.ball.x == x as isize && self.ball.y == y as isize {
