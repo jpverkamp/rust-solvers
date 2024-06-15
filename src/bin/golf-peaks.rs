@@ -150,7 +150,7 @@ enum Tile {
     Quicksand(usize),
     Water(usize),
     Spring(usize),
-    Hole(usize),
+    Hole(usize, usize),
 }
 
 #[derive(Debug, Clone)]
@@ -294,6 +294,7 @@ impl Global {
                 let mut current_type = ParsedType::Flat;
                 let mut which_angle = AngleType::TopLeft;
                 let mut slope_direction = Direction::Up;
+                let mut hole_index = 0;
 
                 while !definition.is_empty() {
                     if definition.contains(',') {
@@ -309,6 +310,13 @@ impl Global {
                     } else if let Ok(new_direction) = Direction::try_from(part) {
                         current_type = ParsedType::Slope;
                         slope_direction = new_direction;
+                    } else if part.starts_with("hole") {
+                        current_type = ParsedType::Hole;
+
+                        // If no index is specified, it's 0
+                        if part.len() > 4 {
+                            hole_index = part[4..].parse().expect("Invalid hole index");
+                        } 
                     } else {
                         match part {
                             "flag" => current_type = ParsedType::Flag,
@@ -317,7 +325,6 @@ impl Global {
                             "quick" => current_type = ParsedType::Quicksand,
                             "water" => current_type = ParsedType::Water,
                             "boing" => current_type = ParsedType::Spring,
-                            "hole" => current_type = ParsedType::Hole,
                             "/tl" => {
                                 current_type = ParsedType::Angle;
                                 which_angle = AngleType::TopLeft;
@@ -363,14 +370,24 @@ impl Global {
                     ParsedType::Quicksand => Tile::Quicksand(height),
                     ParsedType::Water => Tile::Water(height),
                     ParsedType::Spring => Tile::Spring(height),
-                    ParsedType::Hole => Tile::Hole(height),
+                    ParsedType::Hole => Tile::Hole(height, hole_index),
                 };
             }
         }
 
-        // Verify there are exactly 0 or 2 teleporting holes
-        let hole_count = tiles.iter().filter(|t| matches!(t, Tile::Hole(_))).count();
-        assert!(hole_count == 0 || hole_count == 2, "Invalid hole count, must be 0 or 2");
+        // Verify that each existing hole index exists exactly twice
+        let hole_indices = tiles
+            .iter()
+            .filter_map(|t| match t {
+                Tile::Hole(_, index) => Some(*index),
+                _ => None,
+            })
+            .collect::<Vec<usize>>();
+
+        for index in hole_indices.iter() {
+            let count = hole_indices.iter().filter(|i| *i == index).count();
+            assert!(count == 2, "Invalid hole count for index {index}, must be 2, got {count}");
+        }
 
         // Read an empty line before cards
         lines.next();
@@ -477,18 +494,22 @@ impl Local {
             }
 
             // If we're on a hole after any card part, transport to the other half
-            if let Tile::Hole(_) = global.tile_at(self.ball) {
+            if let Tile::Hole(_, hole_index) = global.tile_at(self.ball) {
                 let ball_index = self.ball.y as usize * global.width + self.ball.x as usize;
 
-                let other_hole_index = global
+                let other_hole_map_index = global
                     .tiles
                     .iter()
                     .enumerate()
                     .find_map(|(other_index, tile)| {
                         if other_index == ball_index {
                             None
-                        } else if let Tile::Hole(_) = tile {
-                            Some(other_index)
+                        } else if let Tile::Hole(_, other_hole_index) = tile {
+                            if *other_hole_index == hole_index {
+                                return Some(other_index);
+                            } else {
+                                None
+                            }
                         } else {
                             None
                         }
@@ -496,8 +517,8 @@ impl Local {
                     .expect("No other hole in map");
 
                 self.ball = Point {
-                    x: (other_hole_index % global.width) as isize,
-                    y: (other_hole_index / global.width) as isize,
+                    x: (other_hole_map_index % global.width) as isize,
+                    y: (other_hole_map_index / global.width) as isize,
                 };
             }
 
@@ -546,7 +567,7 @@ impl Local {
             | Tile::Quicksand(height)
             | Tile::Water(height)
             | Tile::Spring(height)
-            | Tile::Hole(height) => height,
+            | Tile::Hole(height, _) => height,
 
             Tile::Slope(height, slope_direction) => {
                 if direction == slope_direction {
@@ -628,7 +649,8 @@ impl Local {
             Tile::Flat(height)
             | Tile::Quicksand(height)
             | Tile::Angle(height, _)
-            | Tile::Spring(height) => {
+            | Tile::Spring(height)
+            | Tile::Hole(height, _) => {
                 // On the same level, just move
                 if height == current_height {
                     self.ball = next_point;
@@ -791,7 +813,7 @@ impl State<Global, Step> for Local {
                     Tile::Quicksand(_) => '▓',
                     Tile::Water(_) => '≈',
                     Tile::Spring(_) => '⌉',
-                    Tile::Hole(_) => 'O',
+                    Tile::Hole(_, _) => 'O',
                 });
 
                 if self.ball.x == x as isize && self.ball.y == y as isize {
