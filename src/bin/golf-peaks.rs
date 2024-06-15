@@ -261,7 +261,11 @@ impl Global {
         lines.next();
 
         for line in lines {
-            let line = line.expect("Missing solution line");
+            let line = line.expect("Missing solution line").trim().to_string();
+            if line.is_empty() {
+                break;
+            }
+
             solutions.push(line);
         }
 
@@ -322,10 +326,8 @@ impl Local {
             return false;
         }
 
-        // TODO: Slopes
+        // Trying to move into/up/down a slope
         if let Tile::Slope(height, slope_direction) = next_tile {
-            println!("Slope: {height}, {slope_direction:?}, {direction:?}, {current_height}");
-
             // Sliding down at the proper height
             if height == current_height && slope_direction == direction {
                 self.ball = next_point;
