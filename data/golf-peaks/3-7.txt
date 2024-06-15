@@ -1,0 +1,9 @@
+4x4
+5,flag  4       3       x
+4,sand  3       3,down  2
+3       3,right 2,quick 2
+x       2       1       0,ball
+
+2- 2/ 2/ 3/
+
+2/↖ 3/↗ 2-↖ 2/↖
