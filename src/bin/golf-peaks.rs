@@ -428,7 +428,12 @@ impl Global {
 
 impl Local {
     fn try_card(&mut self, global: &Global, card: Card, direction: Direction) -> bool {
+        let mut direction = direction;
+        log::debug!("try_card({self:?}, {card:?}, {direction:?})");
+
         for card_step in card.0.iter() {
+            log::debug!("try_card({self:?}, {card:?}, {direction:?}), step={card_step:?}");
+
             let success = match card_step {
                 CardStep::Move(strength) => self.try_move(global, direction, *strength),
                 CardStep::Jump(strength) => self.try_jump(global, direction, *strength),
@@ -438,9 +443,15 @@ impl Local {
                 return false;
             }
 
-            if !self.try_slopes(global) {
-                return false;
+            // Halfway through a move, if we're on a slope change direction to match it
+            // This comes up in 3-10; I don't think I like it
+            if let Tile::Slope(_, slope_direction) = global.tile_at(self.ball) {
+                direction = slope_direction;
             }
+        }
+
+        if !self.try_slopes(global) {
+            return false;
         }
 
         // On quicksand, we fail
@@ -490,7 +501,7 @@ impl Local {
         }
 
         let next_point = self.ball + Point::from(direction);
-        let next_tile = global.tile_at(next_point);
+        let mut next_tile = global.tile_at(next_point);
 
         // Trying to move into empty space/out of bounds
         if let Tile::Empty = next_tile {
@@ -517,9 +528,8 @@ impl Local {
                 return self.try_move(global, direction, strength - 1);
             }
 
-            // Anything else we don't support for now
-            // TODO: Support this?
-            return false;
+            // Anything else, we'll fall through as a normal flat tile
+            next_tile = Tile::Flat(height);
         }
 
         // Normal flat tile or quicksand (deal with this at the end)

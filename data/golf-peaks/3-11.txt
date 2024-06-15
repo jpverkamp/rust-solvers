@@ -1,0 +1,11 @@
+6x6
+0       0       0,sand  1,up    0       0,ball
+0       0       1       2,up    1       0
+0       1,up    2,left  3,flag  2,right 1,right
+0       0       1       2,down  1       0,sand
+0,quick 0,quick 0       1,down  0       0
+0,quick 0,quick 0       0       0       0
+
+1- 2/ 3/ 2/3-
+
+1-↙ 2/3-↙ 2/↖ 3/↗
