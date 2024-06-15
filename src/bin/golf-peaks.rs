@@ -142,6 +142,7 @@ enum Tile {
     Slope(usize, Direction),
     Angle(usize, AngleType),
     Sand(usize),
+    Quicksand(usize),
 }
 
 #[derive(Debug, Clone)]
@@ -270,6 +271,7 @@ impl Global {
                 let mut is_slope = false;
                 let mut is_angle = false;
                 let mut is_sand = false;
+                let mut is_quicksand = false;
                 let mut which_angle = AngleType::TopLeft;
                 let mut slope_direction = Direction::Up;
 
@@ -333,13 +335,17 @@ impl Global {
                         is_sand = true;
                         continue;
                     }
+                    if part == "quick" {
+                        is_quicksand = true;
+                        continue;
+                    }
 
                     // Not something we know yet
                     return Err(anyhow!("Unknown tile definition `{part}` in `{line}`"));
                 }
 
                 assert!(
-                    [is_flag, is_ball, is_slope, is_angle, is_sand].iter().filter(|v| **v).count() <= 1,
+                    [is_flag, is_ball, is_slope, is_angle, is_sand, is_quicksand].iter().filter(|v| **v).count() <= 1,
                     "Multiple tile types in line `{definition}`",
                 );
 
@@ -349,6 +355,8 @@ impl Global {
                     tiles[y * width + x] = Tile::Angle(height, which_angle);
                 } else if is_sand {
                     tiles[y * width + x] = Tile::Sand(height);
+                } else if is_quicksand {
+                    tiles[y * width + x] = Tile::Quicksand(height);
                 } else {
                     tiles[y * width + x] = Tile::Flat(height);
                 }
@@ -419,17 +427,42 @@ impl Global {
 }
 
 impl Local {
+    fn try_card(&mut self, global: &Global, card: Card, direction: Direction) -> bool {
+        for card_step in card.0.iter() {
+            let success = match card_step {
+                CardStep::Move(strength) => self.try_move(global, direction, *strength),
+                CardStep::Jump(strength) => self.try_jump(global, direction, *strength),
+                CardStep::None => break,
+            };
+            if !success {
+                return false;
+            }
+
+            if !self.try_slopes(global) {
+                return false;
+            }
+        }
+
+        // On quicksand, we fail
+        if let Tile::Quicksand(_) = global.tile_at(self.ball) {
+            return false;
+        }
+
+        true
+    }
+
     fn try_move(&mut self, global: &Global, direction: Direction, strength: usize) -> bool {
+        let current_tile = global.tile_at(self.ball);
+
         // No more moving to do, we're done
         if strength == 0 {
             log::debug!("try_move({self:?}, {direction:?}, {strength}), base case");
             return true;
         }
 
-        let current_tile = global.tile_at(self.ball);
         let current_height = match current_tile {
             Tile::Empty => unreachable!(),
-            Tile::Flat(height) | Tile::Angle(height, _) | Tile::Sand(height) => height,
+            Tile::Flat(height) | Tile::Angle(height, _) | Tile::Sand(height) | Tile::Quicksand(height)=> height,
             Tile::Slope(height, slope_direction) => if direction == slope_direction {
                 height
             } else if direction == slope_direction.flip() {
@@ -489,45 +522,32 @@ impl Local {
             return false;
         }
 
-        // // Angled tiles
-        // // On either of their angled sides, reflect to the other
-        // // On the other two, treat them as a wall
-        // if let Tile::Angle(height, a_type) = next_tile {
-        //     // If we're on the same height or above and reflect
-        //     if height <= current_height {
-        //         if let Some(new_direction) = a_type.try_reflect(direction) {
-        //             self.ball = next_point;
-        //             return self.try_move(global, new_direction, strength - 1);
-        //         }
-        //     }
+        // Normal flat tile or quicksand (deal with this at the end)
+        match next_tile {
+            Tile::Flat(height) | Tile::Quicksand(height) => {
+                // On the same level, just move
+                if height == current_height {
+                    self.ball = next_point;
+                    return self.try_move(global, direction, strength - 1);
+                }
 
-        //     // Otherwise, always treat this as a wall one height (fall through)
-        //     next_tile = Tile::Flat(height + 1);
-        // }
+                // New tile is higher, bounce
+                // This effectively reverses direction and moves 'back' to the same tile
+                if height > current_height {
+                    return self.try_move(global, direction.flip(), strength - 1);
+                }
 
-        // Normal flat tile
-        if let Tile::Flat(height) = next_tile {
-            // On the same level, just move
-            if height == current_height {
-                self.ball = next_point;
-                return self.try_move(global, direction, strength - 1);
-            }
+                // New tile is lower, fall onto that level and continue
+                if height < current_height {
+                    self.ball = next_point;
+                    return self.try_move(global, direction, strength - 1);
+                }
 
-            // New tile is higher, bounce
-            // This effectively reverses direction and moves 'back' to the same tile
-            if height > current_height {
-                return self.try_move(global, direction.flip(), strength - 1);
-            }
-
-            // New tile is lower, fall onto that level and continue
-            if height < current_height {
-                self.ball = next_point;
-                return self.try_move(global, direction, strength - 1);
-            }
-
-            unreachable!();
+                unreachable!();
+            },
+            _ => {},
         }
-        
+
         // Normal flat tile, recur
         self.ball = self.ball + direction.into();
         self.try_move(global, direction, strength - 1)
@@ -583,19 +603,9 @@ impl State<Global, Step> for Local {
                 let mut next_state = self.clone();
                 next_state.cards.remove(i);
 
-                for card_step in card.0.iter() {
-                    let step_success = match card_step {
-                        CardStep::Move(strength) => next_state.try_move(global, direction, *strength),
-                        CardStep::Jump(strength) => next_state.try_jump(global, direction, *strength),
-                        CardStep::None => break,
-                    };
-                    if !step_success {
-                        // Invalid state, try next direction
-                        continue 'next_direction;
-                    }
-
-                    // Apply slopes
-                    next_state.try_slopes(global);
+                if !next_state.try_card(global, *card, direction) {
+                    // Invalid state, try next direction
+                    continue 'next_direction;
                 }
                 
                 next_states.push((1, Step { card: *card, direction }, next_state));
@@ -653,6 +663,7 @@ impl State<Global, Step> for Local {
                     Tile::Angle(_, AngleType::BottomRight) => '◢',
 
                     Tile::Sand(_) => '▒',
+                    Tile::Quicksand(_) => '▓',
                 });
 
                 if self.ball.x == x as isize && self.ball.y == y as isize {
@@ -757,19 +768,8 @@ fn main() -> Result<()> {
                 
                 assert!(local.cards.contains(&card), "Card doesn't exist in step `{step}`");
 
-                for card_step in card.0.iter() {
-                    let success = match card_step {
-                        CardStep::Move(s) => local.try_move(&global, d, *s),
-                        CardStep::Jump(s) => local.try_jump(&global, d, *s),
-                        CardStep::None => break,
-                    };
-                    if !success {
-                        panic!("Invalid move in step `{step}`")
-                    }
-
-                    if !local.try_slopes(&global) {
-                       panic!("Invalid after slide in step `{step}`")
-                    }
+                if !local.try_card(&global, card, d) {
+                    panic!("Failed to move by {card:?} in `{step}`")
                 }
 
                 log::info!("After: {}", local.stringify(&global));

@@ -1,0 +1,8 @@
+3x3
+2,ball  2,right 1,down
+2,down  1       0,sand
+1,right 0,quick 0,flag
+
+1- 1/
+
+1-↘ 1/↙
