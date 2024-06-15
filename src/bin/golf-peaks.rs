@@ -427,11 +427,17 @@ impl Local {
         let mut direction = direction;
         log::debug!("try_card({:?}, {card:?}, {direction:?})", self.ball);
 
+        let mut bouncing = false;
+
         for card_step in card.0.iter() {
             log::debug!("try_card({:?}, {card:?}, {direction:?}), step={card_step:?}", self.ball);
 
             let success = match card_step {
-                CardStep::Move(strength) => self.try_move(global, direction, *strength),
+                CardStep::Move(strength) => if bouncing {
+                    self.try_jump(global, direction, *strength)
+                } else {
+                    self.try_move(global, direction, *strength)
+                },
                 CardStep::Jump(strength) => self.try_jump(global, direction, *strength),
                 CardStep::None => break,
             };
@@ -451,6 +457,11 @@ impl Local {
                 self.ball = self.last_safe;
                 return true;
             }
+
+            // If we end part of a card on a spring, the next move counts as a jump
+            if let Tile::Spring(_) = global.tile_at(self.ball) {
+                bouncing = true;
+            }
         }
 
         if !self.try_slopes(global) {
@@ -469,7 +480,7 @@ impl Local {
         let current_tile = global.tile_at(self.ball);
 
         // If we're on a flat/safe tile, mark this as the last safe spot
-        if let Tile::Flat(_) | Tile::Angle(_, _) | Tile::Sand(_) = current_tile {
+        if let Tile::Flat(_) | Tile::Angle(_, _) | Tile::Sand(_) | Tile::Spring(_) = current_tile {
             self.last_safe = self.ball;
         }
 
@@ -591,7 +602,8 @@ impl Local {
 
         // If we move onto a spring, treat the rest of the move as a jump
         if let Tile::Spring(_) = next_tile {
-            self.ball = self.ball + direction.into();
+            self.last_safe = self.ball;
+            self.ball = next_point;
             return self.try_jump(global, direction, strength - 1);
         }
 
@@ -603,8 +615,14 @@ impl Local {
     fn try_jump(&mut self, global: &Global, direction: Direction, strength: usize) -> bool {
         log::debug!("try_jump({:?}, {direction:?}, {strength})", self.ball);
 
+        let current_tile = global.tile_at(self.ball);
         let next_point = self.ball + Point::from(direction) * strength as isize;
         let next_tile = global.tile_at(next_point);
+
+        // If we're on a flat/safe tile, mark this as the last safe spot
+        if let Tile::Flat(_) | Tile::Angle(_, _) | Tile::Sand(_) | Tile::Spring(_) = current_tile {
+            self.last_safe = self.ball;
+        }
 
         // Trying to jump into empty space
         if let Tile::Empty = next_tile {
