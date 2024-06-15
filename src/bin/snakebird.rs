@@ -309,19 +309,15 @@ impl Local {
         }
 
         // If we ended up with snakes overlapping, something funny (and bad!) happened
-        if self
-            .snakes
-            .iter()
-            .enumerate()
-            .any(|(i, snake)| 
-                self
-                    .snakes
-                    .iter()
-                    .enumerate()
-                    .any(|(j, other_snake)| 
-                        i != j && snake.points.iter().any(|point| other_snake.points.contains(point))
-                    )
-                ) {
+        if self.snakes.iter().enumerate().any(|(i, snake)| {
+            self.snakes.iter().enumerate().any(|(j, other_snake)| {
+                i != j
+                    && snake
+                        .points
+                        .iter()
+                        .any(|point| other_snake.points.contains(point))
+            })
+        }) {
             return false;
         }
 
@@ -344,9 +340,10 @@ impl Local {
             for (other_index, _) in self.snakes.iter().enumerate() {
                 // TODO: What if we have a weird loop where we're pushing ourselves?
                 if index == other_index {
-                    if pushing_points
-                        .iter()
-                        .any(|p| *p != self.snakes[other_index].points[0] && self.snakes[other_index].points.contains(&p)) {
+                    if pushing_points.iter().any(|p| {
+                        *p != self.snakes[other_index].points[0]
+                            && self.snakes[other_index].points.contains(&p)
+                    }) {
                         return false;
                     } else {
                         continue;
@@ -382,15 +379,11 @@ impl Local {
         // No snake pushing points can hit anything (other than the original head)
         // Treat exits as empty space when pushing
         // TODO: Is this correct?
-        if pushing_points
-            .iter()
-            .skip(1)
-            .any(|p| !(
-                global.tile(*p) == Tile::Empty 
+        if pushing_points.iter().skip(1).any(|p| {
+            !(global.tile(*p) == Tile::Empty
                 || global.tile(*p) == Tile::Exit
-                || global.tile(*p) == Tile::Portal
-            ))
-        {
+                || global.tile(*p) == Tile::Portal)
+        }) {
             return false;
         }
 
@@ -413,7 +406,7 @@ impl Local {
                 .iter()
                 .position(|point| global.tile(*point) == Tile::Portal)
             {
-                // If going through the portal fails, that's okay! Just don't use it. 
+                // If going through the portal fails, that's okay! Just don't use it.
                 let _ = self.try_portal(
                     global,
                     *snake_index,
@@ -500,8 +493,7 @@ impl Local {
 
                 // Any portals that we're covering before moving don't double trigger
                 // If a portal is covered before falling and after, it doesn't trigger
-                let hidden_portals = self
-                    .snakes[index]
+                let hidden_portals = self.snakes[index]
                     .points
                     .iter()
                     .filter(|point| global.tile(**point) == Tile::Portal)
@@ -523,37 +515,27 @@ impl Local {
                 // If the snake goes straight up through the portal (assume it has to be vertical)
                 // It will trigger the fall when the snake goes up three times (sort of jumping)
                 // But the game doesn't actually trigger here
-                // 
+                //
                 // Also: If a snake was already covering a portal, it can't trigger by falling
-                // TODO: Did this fix the above error? 
-                if let Some(portal_index) = self.snakes[index]
-                    .points
-                    .iter()
-                    .position(|point| 
-                        global.tile(*point) == Tile::Portal
-                        && !hidden_portals.contains(point)
-                    )
-                {
-                    // If going through the portal fails, that's okay! Just don't use it. 
-                    let _ = self.try_portal(
-                        global,
-                        index,
-                        self.snakes[index].points[portal_index],
-                    );
+                // TODO: Did this fix the above error?
+                if let Some(portal_index) = self.snakes[index].points.iter().position(|point| {
+                    global.tile(*point) == Tile::Portal && !hidden_portals.contains(point)
+                }) {
+                    // If going through the portal fails, that's okay! Just don't use it.
+                    let _ = self.try_portal(global, index, self.snakes[index].points[portal_index]);
                 }
             }
 
             // If any snakes fall out of the world, the whole move is invalid
             // Statues are allowed to fall out of the world
             let mut statues_to_remove = Vec::new();
-            
+
             for index in 0..self.snakes.len() {
-                if self
-                    .snakes[index]
+                if self.snakes[index]
                     .points
                     .iter()
-                    .all(|point| point.y > global.height as isize) {
-
+                    .all(|point| point.y > global.height as isize)
+                {
                     if self.snakes[index].is_statue {
                         statues_to_remove.push(index);
                     } else {

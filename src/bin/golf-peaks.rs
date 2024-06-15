@@ -73,7 +73,12 @@ impl From<Direction> for Point {
 
 impl Direction {
     fn all() -> Vec<Direction> {
-        vec![Direction::Up, Direction::Down, Direction::Left, Direction::Right]
+        vec![
+            Direction::Up,
+            Direction::Down,
+            Direction::Left,
+            Direction::Right,
+        ]
     }
 
     fn flip(&self) -> Direction {
@@ -165,7 +170,7 @@ enum CardStep {
 const CARD_MAX_STEPS: usize = 3;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-struct Card([CardStep;CARD_MAX_STEPS]);
+struct Card([CardStep; CARD_MAX_STEPS]);
 
 impl From<&str> for Card {
     fn from(value: &str) -> Card {
@@ -176,15 +181,18 @@ impl From<&str> for Card {
         let mut value = value;
         while !value.is_empty() {
             // The first part will be a number of strength
-            let strength = value.chars().take_while(|c| c.is_ascii_digit()).collect::<String>();
+            let strength = value
+                .chars()
+                .take_while(|c| c.is_ascii_digit())
+                .collect::<String>();
             let rest = &value[strength.len()..];
 
             let strength = strength.parse().expect("Invalid card strength");
 
             // The next part will be a card type
             match rest.chars().next().expect("Invalid card type") {
-                '-' => { card.0[index] = CardStep::Move(strength) },
-                '/' => { card.0[index] = CardStep::Jump(strength) },
+                '-' => card.0[index] = CardStep::Move(strength),
+                '/' => card.0[index] = CardStep::Jump(strength),
                 _ => panic!("Invalid card type"),
             }
 
@@ -246,7 +254,7 @@ impl Global {
 
         let width: usize = size[0];
         let height: usize = size[1];
-        
+
         let mut tiles = vec![Tile::Empty; width * height];
         let mut flag = None;
         let mut ball = None;
@@ -258,7 +266,7 @@ impl Global {
                 .next()
                 .expect("Missing tile line")
                 .expect("Missing tile line");
-            
+
             for (x, mut definition) in line.split_ascii_whitespace().enumerate() {
                 // Empty space, already handled
                 if definition == "x" {
@@ -354,7 +362,19 @@ impl Global {
                 }
 
                 assert!(
-                    [is_flag, is_ball, is_slope, is_angle, is_sand, is_quicksand, is_water].iter().filter(|v| **v).count() <= 1,
+                    [
+                        is_flag,
+                        is_ball,
+                        is_slope,
+                        is_angle,
+                        is_sand,
+                        is_quicksand,
+                        is_water
+                    ]
+                    .iter()
+                    .filter(|v| **v)
+                    .count()
+                        <= 1,
                     "Multiple tile types in line `{definition}`",
                 );
 
@@ -374,12 +394,18 @@ impl Global {
 
                 if is_flag {
                     assert!(flag.is_none(), "Multiple flags in map");
-                    flag = Some(Point { x: x as isize, y: y as isize });
+                    flag = Some(Point {
+                        x: x as isize,
+                        y: y as isize,
+                    });
                 }
 
                 if is_ball {
                     assert!(ball.is_none(), "Multiple balls in map");
-                    ball = Some(Point { x: x as isize, y: y as isize });
+                    ball = Some(Point {
+                        x: x as isize,
+                        y: y as isize,
+                    });
                 }
             }
         }
@@ -430,7 +456,11 @@ impl Global {
 impl Global {
     fn tile_at(&self, point: Point) -> Tile {
         // Points out of bounds are always empty
-        if point.x < 0 || point.y < 0 || point.x >= self.width as isize || point.y >= self.height as isize {
+        if point.x < 0
+            || point.y < 0
+            || point.x >= self.width as isize
+            || point.y >= self.height as isize
+        {
             return Tile::Empty;
         }
 
@@ -497,17 +527,26 @@ impl Local {
 
         let current_height = match current_tile {
             Tile::Empty => unreachable!(),
-            Tile::Flat(height) | Tile::Angle(height, _) | Tile::Sand(height) | Tile::Quicksand(height) | Tile::Water(height) => height,
-            Tile::Slope(height, slope_direction) => if direction == slope_direction {
-                height
-            } else if direction == slope_direction.flip() {
-                height + 1 // TODO: Is this correct?
-            } else {
-                return false; // TODO: Support this? 
-            },
+            Tile::Flat(height)
+            | Tile::Angle(height, _)
+            | Tile::Sand(height)
+            | Tile::Quicksand(height)
+            | Tile::Water(height) => height,
+            Tile::Slope(height, slope_direction) => {
+                if direction == slope_direction {
+                    height
+                } else if direction == slope_direction.flip() {
+                    height + 1 // TODO: Is this correct?
+                } else {
+                    return false; // TODO: Support this?
+                }
+            }
         };
 
-        log::debug!("try_move({self:?}, {direction:?}, {strength}), height={current_height}, tile={:?}", global.tile_at(self.ball));
+        log::debug!(
+            "try_move({self:?}, {direction:?}, {strength}), height={current_height}, tile={:?}",
+            global.tile_at(self.ball)
+        );
 
         // Cannot slide out of sand, just stop moving
         // But return true, this isn't an error, just stopping
@@ -578,8 +617,8 @@ impl Local {
                 }
 
                 unreachable!();
-            },
-            _ => {},
+            }
+            _ => {}
         }
 
         // Trying to move onto water, fall back to last safe tile and end move
@@ -622,7 +661,7 @@ impl Local {
             if !self.try_move(global, slope_direction, 1) {
                 return false;
             }
-            
+
             return self.try_slopes(global);
         }
 
@@ -634,8 +673,8 @@ impl Local {
 impl State<Global, Step> for Local {
     fn next_states(&self, global: &Global) -> Option<Vec<(i64, Step, Self)>>
     where
-        Self: Sized {
-        
+        Self: Sized,
+    {
         let mut next_states = Vec::new();
 
         for (i, card) in self.cards.iter().enumerate() {
@@ -647,12 +686,17 @@ impl State<Global, Step> for Local {
                     // Invalid state, try next direction
                     continue 'next_direction;
                 }
-                
-                next_states.push((1, Step { card: *card, direction }, next_state));
+
+                next_states.push((
+                    1,
+                    Step {
+                        card: *card,
+                        direction,
+                    },
+                    next_state,
+                ));
             }
         }
-
-
 
         if next_states.is_empty() {
             return None;
@@ -687,7 +731,6 @@ impl State<Global, Step> for Local {
                     output.push(' ');
                 }
 
-
                 let tile = global.tiles[y * global.width + x];
                 output.push(match tile {
                     Tile::Empty => ' ',
@@ -719,12 +762,18 @@ impl State<Global, Step> for Local {
             output.push('\n');
         }
 
-        output.push_str(&format!("Cards: {}", self.cards.iter().map(|c| String::from(*c)).collect::<Vec<String>>().join(" ")));
+        output.push_str(&format!(
+            "Cards: {}",
+            self.cards
+                .iter()
+                .map(|c| String::from(*c))
+                .collect::<Vec<String>>()
+                .join(" ")
+        ));
 
         output
     }
 }
-
 
 fn solve(global: Global, local: Local) -> Option<(Solver<Global, Local, Step>, Local)> {
     let mut solver = Solver::new(global.clone(), local);
@@ -762,7 +811,7 @@ fn stringify_solution(
     solved_state: &Local,
 ) -> String {
     let mut path = String::new();
-    
+
     for step in solver.path(initial_state, solved_state).unwrap().iter() {
         let c = String::from(step.card);
         let d = match step.direction {
@@ -806,8 +855,11 @@ fn main() -> Result<()> {
                     _ => panic!("Invalid direction"),
                 };
                 let card = Card::from(chars.as_str());
-                
-                assert!(local.cards.contains(&card), "Card doesn't exist in step `{step}`");
+
+                assert!(
+                    local.cards.contains(&card),
+                    "Card doesn't exist in step `{step}`"
+                );
 
                 if !local.try_card(&global, card, d) {
                     panic!("Failed to move by {card:?} in `{step}`")
@@ -863,7 +915,7 @@ mod test_solutions {
             for entry in std::fs::read_dir(folder).unwrap() {
                 let entry = entry.unwrap();
                 let path = entry.path();
-                
+
                 if path.extension().is_none() || path.extension().unwrap() != "txt" {
                     continue;
                 }
