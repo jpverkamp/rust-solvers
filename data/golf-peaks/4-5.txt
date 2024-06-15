@@ -1,0 +1,10 @@
+5x5
+4,ball  4,right 2,water 5,right 4
+4,down  1,water 2,down  1,water 4,down
+2,water 2,right 1,flag  2,left  3,sand
+5,down  1,water 2,up    1,water 3,down
+4       4,right 3,sand  3,right 2
+
+1- 3/ 4/
+
+4/↙ 1-↘ 3/↗

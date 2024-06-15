@@ -143,6 +143,7 @@ enum Tile {
     Angle(usize, AngleType),
     Sand(usize),
     Quicksand(usize),
+    Water(usize),
 }
 
 #[derive(Debug, Clone)]
@@ -219,6 +220,7 @@ impl From<Card> for String {
 struct Local {
     ball: Point,
     cards: Vec<Card>,
+    last_safe: Point,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -272,6 +274,7 @@ impl Global {
                 let mut is_angle = false;
                 let mut is_sand = false;
                 let mut is_quicksand = false;
+                let mut is_water = false;
                 let mut which_angle = AngleType::TopLeft;
                 let mut slope_direction = Direction::Up;
 
@@ -340,12 +343,18 @@ impl Global {
                         continue;
                     }
 
+                    // Water hazards
+                    if part == "water" {
+                        is_water = true;
+                        continue;
+                    }
+
                     // Not something we know yet
                     return Err(anyhow!("Unknown tile definition `{part}` in `{line}`"));
                 }
 
                 assert!(
-                    [is_flag, is_ball, is_slope, is_angle, is_sand, is_quicksand].iter().filter(|v| **v).count() <= 1,
+                    [is_flag, is_ball, is_slope, is_angle, is_sand, is_quicksand, is_water].iter().filter(|v| **v).count() <= 1,
                     "Multiple tile types in line `{definition}`",
                 );
 
@@ -357,6 +366,8 @@ impl Global {
                     tiles[y * width + x] = Tile::Sand(height);
                 } else if is_quicksand {
                     tiles[y * width + x] = Tile::Quicksand(height);
+                } else if is_water {
+                    tiles[y * width + x] = Tile::Water(height);
                 } else {
                     tiles[y * width + x] = Tile::Flat(height);
                 }
@@ -410,6 +421,7 @@ impl Global {
             Local {
                 ball: ball.expect("No ball in map"),
                 cards,
+                last_safe: ball.expect("No ball in map"),
             },
         ))
     }
@@ -448,6 +460,13 @@ impl Local {
             if let Tile::Slope(_, slope_direction) = global.tile_at(self.ball) {
                 direction = slope_direction;
             }
+
+            // If after any step, we're on water, reset to last safe tile and stop move
+            // This shouldn't apply after move (it's handled in try_move), but might after jump or slide
+            if let Tile::Water(_) = global.tile_at(self.ball) {
+                self.ball = self.last_safe;
+                return true;
+            }
         }
 
         if !self.try_slopes(global) {
@@ -465,6 +484,11 @@ impl Local {
     fn try_move(&mut self, global: &Global, direction: Direction, strength: usize) -> bool {
         let current_tile = global.tile_at(self.ball);
 
+        // If we're on a flat/safe tile, mark this as the last safe spot
+        if let Tile::Flat(_) | Tile::Angle(_, _) | Tile::Sand(_) = current_tile {
+            self.last_safe = self.ball;
+        }
+
         // No more moving to do, we're done
         if strength == 0 {
             log::debug!("try_move({self:?}, {direction:?}, {strength}), base case");
@@ -473,7 +497,7 @@ impl Local {
 
         let current_height = match current_tile {
             Tile::Empty => unreachable!(),
-            Tile::Flat(height) | Tile::Angle(height, _) | Tile::Sand(height) | Tile::Quicksand(height)=> height,
+            Tile::Flat(height) | Tile::Angle(height, _) | Tile::Sand(height) | Tile::Quicksand(height) | Tile::Water(height) => height,
             Tile::Slope(height, slope_direction) => if direction == slope_direction {
                 height
             } else if direction == slope_direction.flip() {
@@ -556,6 +580,12 @@ impl Local {
                 unreachable!();
             },
             _ => {},
+        }
+
+        // Trying to move onto water, fall back to last safe tile and end move
+        if let Tile::Water(_) = next_tile {
+            self.ball = self.last_safe;
+            return true;
         }
 
         // Normal flat tile, recur
@@ -674,6 +704,7 @@ impl State<Global, Step> for Local {
 
                     Tile::Sand(_) => '▒',
                     Tile::Quicksand(_) => '▓',
+                    Tile::Water(_) => '≈',
                 });
 
                 if self.ball.x == x as isize && self.ball.y == y as isize {
