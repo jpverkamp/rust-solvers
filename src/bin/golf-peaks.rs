@@ -785,25 +785,32 @@ impl Local {
             return self.try_slide(global);
         }
 
+        fn is_ice(tile: Tile) -> bool {
+            match tile {
+                Tile::Ice(_) | Tile::IceAngle(_, _) => true,
+                _ => false,
+            }
+        }
+
         // If we're on ice, continue to slide in that direction until it changes
-        loop {
-            match global.tile_at(self.ball) {
-                Tile::Ice(_) | Tile::IceAngle(_, _) => {}
-                _ => break,
+        // This is if + while to deal with the warp at the end of ice case
+        if is_ice(current_tile) {
+            while is_ice(global.tile_at(self.ball)) {
+                let start_position = self.ball;
+                let success = self.try_move(global, self.last_move, 1);
+                
+                // Fell off the map (most likely)
+                if !success {
+                    return false;
+                }
+
+                // Didn't actually slide, probably bounced
+                if self.ball == start_position {
+                    break;
+                }
             }
 
-            let start_position = self.ball;
-            let success = self.try_move(global, self.last_move, 1);
-            
-            // Fell off the map (most likely)
-            if !success {
-                return false;
-            }
-
-            // Didn't actually slide, probably bounced
-            if self.ball == start_position {
-                break;
-            }
+            self.try_warp(global);
         }
 
         // Any non-slopes just don't slide
