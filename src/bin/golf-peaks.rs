@@ -153,6 +153,7 @@ enum Tile {
     Warp(usize, usize),
     Belt(usize, Direction),
     Ice(usize),
+    IceAngle(usize, AngleType),
 }
 
 #[derive(Debug, Clone)]
@@ -293,6 +294,7 @@ impl Global {
                     Warp,
                     Belt,
                     Ice,
+                    IceAngle,
                 }
 
                 let mut height = 0;
@@ -363,6 +365,22 @@ impl Global {
                                 current_type = ParsedType::Belt;
                                 slope_direction = Direction::Left;
                             }
+                            "icetl" => {
+                                current_type = ParsedType::IceAngle;
+                                which_angle = AngleType::TopLeft;
+                            }
+                            "icetr" => {
+                                current_type = ParsedType::IceAngle;
+                                which_angle = AngleType::TopRight;
+                            }
+                            "icebl" => {
+                                current_type = ParsedType::IceAngle;
+                                which_angle = AngleType::BottomLeft;
+                            }
+                            "icebr" => {
+                                current_type = ParsedType::IceAngle;
+                                which_angle = AngleType::BottomRight;
+                            }
                             _ => panic!("Unknown tile definition `{part}` in `{line}`"),
                         }
                     }
@@ -395,6 +413,7 @@ impl Global {
                     ParsedType::Warp => Tile::Warp(height, warp_index),
                     ParsedType::Belt => Tile::Belt(height, slope_direction),
                     ParsedType::Ice => Tile::Ice(height),
+                    ParsedType::IceAngle => Tile::IceAngle(height, which_angle),
                 };
             }
         }
@@ -529,7 +548,7 @@ impl Local {
             }
         }
 
-        if !self.try_slopes(global) {
+        if !self.try_slide(global) {
             return false;
         }
 
@@ -570,7 +589,8 @@ impl Local {
             | Tile::Spring(height)
             | Tile::Warp(height, _)
             | Tile::Belt(height, _)
-            | Tile::Ice(height) => height,
+            | Tile::Ice(height)
+            | Tile::IceAngle(height, _) => height,
 
             Tile::Slope(height, slope_direction) => {
                 if direction == slope_direction {
@@ -597,12 +617,17 @@ impl Local {
         // If we're currently on an angled tile, we need to reflect
         // When this recurs, we'll be moving 'out' of the tile so won't trigger it twice
         // If we're at a different height than the angle, treat it as flat
-        if let Tile::Angle(height, a_type) = current_tile {
-            if height == current_height {
-                if let Some(new_direction) = a_type.try_reflect(direction) {
-                    return self.try_move(global, new_direction, strength);
+        match current_tile {
+            Tile::Angle(height, a_type)
+            | Tile::IceAngle(height, a_type) => {
+                if height == current_height {
+                    if let Some(new_direction) = a_type.try_reflect(direction) {
+                        self.last_move = new_direction;
+                        return self.try_move(global, new_direction, strength);
+                    }
                 }
             }
+            _ => {}
         }
 
         let next_point = self.ball + Point::from(direction);
@@ -660,7 +685,8 @@ impl Local {
             | Tile::Warp(height, _)
             | Tile::Sand(height)
             | Tile::Belt(height, _)
-            | Tile::Ice(height) => {
+            | Tile::Ice(height) 
+            | Tile::IceAngle(height, _) => {
                 // On the same level, just move
                 if height == current_height {
                     self.last_move = direction;
@@ -678,7 +704,7 @@ impl Local {
 
                     // If we bounce on ice, slide the opposite direction
                     self.last_move = direction.flip();
-                    
+
                     return self.try_move(global, direction.flip(), strength - 1);
                 }
 
@@ -729,13 +755,13 @@ impl Local {
         true
     }
 
-    fn try_slopes(&mut self, global: &Global) -> bool {
+    fn try_slide(&mut self, global: &Global) -> bool {
         let current_tile = global.tile_at(self.ball);
         if current_tile == Tile::Empty {
             return false;
         }
 
-        log::debug!("try_slopes({:?}) @ {current_tile:?}", self.ball);
+        log::debug!("try_slide({:?}) @ {current_tile:?}", self.ball);
 
         // Slopes apply a single tile move than recur
         if let Tile::Slope(_, slope_direction) = current_tile {
@@ -745,7 +771,7 @@ impl Local {
 
             self.try_warp(global);
 
-            return self.try_slopes(global);
+            return self.try_slide(global);
         }
 
         // Same for belts
@@ -756,17 +782,26 @@ impl Local {
 
             self.try_warp(global);
 
-            return self.try_slopes(global);
+            return self.try_slide(global);
         }
 
         // If we're on ice, continue to slide in that direction until it changes
-        while let Tile::Ice(_) = global.tile_at(self.ball) {
-            let sliding = self.last_move;
+        loop {
+            match global.tile_at(self.ball) {
+                Tile::Ice(_) | Tile::IceAngle(_, _) => {}
+                _ => break,
+            }
+
+            let start_position = self.ball;
             let success = self.try_move(global, self.last_move, 1);
+            
+            // Fell off the map (most likely)
             if !success {
                 return false;
             }
-            if sliding != self.last_move {
+
+            // Didn't actually slide, probably bounced
+            if self.ball == start_position {
                 break;
             }
         }
@@ -887,6 +922,11 @@ impl State<Global, Step> for Local {
                     Tile::Angle(_, AngleType::TopRight) => '◥',
                     Tile::Angle(_, AngleType::BottomLeft) => '◣',
                     Tile::Angle(_, AngleType::BottomRight) => '◢',
+
+                    Tile::IceAngle(_, AngleType::TopLeft) => '⌜',
+                    Tile::IceAngle(_, AngleType::TopRight) => '⌝',
+                    Tile::IceAngle(_, AngleType::BottomLeft) => '⌞',
+                    Tile::IceAngle(_, AngleType::BottomRight) => '⌟',
 
                     Tile::Sand(_) => '▒',
                     Tile::Quicksand(_) => '▓',
