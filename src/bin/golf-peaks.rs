@@ -151,6 +151,7 @@ enum Tile {
     Water(usize),
     Spring(usize),
     Warp(usize, usize),
+    Belt(usize, Direction),
 }
 
 #[derive(Debug, Clone)]
@@ -288,6 +289,7 @@ impl Global {
                     Water,
                     Spring,
                     Warp,
+                    Belt,
                 }
 
                 let mut height = 0;
@@ -340,7 +342,23 @@ impl Global {
                             "/br" => {
                                 current_type = ParsedType::Angle;
                                 which_angle = AngleType::BottomRight;
-                            }
+                            },
+                            "*n" => {
+                                current_type = ParsedType::Belt;
+                                slope_direction = Direction::Up;
+                            },
+                            "*e" => {
+                                current_type = ParsedType::Belt;
+                                slope_direction = Direction::Right;
+                            },
+                            "*s" => {
+                                current_type = ParsedType::Belt;
+                                slope_direction = Direction::Down;
+                            },
+                            "*w" => {
+                                current_type = ParsedType::Belt;
+                                slope_direction = Direction::Left;
+                            },
                             _ => panic!("Unknown tile definition `{part}` in `{line}`"),
                         }
                     }
@@ -371,6 +389,7 @@ impl Global {
                     ParsedType::Water => Tile::Water(height),
                     ParsedType::Spring => Tile::Spring(height),
                     ParsedType::Warp => Tile::Warp(height, warp_index),
+                    ParsedType::Belt => Tile::Belt(height, slope_direction),
                 };
             }
         }
@@ -540,7 +559,8 @@ impl Local {
             | Tile::Quicksand(height)
             | Tile::Water(height)
             | Tile::Spring(height)
-            | Tile::Warp(height, _) => height,
+            | Tile::Warp(height, _) 
+            | Tile::Belt(height, _) => height,
 
             Tile::Slope(height, slope_direction) => {
                 if direction == slope_direction {
@@ -624,7 +644,8 @@ impl Local {
             | Tile::Angle(height, _)
             | Tile::Spring(height)
             | Tile::Warp(height, _)
-            | Tile::Sand(height) => {
+            | Tile::Sand(height) 
+            | Tile::Belt(height, _) => {
                 // On the same level, just move
                 if height == current_height {
                     self.ball = next_point;
@@ -697,6 +718,17 @@ impl Local {
         // Slopes apply a single tile move than recur
         if let Tile::Slope(_, slope_direction) = current_tile {
             if !self.try_move(global, slope_direction, 1) {
+                return false;
+            }
+
+            self.try_warp(global);
+
+            return self.try_slopes(global);
+        }
+
+        // Same for belts
+        if let Tile::Belt(_, belt_direction) = current_tile {
+            if !self.try_move(global, belt_direction, 1) {
                 return false;
             }
 
@@ -806,10 +838,16 @@ impl State<Global, Step> for Local {
                 output.push(match tile {
                     Tile::Empty => ' ',
                     Tile::Flat(height) => std::char::from_digit(height as u32, 10).unwrap(),
+
                     Tile::Slope(_, Direction::Up) => '^',
                     Tile::Slope(_, Direction::Right) => '>',
                     Tile::Slope(_, Direction::Down) => 'v',
                     Tile::Slope(_, Direction::Left) => '<',
+
+                    Tile::Belt(_, Direction::Up) => '↑',
+                    Tile::Belt(_, Direction::Right) => '→',
+                    Tile::Belt(_, Direction::Down) => '↓',
+                    Tile::Belt(_, Direction::Left) => '←',
 
                     Tile::Angle(_, AngleType::TopLeft) => '◤',
                     Tile::Angle(_, AngleType::TopRight) => '◥',

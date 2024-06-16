@@ -1,0 +1,14 @@
+9x9
+2,sand  2,sand  2,/tr   x       0,flag  0,*w    x       x       x
+2,sand  2       2       x       x       0,*n    0,/tr   x       x
+2,/bl   2       2       2,/tr   2       x       0,/bl   0,/tr   x
+0,boing 0,boing 2,/bl   2       2,*s    x       x       0,/bl   0,/tr
+0,*w    0,*n    2       2,*e    2,*s    2,*e    2,*e    x       0,*n
+0,/bl   0       0,*w    0,*w    2,*s    2,/tl   2,/tr   1,up    1,up
+x       0,/bl   0,*e    0,*n    2,*e    2       2       2       2
+x       x       0,/bl   0       0,*w    0,*w    2       2,quick 2,quick
+x       x       x       0,/bl   0,*w    0,ball  2,/bl   2,quick 2,/br
+
+4- 5- 7- 8- 9-
+
+5-↖ 8-↘ 7-↘ 4-↗

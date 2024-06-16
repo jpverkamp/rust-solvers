@@ -1,0 +1,12 @@
+7x7
+1,flag  1,*s    1,*w    1,quick 1       1,quick 1,quick
+0       1       1,quick 1       1,*n    1,quick 1,*s
+1,*n    1,quick 1       1,quick 0,quick 1,quick 1
+1       1       1,quick 1,*w    1       1,quick 1,*w
+1,*s    1,quick 1       1,*w    1,quick 1,quick 1
+1,quick 1,quick 1       1,quick 1,*e    1       1,quick
+1       1,quick 1,*n    1,quick 1       1,quick 1,ball
+
+2- 2- 3- 3- 3- 4-
+
+2-↖ 3-↗ 3-↖ 2-↗ 3-↘ 4-↖

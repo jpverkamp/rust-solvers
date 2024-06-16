@@ -1,0 +1,14 @@
+9x9
+3,/tl   3,*e    3,*e    3       3,*e    3,*n    3       3,*s    3,/tr
+4,up    x       x       x       x       x       x       x       3,down
+5,up    x       3,/tl   3       3,*s    3       3,/tr   x       2,down       
+6,up    x       4,up    x       x       x       3,down  x       1,down
+6       x       5,up    x       3,flag  x       2       x       0
+6,down  x       5       x       3       x       3,up    x       1,up
+5,down  x       5,down  x       3,/bl   3,*w    3,/br   x       2,up
+4,down  x       4,down  x       x       x       x       x       3,up
+3,ball  x       3,/bl   3,*e    3,*e    3       3,*w    3,*w    3,/br
+
+4- 5- 6- 7- 8- 9-
+
+5-↗ 9-↗ 6-↙ 7-↖ 4-↗ 8-↙
