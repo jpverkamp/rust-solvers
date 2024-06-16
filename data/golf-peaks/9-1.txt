@@ -1,0 +1,10 @@
+5x5
+2       2,ice   2,ice   2,ice   2
+2,ice   0,ice   0,ice   1,ice   2,ice
+2,ice   0,ice   0,flag  1,ice   2,ice
+2,ice   1,ice   1,ice   1,ice   2,ice
+2       2,ice   2,ice   2,ice   3,ball
+
+1- 1- 2- 2- 1/ 1/
+
+1-↖ 2-↘ 2-↗ 1/↖ 1/↙ 1-↖

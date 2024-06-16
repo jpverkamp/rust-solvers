@@ -152,6 +152,7 @@ enum Tile {
     Spring(usize),
     Warp(usize, usize),
     Belt(usize, Direction),
+    Ice(usize),
 }
 
 #[derive(Debug, Clone)]
@@ -232,6 +233,7 @@ struct Local {
     ball: Point,
     cards: Vec<Card>,
     last_safe: Point,
+    last_move: Direction,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -290,6 +292,7 @@ impl Global {
                     Spring,
                     Warp,
                     Belt,
+                    Ice,
                 }
 
                 let mut height = 0;
@@ -327,6 +330,7 @@ impl Global {
                             "quick" => current_type = ParsedType::Quicksand,
                             "water" => current_type = ParsedType::Water,
                             "boing" => current_type = ParsedType::Spring,
+                            "ice" => current_type = ParsedType::Ice,
                             "/tl" => {
                                 current_type = ParsedType::Angle;
                                 which_angle = AngleType::TopLeft;
@@ -390,6 +394,7 @@ impl Global {
                     ParsedType::Spring => Tile::Spring(height),
                     ParsedType::Warp => Tile::Warp(height, warp_index),
                     ParsedType::Belt => Tile::Belt(height, slope_direction),
+                    ParsedType::Ice => Tile::Ice(height),
                 };
             }
         }
@@ -449,6 +454,7 @@ impl Global {
                 ball: ball.expect("No ball in map"),
                 cards,
                 last_safe: ball.expect("No ball in map"),
+                last_move: Direction::Up,
             },
         ))
     }
@@ -544,6 +550,7 @@ impl Local {
         }
 
         // No more moving to do, we're done
+        // If we're on ice, slide one more
         if strength == 0 {
             log::debug!(
                 "try_move({:?}, {direction:?}, {strength}), base case",
@@ -562,7 +569,8 @@ impl Local {
             | Tile::Water(height)
             | Tile::Spring(height)
             | Tile::Warp(height, _)
-            | Tile::Belt(height, _) => height,
+            | Tile::Belt(height, _)
+            | Tile::Ice(height) => height,
 
             Tile::Slope(height, slope_direction) => {
                 if direction == slope_direction {
@@ -609,18 +617,21 @@ impl Local {
         if let Tile::Slope(height, slope_direction) = next_tile {
             // Sliding down at the proper height
             if height == current_height && slope_direction == direction {
+                self.last_move = direction;
                 self.ball = next_point;
                 return self.try_move(global, direction, strength - 1);
             }
 
             // Sliding up at the proper height
             if height == current_height + 1 && slope_direction == direction.flip() {
+                self.last_move = direction;
                 self.ball = next_point;
                 return self.try_move(global, direction, strength - 1);
             }
 
             // Dropping down onto a slope
             if height < current_height {
+                self.last_move = direction;
                 self.ball = next_point;
                 return self.try_move(global, direction, strength - 1);
             }
@@ -632,6 +643,7 @@ impl Local {
         // If we move/fall onto a spring, treat the rest of the move as a jump
         if let Tile::Spring(height) = next_tile {
             if height <= current_height {
+                self.last_move = direction;
                 self.last_safe = self.ball;
                 self.ball = next_point;
                 return self.try_jump(global, direction, strength - 1);
@@ -647,9 +659,11 @@ impl Local {
             | Tile::Spring(height)
             | Tile::Warp(height, _)
             | Tile::Sand(height)
-            | Tile::Belt(height, _) => {
+            | Tile::Belt(height, _)
+            | Tile::Ice(height) => {
                 // On the same level, just move
                 if height == current_height {
+                    self.last_move = direction;
                     self.ball = next_point;
                     return self.try_move(global, direction, strength - 1);
                 }
@@ -662,11 +676,15 @@ impl Local {
                         return self.try_jump(global, direction.flip(), strength - 1);
                     }
 
+                    // If we bounce on ice, slide the opposite direction
+                    self.last_move = direction.flip();
+                    
                     return self.try_move(global, direction.flip(), strength - 1);
                 }
 
                 // New tile is lower, fall onto that level and continue
                 if height < current_height {
+                    self.last_move = direction;
                     self.ball = next_point;
                     return self.try_move(global, direction, strength - 1);
                 }
@@ -683,6 +701,7 @@ impl Local {
         }
 
         // Normal flat tile, recur
+        self.last_move = direction;
         self.ball = self.ball + direction.into();
         self.try_move(global, direction, strength - 1)
     }
@@ -705,6 +724,7 @@ impl Local {
         }
 
         // Otherwise, it always works
+        self.last_move = direction;
         self.ball = next_point;
         true
     }
@@ -737,6 +757,18 @@ impl Local {
             self.try_warp(global);
 
             return self.try_slopes(global);
+        }
+
+        // If we're on ice, continue to slide in that direction until it changes
+        while let Tile::Ice(_) = global.tile_at(self.ball) {
+            let sliding = self.last_move;
+            let success = self.try_move(global, self.last_move, 1);
+            if !success {
+                return false;
+            }
+            if sliding != self.last_move {
+                break;
+            }
         }
 
         // Any non-slopes just don't slide
@@ -861,6 +893,7 @@ impl State<Global, Step> for Local {
                     Tile::Water(_) => '≈',
                     Tile::Spring(_) => '⌉',
                     Tile::Warp(_, _) => 'O',
+                    Tile::Ice(_) => '❄',
                 });
 
                 if self.ball.x == x as isize && self.ball.y == y as isize {
