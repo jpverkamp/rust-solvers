@@ -911,9 +911,29 @@ impl State<Global, Step> for Local {
                 }
 
                 let tile = global.tiles[y * global.width + x];
+
+                // Height of the current tile
                 output.push(match tile {
                     Tile::Empty => ' ',
-                    Tile::Flat(height) => std::char::from_digit(height as u32, 10).unwrap(),
+                    Tile::Flat(height)
+                    | Tile::Slope(height, _)
+                    | Tile::Angle(height, _)
+                    | Tile::Sand(height)
+                    | Tile::Quicksand(height)
+                    | Tile::Water(height)
+                    | Tile::Spring(height)
+                    | Tile::Warp(height, _)
+                    | Tile::Belt(height, _)
+                    | Tile::Ice(height)
+                    | Tile::IceAngle(height, _)
+                    => {
+                        std::char::from_digit(height as u32, 10).unwrap()
+                    }
+                });
+
+                output.push(match tile {
+                    Tile::Empty => ' ',
+                    Tile::Flat(_) => '_',
 
                     Tile::Slope(_, Direction::Up) => '^',
                     Tile::Slope(_, Direction::Right) => '>',
