@@ -654,11 +654,19 @@ impl Local {
                 return self.try_move(global, direction, strength - 1);
             }
 
-            // Dropping down onto a slope
+            // Dropping down onto a slope, stop move and fall
             if height < current_height {
-                self.last_move = direction;
-                self.ball = next_point;
-                return self.try_move(global, direction, strength - 1);
+                // If we're going up/down the slope we can continue
+                // But if we're going perpendicular, stop now
+                if slope_direction == direction || slope_direction == direction.flip() {
+                    self.last_move = direction;
+                    self.ball = next_point;
+                    return self.try_move(global, direction, strength - 1);
+                } else {
+                    self.last_move = direction;
+                    self.ball = next_point;
+                    return true;
+                }
             }
 
             // Anything else, we'll fall through as a normal flat tile
@@ -756,34 +764,11 @@ impl Local {
     }
 
     fn try_slide(&mut self, global: &Global) -> bool {
-        let current_tile = global.tile_at(self.ball);
-        if current_tile == Tile::Empty {
+        if global.tile_at(self.ball) == Tile::Empty {
             return false;
         }
 
-        log::debug!("try_slide({:?}) @ {current_tile:?}", self.ball);
-
-        // Slopes apply a single tile move than recur
-        if let Tile::Slope(_, slope_direction) = current_tile {
-            if !self.try_move(global, slope_direction, 1) {
-                return false;
-            }
-
-            self.try_warp(global);
-
-            return self.try_slide(global);
-        }
-
-        // Same for belts
-        if let Tile::Belt(_, belt_direction) = current_tile {
-            if !self.try_move(global, belt_direction, 1) {
-                return false;
-            }
-
-            self.try_warp(global);
-
-            return self.try_slide(global);
-        }
+        log::debug!("try_slide({:?}) @ {:?}", self.ball, global.tile_at(self.ball));
 
         fn is_ice(tile: Tile) -> bool {
             match tile {
@@ -794,7 +779,7 @@ impl Local {
 
         // If we're on ice, continue to slide in that direction until it changes
         // This is if + while to deal with the warp at the end of ice case
-        if is_ice(current_tile) {
+        if is_ice(global.tile_at(self.ball)) {
             while is_ice(global.tile_at(self.ball)) {
                 let start_position = self.ball;
                 let success = self.try_move(global, self.last_move, 1);
@@ -811,6 +796,26 @@ impl Local {
             }
 
             self.try_warp(global);
+        }
+
+        // Slopes apply a single tile move than recur
+        if let Tile::Slope(_, slope_direction) = global.tile_at(self.ball) {
+            if !self.try_move(global, slope_direction, 1) {
+                return false;
+            }
+
+            self.try_warp(global);
+            return self.try_slide(global);
+        }
+
+        // Same for belts
+        if let Tile::Belt(_, belt_direction) = global.tile_at(self.ball) {
+            if !self.try_move(global, belt_direction, 1) {
+                return false;
+            }
+
+            self.try_warp(global);
+            return self.try_slide(global);
         }
 
         // Any non-slopes just don't slide
