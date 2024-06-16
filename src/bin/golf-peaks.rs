@@ -318,7 +318,7 @@ impl Global {
                         // If no index is specified, it's 0
                         if part.len() > 4 {
                             warp_index = part[4..].parse().expect("Invalid warp index");
-                        } 
+                        }
                     } else {
                         match part {
                             "flag" => current_type = ParsedType::Flag,
@@ -342,23 +342,23 @@ impl Global {
                             "/br" => {
                                 current_type = ParsedType::Angle;
                                 which_angle = AngleType::BottomRight;
-                            },
+                            }
                             "*n" => {
                                 current_type = ParsedType::Belt;
                                 slope_direction = Direction::Up;
-                            },
+                            }
                             "*e" => {
                                 current_type = ParsedType::Belt;
                                 slope_direction = Direction::Right;
-                            },
+                            }
                             "*s" => {
                                 current_type = ParsedType::Belt;
                                 slope_direction = Direction::Down;
-                            },
+                            }
                             "*w" => {
                                 current_type = ParsedType::Belt;
                                 slope_direction = Direction::Left;
-                            },
+                            }
                             _ => panic!("Unknown tile definition `{part}` in `{line}`"),
                         }
                     }
@@ -405,7 +405,10 @@ impl Global {
 
         for index in warp_indices.iter() {
             let count = warp_indices.iter().filter(|i| *i == index).count();
-            assert!(count == 2, "Invalid warp count for index {index}, must be 2, got {count}");
+            assert!(
+                count == 2,
+                "Invalid warp count for index {index}, must be 2, got {count}"
+            );
         }
 
         // Read an empty line before cards
@@ -518,7 +521,6 @@ impl Local {
             if self.ball == global.flag {
                 return true;
             }
-
         }
 
         if !self.try_slopes(global) {
@@ -559,7 +561,7 @@ impl Local {
             | Tile::Quicksand(height)
             | Tile::Water(height)
             | Tile::Spring(height)
-            | Tile::Warp(height, _) 
+            | Tile::Warp(height, _)
             | Tile::Belt(height, _) => height,
 
             Tile::Slope(height, slope_direction) => {
@@ -644,7 +646,7 @@ impl Local {
             | Tile::Angle(height, _)
             | Tile::Spring(height)
             | Tile::Warp(height, _)
-            | Tile::Sand(height) 
+            | Tile::Sand(height)
             | Tile::Belt(height, _) => {
                 // On the same level, just move
                 if height == current_height {
