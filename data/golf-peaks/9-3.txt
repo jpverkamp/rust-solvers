@@ -1,7 +1,7 @@
 7x7
 0,ice   0,icetl 0,icetr 0,icetl 0,ice   0,ice   0,flag
 0,icetl 0,icebr 0,icebl 0,icebr 0,ice   0,icebl 0,icetr
-0,icebl 0,icetr 0,icetr 0,icetr 0,ice   0,ice   0,ice
+0,icebl 0,icetr 0,icetl 0,icetr 0,ice   0,ice   0,ice
 0,icetl 0,icebr 0,ice   0,ball  0,ice   0,ice   0,icebr
 0,ice   0,ice   0,ice   0,ice   0,icebr 0,icebl 0,icetr
 0,ice   0,ice   0,ice   0,icebl 0,icetr 0,icetl 0,icebr

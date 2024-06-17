@@ -620,6 +620,7 @@ impl Local {
         match current_tile {
             Tile::Angle(height, a_type)
             | Tile::IceAngle(height, a_type) => {
+
                 if height == current_height {
                     if let Some(new_direction) = a_type.try_reflect(direction) {
                         self.last_move = new_direction;
@@ -684,7 +685,25 @@ impl Local {
         }
 
         // Normal flat tile (or equivalent, like quicksand or springs)
-        // Angles here mean that they're at a different height, so treated as a wall or fallen onto
+        // Angles here mean that we're not bouncing off the, treat as a flat one higher
+        if let Tile::Angle(height, a_type) | Tile::IceAngle(height, a_type) = next_tile {
+            let is_high_side = match (direction, a_type) {
+                (Direction::Up, AngleType::TopLeft)
+                | (Direction::Up, AngleType::TopRight)
+                | (Direction::Down, AngleType::BottomLeft)
+                | (Direction::Down, AngleType::BottomRight)
+                | (Direction::Right, AngleType::TopRight)
+                | (Direction::Right, AngleType::BottomRight)
+                | (Direction::Left, AngleType::TopLeft)
+                | (Direction::Left, AngleType::BottomLeft) => false,
+                _ => true,
+            };
+
+            if is_high_side {
+                next_tile = Tile::Flat(height + 1);
+            }
+        }
+
         match next_tile {
             Tile::Flat(height)
             | Tile::Quicksand(height)
@@ -1167,7 +1186,7 @@ mod test_solutions {
                 let solver_global = global.clone();
                 let solver_local = local.clone();
 
-                thread::spawn(move || {
+                let _ = thread::Builder::new().name(format!("{:?}", path)).spawn(move || {
                     let solution = solve(solver_global, solver_local);
                     match tx.send(solution) {
                         Ok(_) => {}
