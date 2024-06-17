@@ -1,0 +1,13 @@
+8x8
+1,*e    0,ice   1,*s    0,ice   1,*s    0,ice   1,*e    0,flag
+0,ice   1,*e    0,ice   1,*e    0,ice   1,*s    0,ice   1,*n
+1,*e    0,ice   1,*w    0,ice   1,*n    0,ice   1,*w    0,ice
+0,ice   1,*w    0,ice   1,*n    0,ice   1,*w    0,ice   1,*w
+1,*e    0,ice   1,*n    0,ice   1,*s    0,ice   1,*e    0,ice
+0,ice   1,*n    0,ice   1,*w    0,ice   1,*w    0,ice   1,*n
+1,*n    0,ice   1,*w    0,ice   1,*n    0,ice   1,*s    0,ice
+0,ball  1,*n    0,ice   1,*n    0,ice   1,*s    0,ice   1,*w
+
+1/ 1/ 2/ 2/ 3/ 1/1-
+
+1/↗ 1/1-↗ 2/↗ 1/↗ 2/↘ 3/↘

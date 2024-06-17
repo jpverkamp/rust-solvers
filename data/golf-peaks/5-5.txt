@@ -1,0 +1,12 @@
+5x7
+x       0,water 1,flag  0,water x
+2,right 1,right 0       1       2
+x       x       x       x       x
+0,sand  x       0       x       0,boing
+x       x       x       x       x
+0       0,water 0       0,water 0,sand
+x       0,water 0,ball  0,water x
+
+1- 2- 1/ 2/ 2/2-
+
+1-↗ 2/↘ 2/2-↗ 2-↖ 1/↗

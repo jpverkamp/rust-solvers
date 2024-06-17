@@ -1,0 +1,11 @@
+5x5
+2       2       0       2,right 1,flag
+2,down  1,sand  x       0       2,up
+1,down  x       1,sand  x       0
+0,quick 0,quick x       1,sand  1
+0,ball  0,quick 1,left  1       2
+
+1- 1/1- 1/2- 2/1-
+
+1/2-↘ 1-↗ 2/1-↗ 1/1-↗
+1/2-↘ 1-↗ 2/1-↗ 1/1-↘

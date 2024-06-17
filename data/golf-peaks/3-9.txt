@@ -1,0 +1,13 @@
+7x7
+0,sand  x       0,/tl   0       x       0       0,flag
+0,sand  x       0       x       x       x       0
+x       x       x       0,sand  0,sand  x       x
+0,sand  x       0       x       0       0       0,sand
+0       x       0,sand  0,sand  x       0,sand  0,/br
+x       x       x       x       x       x       x
+0,ball  x       0,sand  0       x       0       0
+
+2/ 2/1- 2/1- 2/2-
+
+2/1-↗ 2/↘ 2/2-↗ 2/1-↘
+2/1-↗ 2/↘ 2/2-↘ 2/1-↗

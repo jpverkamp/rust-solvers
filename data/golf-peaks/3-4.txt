@@ -1,0 +1,10 @@
+5x5
+x       x       x       2,/tl   2,flag
+x       2       1,sand  0       2
+x       1,sand  1       1,sand  x
+2,/tl   0,ball  1,sand  2       x
+2,/bl   2       x       x       x
+
+1/2- 2/1- 2/2-
+
+1/2-↗ 2/2-↘ 2/1-↗

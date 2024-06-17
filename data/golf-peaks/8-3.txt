@@ -1,0 +1,14 @@
+8x8
+7,ball  7,down  7,down  7,down  7,down  7,down  7,down  7,down
+7,right 6,*s    6,*w    6,*s    6,*e    6,down  6,*s    6,*w
+7,right 6,*s    5,*s    5,*w    6,*e    6,*s    5,*e    5,right
+7,right 6,*s    5,*e    4,*e    4,down  4,*e    4,down  4,*e
+7,right 6,*e    5,right 4,*s    3,*e    3,down  3,*e    3,down
+7,right 6,right 5,*e    4,*e    3,*s    2,*e    2,*s    2,*e
+7,right 6,*s    5,*n    4,*s    3,right 2,*s    1,*s    1,*w
+7,right 6,down  5,right 4,*s    3,*s    2,down  1,*e    0,flag
+
+1/ 2/ 3/ 4/ 5/ 6/ 7/
+
+3/↘
+# :D

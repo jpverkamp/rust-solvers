@@ -1,0 +1,12 @@
+7x7
+0,flag  0,boing x       0,boing x       0,boing x
+0,boing x       0,boing 0,boing 0,boing 0,boing 0,boing
+x       0,boing 0,boing x       0,boing 0,boing 0,boing
+0,boing 0,boing 0,boing 0,boing x       0,boing x
+0,boing x       0,boing x       0,boing 0,boing 0,boing
+0,boing 0,boing 0,boing 0,boing 0,boing 0,boing 0,boing
+x       0,boing 0,boing 0,boing x       0,boing 0,ball
+
+1- 2- 2- 3- 4- 4-
+
+4-↖ 3-↗ 2-↖ 1-↙ 4-↗

@@ -1,0 +1,14 @@
+9x9
+0,flag  5,left  3       2,*e    0       1,left  2,left  3,warp0 x
+5,up    4,warp0 3       2,*e    0,ice   1,left  2,left  3,/bl   3,warp1
+3       3       3,ice   2,*e    0       1,left  1,icetr 2,down  2,down
+2,*s    2,*s    2,*s    2,ice   2,*e    2,*s    1,down  1,down  1,down
+0       0,ice   0       2,*s    1,ball  2,*e    0       0,ice   0,ice
+1,up    1,up    1,up    2,*e    2,*s    2       1,up    1,up    1,up
+2,up    2,up    1,icebl 1,right 0       1,left  1       2,*w    2,*n
+2       3,warp2 2,right 1,right 0,ice   1,left  2,*n    3,/tl   3,warp1
+x       2       2,right 1       0,ice   1       2,*w    3,warp2 x
+
+1- 1- 2- 2- 1/ 1/ 1/1- 1/1- 1/2-
+
+1/↗ 2-↙ 1/1-↙ 1-↖ 1/2-↖ 1/1-↗ 1-↗ 2-↖ 1/↗

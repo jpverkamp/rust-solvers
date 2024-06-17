@@ -1,0 +1,14 @@
+8x8
+0,ice   1,ice   0,sand  1,sand  0,ice   1,ice   0,sand  1,ball
+1,ice   0,ice   1,sand  0,sand  1,ice   0,ice   1,sand  0,sand
+0,sand  1,sand  0,ice   1,ice   0,sand  1,sand  0,ice   1,ice
+1,sand  0,sand  1,ice   0,ice   1,sand  0,sand  1,ice   0,ice
+0,ice   1,ice   0,sand  1,sand  0,ice   1,ice   0,sand  1,sand
+1,ice   0,ice   1,sand  0,sand  1,ice   0,ice   1,sand  0,sand
+0,sand  1,sand  0,ice   1,ice   0,sand  1,sand  0,ice   1,ice
+0,flag  0,sand  1,ice   0,ice   1,sand  0,sand  1,ice   0,ice
+
+1/ 1/ 1/ 2/ 2/ 2/ 1/1-
+
+2/↙ 1/1-↖ 1/↙ 1/↙ 2/↖ 2/↖ 1/↙
+2/↖ 1/↙ 1/1-↖ 1/↙ 2/↙ 2/↖ 1/↙

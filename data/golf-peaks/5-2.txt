@@ -1,0 +1,10 @@
+4x4
+3,flag  2,boing 1       0,boing
+2,boing 1       0,boing 0
+1       0,boing 0       0,boing
+0,boing 0       0,boing 0,ball
+
+1/ 1/1- 1/2-
+
+1/1-↗ 1/2-↖ 1/↗
+1/2-↗ 1/1-↖ 1/↖

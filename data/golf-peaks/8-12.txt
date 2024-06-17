@@ -1,0 +1,16 @@
+9x9
+0,flag  0,*s    0,warp0 1       0       1,up    1,*s    1       0,warp0
+0,*w    0,*w    1,*w    1,quick 1,quick 2,up    1,quick 0,quick 0
+1       1,quick 2,up    1,quick 2,left  2       2       1,quick 0
+1,*w    2,left  2       2       3,*n    2       1,*e    1,*e    1,*n
+0       1,quick 2,down  3,*w    3,ball  3,*e    2,quick 1,quick 0,boing
+1       1,quick 1,quick 2       3,*s    2,quick 2,quick 2,right 1,*s
+0,*s    1,left  2,left  2,*s    2,right 1       2,down  1       1,*e
+0,*s    0,quick 1,quick 2,down  1,quick 1,quick 1,down  0,*s    1
+0,warp1 1       1       1,*w    0,boing 1       0,*s    0       0,warp1
+
+1- 2- 3- 1/ 3/ 1/4-
+
+1/↙ 3/↖ 1/4-↗ 2-↗ 3-↘
+1-↙ 3/↗ 1/↘ 2-↗ 3-↘
+1/↙ 3/↗ 1-↘ 2-↗ 3-↘

@@ -1,0 +1,12 @@
+6x6
+0,ball  0,/tr   1       1       0       1
+0,/bl   0,sand  0,sand  0,water 0,water 0
+1       0,sand  0,sand  0,water 0,water 1
+1       0,water 0,water 0,sand  0,sand  1
+0       0,water 0,water 0,sand  0,sand  0
+1       0       1       1       0       0,flag
+
+2- 3/ 1/2- 2/2-
+
+2-↙ 1/2-↘ 3/↘ 2/2-↙
+2-↙ 1/2-↙ 3/↙ 2/2-↘

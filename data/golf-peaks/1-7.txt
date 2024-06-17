@@ -1,0 +1,8 @@
+4x3
+2,flag  2,right 1   1
+x       x       x   1,down
+x       x       x   0,ball
+
+2- 2- 2-
+
+2-↗ 2-↖ 2-↖

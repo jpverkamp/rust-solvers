@@ -1,0 +1,11 @@
+6x6
+x       x       1,/tl   1,right 0       0,/tr
+x       x       1,down  0,water 0,water 0
+1,/tl   1,right 0,/br   0,water 0,water 0
+1,down  0,water 0,water 0,water 0,water 0
+0       0,water 0,water 0,water 0,water 0,boing
+0,/bl   0       0       0       0,ball  1,flag
+
+3- 4- 5- 6- 
+
+3-↖ 5-↖ 6-↗ 4-↙

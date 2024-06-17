@@ -1,0 +1,11 @@
+5x5
+1,warp0 0,water 0,warp1 0,water 0,warp2
+1,down  0       1,up    0       0
+0,warp2 1,left  1,flag  1,right 0,warp3
+0       0       1,down  0,ball  1,/tr
+0,warp3 0       0,warp1 0,/bl   0,warp0
+
+1- 2- 1/2- 2/2-
+
+2-↙ 2/2-↙ 1-↘ 1/2-↖
+2-↙ 2/2-↘ 1/2-↖

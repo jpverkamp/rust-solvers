@@ -1,0 +1,9 @@
+4x4
+0,quick 0,sand  0,quick 0,flag
+0,sand  0,quick 0,sand  0,quick
+0,quick 0,sand  0,quick 0,sand
+0,ball  0,quick 0,sand  0,/br
+
+2- 1/1- 1/2-
+
+2-↘ 1/2-↘ 1/1-↗

@@ -1,0 +1,12 @@
+7x7
+3,/tl   3,right 2,/tr   2       2,right 1,right 0,flag
+3,down  x       x       2       x       x       1,up
+2,/bl   x       x       2,/br   x       x       2,up
+2       3,left  3       2       3       3,right 2
+3,up    x       x       2,/tl   x       x       2,/tr
+4,up    x       x       2       x       x       3,up
+4,ball  4,right 3,right 2       2,/bl   3,left  3,/br
+
+1- 1- 2- 2/1-
+
+1-↗ 2-↘ 2/1-↘ 1-↗

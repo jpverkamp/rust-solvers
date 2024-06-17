@@ -1,0 +1,13 @@
+8x8
+x       2,down  2,down  2,down  2,down  2,down  2,right 1,flag
+2,right 0,ice   1,ice   1,ice   0,ice   1,ice   1,ice   2,up
+2,right 0,ice   0,ice   1,ice   1,ice   1,ice   0,ice   2,left
+2,right 1,ice   1,ice   1,ice   1,ice   1,ice   0,ice   2,left
+2,right 0,ice   1,ice   0,ice   0,ice   1,ice   1,ice   2,left
+2,right 0,ice   1,ice   1,ice   1,ice   0,ice   0,ice   2,left
+2,right 1,ice   0,ice   0,ice   1,ice   0,ice   1,ice   2,left
+3,ball  2,up    2,up    2,up    2,up    2,up    2,up    x
+
+2- 3- 1/ 1/ 2/
+
+3-↗ 2-↘ 1/↗ 1/↘ 2/↗

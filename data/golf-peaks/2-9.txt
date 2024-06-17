@@ -1,0 +1,10 @@
+5x5
+0,/tl   0       0       x       0
+0       x       1,up    x       x
+0       1,left  1,flag  1,right 0
+x       x       1,down  x       0
+0,ball  x       0       0       0,/br
+
+3- 2/ 3/
+
+3/↗ 3-↗ 2/↙

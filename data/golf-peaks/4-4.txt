@@ -1,0 +1,10 @@
+5x5
+0,flag  0,sand  0       0       1
+0       0       0       1,up    1,water
+0,/bl   0       0       1,water 1,water
+1       1,up    1,water 1       1
+1       1,water 1,water 1       1,ball
+
+1- 2- 2/ 1/2-
+
+1-↗ 2-↖ 2/↖ 1/2-↖

@@ -1,0 +1,14 @@
+9x9
+3,warp  x       1,boing x       2,sand  x       1,boing x       2,flag
+x       0       0       0       0       0       0       0       x
+1,boing 0       2,ice   1,down  2,sand  x       3,ice   x       1,boing
+x       0       1,right 0       0       0,ice   0       0       x
+2,sand  0       2,sand  1       2,boing x       2,sand  x       2,sand
+x       0       x       0,ice   x       0       0       0       x
+1,boing 0       2,ice   0       1,sand  0       2,ice   x       1,boing
+x       0       x       0       x       0       x       0       x
+2,ball  x       1,boing x       2,sand  x       2,boing x       2,warp
+
+2- 1/ 2/ 2/ 4/ 2/2-
+
+2/2-↗ 2/↘ 2/↗ 2-↘ 1/↗ 4/↘

@@ -1,0 +1,15 @@
+7x7
+0,/tl   0       x       0       x       0       0,/tr
+0       1,water 1       1,up    1,flag  1,water 0
+x       1       2,sand  2       2,sand  1       x
+1       2,left  2       0,boing 2       2,right 1
+x       1       2,sand  2       2,sand  1       x
+0       1,water 1       1,down    1       1,water 0
+0,/bl   0,ball  x       0       x       0       0,/br
+
+2- 2/ 1/1- 2/1- 2/1-
+
+2/1-↗ 1/1-↗ 2-↘ 2/↗ 2/1-↘
+2/↗ 2/1-↘ 2/1-↗ 1/1-↗
+2/↘ 2/1-↗ 2-↖ 2/1-↗
+2/↗ 2/1-↗ 2/1-↘ 1/1-↗
