@@ -564,8 +564,11 @@ impl Local {
         let current_tile = global.tile_at(self.ball);
 
         // If we're on a flat/safe tile, mark this as the last safe spot
-        if let Tile::Flat(_) | Tile::Angle(_, _) | Tile::Sand(_) | Tile::Spring(_) = current_tile {
-            self.last_safe = self.ball;
+        if let Tile::Flat(_) | Tile::Angle(_, _) | Tile::Sand(_) | Tile::Spring(_) | Tile::Ice(_) = current_tile {
+            // Flags are apparently not safe, this comes up in 9-9
+            if global.flag != self.ball {
+                self.last_safe = self.ball;
+            }
         }
 
         // No more moving to do, we're done
