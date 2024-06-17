@@ -1,0 +1,13 @@
+8x8
+0,icetl 0       0,icebl 0       0,icetl 0       0,icetl 0,flag
+0       0,icebr 0       0,icebl 0       0,icetr 0       0,icetr
+0,icebl 0       0,icetl 0       0,icetl 0       0,icetl 0       
+0       0,icetl 0       0,icebr 0       0,icetr 0       0,icebl
+0,icebl 0       0,icebl 0       0,icebr 0       0,icebr 0       
+0       0,icebr 0       0,icebl 0       0,icetr 0       0,icebl
+0,icetl 0       0,icetr 0       0,icetl 0       0,icebl 0       
+0,ball  0,icetl 0       0,icebl 0       0,icebr 0       0,icebr
+
+1- 1- 2- 3- 5- 1/ 1/
+
+1-↗ 1/↗ 1-↗ 5-↙ 1/↘ 3-↗ 2-↗

@@ -1,0 +1,12 @@
+7x7
+4,ice   3,ice   1       1       0       0,warp  0,quick
+3,ice   2,icetl 1,*w    0       0,*s    0       0
+1,icetl 1,ice   0,*s    0,*w    0,*w    0       0
+0,quick 0       0       3,warp  0,*n    4       0,flag
+0,water 0,quick 1       2,down  0,*n    1       0
+0,water 1       1       1,down  1       0,quick 1
+0,ball  1,*e    1,*e    1,*s    0       1       0,quick
+
+1- 2- 3- 1/1- 2/2- 2/3-
+
+2/3-↘ 1/1-↗ 1-↖ 2/2-↗ 3-↘ 2-↙
