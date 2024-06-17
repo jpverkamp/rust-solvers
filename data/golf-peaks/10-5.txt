@@ -1,0 +1,14 @@
+9x9
+x       x       1,ice   1,icetl 1,ice   1,icetr x       x       x
+x       x       1,ice   1,*n    1,icetr 1,ice   1       1,/tr   x
+2       1,ice   0       1,*n    1,ice   1,ice   1,*s    1       1,/tr
+2       1,ice   1,ice   1,*n    1,icebl 1,icebr 1,*s    1,*n    1
+1,*e    1,*e    1,*e    0       1,*e    1,*s    1,*e    1,*n    0,flag
+2       1,*w    1,*s    1,*s    1,icetr 1,*e    1,*e    1,*s    1,*e
+2,ball  0       1,*s    1,*s    1,ice   1,ice   1,ice   1,ice   1,ice
+x       1,*n    1,*w    1,*s    1,ice   1,*e    1,*s    x       x
+x       x       x       1,icebl 1,icebr 1,*w    1,*w    x       x
+
+1- 2- 5- 1/ 2/ 1/1-
+
+1/↗ 2/↗ 1-↗ 2-↘ 1/1-↘ 5-↘

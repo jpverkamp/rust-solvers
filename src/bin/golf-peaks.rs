@@ -235,6 +235,7 @@ struct Local {
     cards: Vec<Card>,
     last_safe: Point,
     last_move: Direction,
+    slide_loop_cache: Vec<(Point, Direction)>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -474,6 +475,7 @@ impl Global {
                 cards,
                 last_safe: ball.expect("No ball in map"),
                 last_move: Direction::Up,
+                slide_loop_cache: Vec::new(),
             },
         ))
     }
@@ -499,6 +501,11 @@ impl Local {
         let mut direction = direction;
         log::debug!("try_card({:?}, {card:?}, {direction:?})", self.ball);
 
+        // Keep a cache of moves we've seen on the same card while sliding
+        // If we see the same move again, we're in a loop and should stop
+        self.slide_loop_cache.clear();
+
+        // Track bouncing within a card, this is used for a jump that lands on a spring
         let mut bouncing = false;
 
         for card_step in card.0.iter() {
@@ -802,7 +809,14 @@ impl Local {
         // If we're on ice, continue to slide in that direction until it changes
         // This is if + while to deal with the warp at the end of ice case
         if is_ice(global.tile_at(self.ball)) {
+            // Keep sliding until we hit something that isn't ice
             while is_ice(global.tile_at(self.ball)) {
+                // Update/check slide loop check
+                if self.slide_loop_cache.contains(&(self.ball, self.last_move)) {
+                    return false;
+                }
+                self.slide_loop_cache.push((self.ball, self.last_move));
+
                 let start_position = self.ball;
                 let success = self.try_move(global, self.last_move, 1);
                 
@@ -822,6 +836,13 @@ impl Local {
 
         // Slopes apply a single tile move than recur
         if let Tile::Slope(_, slope_direction) = global.tile_at(self.ball) {
+            // Update/check slide loop check
+            if self.slide_loop_cache.contains(&(self.ball, slope_direction)) {
+                return false;
+            }
+            self.slide_loop_cache.push((self.ball, slope_direction));
+
+            // Try to slide down the slope
             if !self.try_move(global, slope_direction, 1) {
                 return false;
             }
@@ -832,6 +853,13 @@ impl Local {
 
         // Same for belts
         if let Tile::Belt(_, belt_direction) = global.tile_at(self.ball) {
+            // Update/check slide loop check
+            if self.slide_loop_cache.contains(&(self.ball, belt_direction)) {
+                return false;
+            }
+            self.slide_loop_cache.push((self.ball, belt_direction));
+
+            // Try to get pushed by the belt
             if !self.try_move(global, belt_direction, 1) {
                 return false;
             }
