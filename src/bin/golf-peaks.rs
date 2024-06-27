@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use std::io::{BufRead, Read};
 
-use solver::{Solver, State, direction::Direction, point::Point};
+use solver::{Solver, State, Direction, Point};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum AngleType {

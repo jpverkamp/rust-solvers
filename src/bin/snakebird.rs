@@ -1,11 +1,7 @@
 use anyhow::{anyhow, Result};
 use fxhash::FxHashMap;
-use std::{
-    io::{BufRead, Read},
-    ops::{Add, Sub},
-};
-
-use solver::{Solver, State};
+use std::io::{BufRead, Read};
+use solver::{Solver, State, Point, Direction};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum Tile {
@@ -162,40 +158,6 @@ impl Global {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-struct Point {
-    x: isize,
-    y: isize,
-}
-
-impl Point {
-    fn manhattan_distance(&self, other: Point) -> isize {
-        (self.x - other.x).abs() + (self.y - other.y).abs()
-    }
-}
-
-impl Add<Point> for Point {
-    type Output = Point;
-
-    fn add(self, other: Point) -> Point {
-        Point {
-            x: self.x + other.x,
-            y: self.y + other.y,
-        }
-    }
-}
-
-impl Sub<Point> for Point {
-    type Output = Point;
-
-    fn sub(self, other: Point) -> Point {
-        Point {
-            x: self.x - other.x,
-            y: self.y - other.y,
-        }
-    }
-}
-
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Snake {
     head: char,
@@ -207,39 +169,6 @@ struct Snake {
 struct Local {
     snakes: Vec<Snake>,
     fruit: Vec<Point>,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
-impl Add<Direction> for Point {
-    type Output = Point;
-
-    fn add(self, direction: Direction) -> Point {
-        match direction {
-            Direction::Up => Point {
-                x: self.x,
-                y: self.y - 1,
-            },
-            Direction::Down => Point {
-                x: self.x,
-                y: self.y + 1,
-            },
-            Direction::Left => Point {
-                x: self.x - 1,
-                y: self.y,
-            },
-            Direction::Right => Point {
-                x: self.x + 1,
-                y: self.y,
-            },
-        }
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -257,7 +186,7 @@ impl Local {
         }
 
         let head = self.snakes[index].points.first().unwrap().clone();
-        let new_head = head + direction;
+        let new_head = head + direction.into();
 
         // Cannot move into a wall
         if global.tile(new_head) == Tile::Wall {
@@ -366,7 +295,7 @@ impl Local {
                         self.snakes[other_index]
                             .points
                             .iter()
-                            .map(|p| *p + direction),
+                            .map(|p| *p + direction.into()),
                     );
 
                     continue 'daisies_remain;
@@ -395,7 +324,7 @@ impl Local {
         // If we have snakes to push, move them all
         for snake_index in pushing_indexes.iter() {
             for point in self.snakes[*snake_index].points.iter_mut() {
-                *point = *point + direction;
+                *point = *point + direction.into();
             }
         }
 
@@ -440,7 +369,7 @@ impl Local {
                     if self.snakes[index]
                         .points
                         .iter()
-                        .any(|point| global.tile(*point + Direction::Down) == Tile::Wall)
+                        .any(|point| global.tile(*point + Direction::Down.into()) == Tile::Wall)
                     {
                         supported_indexes.push(index);
                         continue 'finding_support;
@@ -450,7 +379,7 @@ impl Local {
                     if self.snakes[index]
                         .points
                         .iter()
-                        .any(|point| self.fruit.contains(&(*point + Direction::Down)))
+                        .any(|point| self.fruit.contains(&(*point + Direction::Down.into())))
                     {
                         supported_indexes.push(index);
                         continue 'finding_support;
@@ -461,7 +390,7 @@ impl Local {
                         if self.snakes[index]
                             .points
                             .iter()
-                            .any(|point| global.tile(*point + Direction::Down) == Tile::Spike)
+                            .any(|point| global.tile(*point + Direction::Down.into()) == Tile::Spike)
                         {
                             supported_indexes.push(index);
                             continue 'finding_support;
@@ -473,7 +402,7 @@ impl Local {
                         if self.snakes[index].points.iter().any(|point| {
                             self.snakes[*other_index]
                                 .points
-                                .contains(&(*point + Direction::Down))
+                                .contains(&(*point + Direction::Down.into()))
                         }) {
                             supported_indexes.push(index);
                             continue 'finding_support;
@@ -501,7 +430,7 @@ impl Local {
                     .collect::<Vec<_>>();
 
                 for point in self.snakes[index].points.iter_mut() {
-                    *point = *point + Direction::Down;
+                    *point = *point + Direction::Down.into();
                 }
 
                 // If a snake falls onto a portal, go through it

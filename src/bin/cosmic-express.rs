@@ -1,49 +1,9 @@
-use rand::seq::SliceRandom;
-use rand::thread_rng;
 use std::hash::Hash;
 use std::io;
 
 use serde::{Deserialize, Serialize};
 
-use solver::{Solver, State};
-
-#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, Serialize, Deserialize)]
-struct Point {
-    x: i32,
-    y: i32,
-}
-
-impl Point {
-    fn neighbors(&self) -> Vec<Point> {
-        let mut points = vec![
-            Point {
-                x: self.x + 1,
-                y: self.y,
-            },
-            Point {
-                x: self.x,
-                y: self.y + 1,
-            },
-            Point {
-                x: self.x,
-                y: self.y - 1,
-            },
-            Point {
-                x: self.x - 1,
-                y: self.y,
-            },
-        ];
-
-        points.shuffle(&mut thread_rng());
-
-        return points;
-    }
-
-    fn is_neighbor(&self, other: &Point) -> bool {
-        self.x == other.x && (self.y - other.y).abs() == 1
-            || self.y == other.y && (self.x - other.x).abs() == 1
-    }
-}
+use solver::{Solver, State, Point};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 enum Color {
@@ -60,9 +20,9 @@ enum Entity {
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
 struct CosmicExpressGlobal {
-    width: i32,
-    height: i32,
-    length: i32,
+    width: isize,
+    height: isize,
+    length: isize,
 
     entrances: Vec<Point>,
     exits: Vec<Point>,
@@ -315,7 +275,7 @@ impl State<CosmicExpressGlobal, ()> for Path {
 
         for exit in global.exits.iter() {
             let d = (p.x - exit.x).abs() + (p.y - exit.y).abs();
-            min_d = min_d.min(d.into());
+            min_d = min_d.min(d.try_into().unwrap());
         }
 
         return min_d;

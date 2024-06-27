@@ -2,7 +2,7 @@ use std::io;
 use std::ops::Add;
 use std::ops::Sub;
 
-use solver::{Solver, State};
+use solver::{Solver, State, Point};
 
 const SINGLE_HORIZONTAL: char = '-';
 const SINGLE_VERTICAL: char = '|';
@@ -10,52 +10,6 @@ const DOUBLE_HORIZONTAL: char = '=';
 const DOUBLE_VERTICAL: char = '‖';
 const TRIPLE_HORIZONTAL: char = '≡';
 const TRIPLE_VERTICAL: char = '⦀';
-
-// A point in 2D space
-#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
-struct Point {
-    x: isize,
-    y: isize,
-}
-
-impl Add<Point> for Point {
-    type Output = Point;
-
-    fn add(self, rhs: Point) -> Self::Output {
-        Point {
-            x: self.x + rhs.x,
-            y: self.y + rhs.y,
-        }
-    }
-}
-
-impl Sub<Point> for Point {
-    type Output = Point;
-
-    fn sub(self, rhs: Point) -> Self::Output {
-        Point {
-            x: self.x - rhs.x,
-            y: self.y - rhs.y,
-        }
-    }
-}
-
-impl Into<Point> for (isize, isize) {
-    fn into(self) -> Point {
-        Point {
-            x: self.0,
-            y: self.1,
-        }
-    }
-}
-
-impl Point {
-    const ZERO: Point = Point { x: 0, y: 0 };
-
-    fn manhattan_distance(&self, other: Point) -> isize {
-        (self.x - other.x).abs() + (self.y - other.y).abs()
-    }
-}
 
 // Possible kinds of map modifiers
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
