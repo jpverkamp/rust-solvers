@@ -5,6 +5,9 @@ use std::fmt::Display;
 use std::hash::Hash;
 use std::time::Instant;
 
+pub mod point;
+pub mod direction;
+
 /// A trait for a state in a search problem
 ///
 /// `G` should store global state which is shared between all states and does not have to be cloned
