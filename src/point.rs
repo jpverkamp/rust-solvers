@@ -16,7 +16,7 @@ impl Point {
     }
     
     pub fn neighbors(&self) -> Vec<Point> {
-        let mut points = vec![
+        vec![
             Point {
                 x: self.x + 1,
                 y: self.y,
@@ -33,9 +33,7 @@ impl Point {
                 x: self.x - 1,
                 y: self.y,
             },
-        ];
-
-        return points;
+        ]
     }
 
     pub fn is_neighbor(&self, other: &Point) -> bool {
