@@ -1,7 +1,7 @@
 use std::fmt;
 use std::io;
 
-use solver::{Solver, State, Point};
+use solver::{Point, Solver, State};
 
 const MOVE_EMPTY_COST: i64 = 1;
 const MOVE_SNOW_COST: i64 = 1;
@@ -92,7 +92,7 @@ impl From<&str> for Map {
         let width = lines[0].len() as u8;
 
         let mut data = Vec::new();
-        let mut player = Point{x: 0, y: 0};
+        let mut player = Point { x: 0, y: 0 };
 
         let mut targets = Vec::new();
         let mut teleporters = Vec::new();
@@ -103,21 +103,33 @@ impl From<&str> for Map {
                     '-' => data.push(Empty),
                     '=' => {
                         data.push(Empty);
-                        targets.push(Point{x: x as isize, y: y as isize});
+                        targets.push(Point {
+                            x: x as isize,
+                            y: y as isize,
+                        });
                     }
                     '*' => data.push(Snow),
                     '+' => {
                         data.push(Snow);
-                        targets.push(Point{x: x as isize, y: y as isize});
+                        targets.push(Point {
+                            x: x as isize,
+                            y: y as isize,
+                        });
                     }
                     'X' => data.push(Wall),
                     '#' => {
                         data.push(Empty);
-                        player = Point{x: x as isize, y: y as isize};
+                        player = Point {
+                            x: x as isize,
+                            y: y as isize,
+                        };
                     }
                     'T' => {
                         data.push(Teleporter);
-                        teleporters.push(Point{x: x as isize, y: y as isize});
+                        teleporters.push(Point {
+                            x: x as isize,
+                            y: y as isize,
+                        });
                     }
                     _ => {
                         let value = c.to_digit(10).unwrap() as u8;
@@ -189,7 +201,10 @@ impl<G> State<G, Step> for Map {
 
         for y in 0..self.height {
             for x in 0..self.width {
-                match self.get(Point{x: x as isize, y: y as isize}) {
+                match self.get(Point {
+                    x: x as isize,
+                    y: y as isize,
+                }) {
                     Some(Snowman(any)) => {
                         small_balls += if (any as u8) & 1 != 0 { 1 } else { 0 };
                         medium_balls += if (any as u8) & 2 != 0 { 1 } else { 0 };
@@ -250,7 +265,10 @@ impl<G> State<G, Step> for Map {
         // Larges in a non-target corner are also bad
         for y in 0..self.height {
             for x in 0..self.width {
-                let (is_snowman, is_large) = match self.get(Point{x: x as isize, y: y as isize}) {
+                let (is_snowman, is_large) = match self.get(Point {
+                    x: x as isize,
+                    y: y as isize,
+                }) {
                     Some(Snowman(LargeMediumSmall | LargeMedium | Large)) => (true, true),
                     Some(Snowman(_)) => (true, false),
                     _ => (false, false),
@@ -259,20 +277,38 @@ impl<G> State<G, Step> for Map {
                     continue;
                 }
                 if is_large && self.targets.is_some() {
-                    if self
-                        .targets
-                        .as_ref()
-                        .unwrap()
-                        .contains(&Point{x: x as isize, y: y as isize})
-                    {
+                    if self.targets.as_ref().unwrap().contains(&Point {
+                        x: x as isize,
+                        y: y as isize,
+                    }) {
                         continue;
                     }
                 }
 
-                let north = self.get(Point{x: x as isize, y: y as isize - 1}).unwrap_or(Wall);
-                let south = self.get(Point{x: x as isize, y: y as isize + 1}).unwrap_or(Wall);
-                let east = self.get(Point{x: x as isize + 1, y: y as isize}).unwrap_or(Wall);
-                let west = self.get(Point{x: x as isize - 1, y: y as isize}).unwrap_or(Wall);
+                let north = self
+                    .get(Point {
+                        x: x as isize,
+                        y: y as isize - 1,
+                    })
+                    .unwrap_or(Wall);
+                let south = self
+                    .get(Point {
+                        x: x as isize,
+                        y: y as isize + 1,
+                    })
+                    .unwrap_or(Wall);
+                let east = self
+                    .get(Point {
+                        x: x as isize + 1,
+                        y: y as isize,
+                    })
+                    .unwrap_or(Wall);
+                let west = self
+                    .get(Point {
+                        x: x as isize - 1,
+                        y: y as isize,
+                    })
+                    .unwrap_or(Wall);
 
                 if !is_moveable(north) && !is_moveable(west) {
                     return false;
@@ -293,8 +329,14 @@ impl<G> State<G, Step> for Map {
         if let Some(targets) = &self.targets {
             for y in 0..self.height {
                 for x in 0..self.width {
-                    if let Some(Snowman(LargeMediumSmall)) = self.get(Point{x: x as isize, y: y as isize}) {
-                        if !targets.contains(&Point{x: x as isize, y: y as isize}) {
+                    if let Some(Snowman(LargeMediumSmall)) = self.get(Point {
+                        x: x as isize,
+                        y: y as isize,
+                    }) {
+                        if !targets.contains(&Point {
+                            x: x as isize,
+                            y: y as isize,
+                        }) {
                             return false;
                         }
                     }
@@ -313,7 +355,10 @@ impl<G> State<G, Step> for Map {
         // All snowmen are completely formed
         for y in 0..self.height {
             for x in 0..self.width {
-                match self.get(Point{x: x as isize, y: y as isize}) {
+                match self.get(Point {
+                    x: x as isize,
+                    y: y as isize,
+                }) {
                     Some(Snowman(LargeMediumSmall)) => continue,
                     Some(Snowman(_)) => return false,
                     _ => continue,
@@ -326,8 +371,14 @@ impl<G> State<G, Step> for Map {
         if let Some(targets) = &self.targets {
             for y in 0..self.height {
                 for x in 0..self.width {
-                    if let Some(Snowman(LargeMediumSmall)) = self.get(Point{x: x as isize, y: y as isize}) {
-                        if !targets.contains(&Point{x: x as isize, y: y as isize}) {
+                    if let Some(Snowman(LargeMediumSmall)) = self.get(Point {
+                        x: x as isize,
+                        y: y as isize,
+                    }) {
+                        if !targets.contains(&Point {
+                            x: x as isize,
+                            y: y as isize,
+                        }) {
                             return false;
                         }
                     }
@@ -346,10 +397,10 @@ impl<G> State<G, Step> for Map {
         let mut states = Vec::new();
 
         let moves = [
-            (North, Point{x: 0, y: -1}),
-            (South, Point{x: 0, y: 1}),
-            (East, Point{x: 1, y: 0}),
-            (West, Point{x: -1, y: 0}),
+            (North, Point { x: 0, y: -1 }),
+            (South, Point { x: 0, y: 1 }),
+            (East, Point { x: 1, y: 0 }),
+            (West, Point { x: -1, y: 0 }),
         ];
 
         for (step, delta) in moves.into_iter() {
@@ -541,7 +592,10 @@ impl<G> State<G, Step> for Map {
         let mut distance = (self.width as i8 + self.height as i8) as i64;
         for y in 0..self.height {
             for x in 0..self.width {
-                match self.get(Point{x: x as isize, y: y as isize}) {
+                match self.get(Point {
+                    x: x as isize,
+                    y: y as isize,
+                }) {
                     Some(Snowman(LargeMediumSmall)) => continue,
                     Some(Snowman(_)) => {
                         let dx = (self.player.x - (x as isize)).abs() as i64;
@@ -557,12 +611,18 @@ impl<G> State<G, Step> for Map {
         // Add the distance from each small/medium to the nearest available medium/large
         for y in 0..self.height {
             for x in 0..self.width {
-                match self.get(Point{x: x as isize, y: y as isize}) {
+                match self.get(Point {
+                    x: x as isize,
+                    y: y as isize,
+                }) {
                     Some(Snowman(Small)) => {
                         let mut distance = (self.width as i8 + self.height as i8) as i64;
                         for y2 in 0..self.height {
                             for x2 in 0..self.width {
-                                match self.get(Point{x: x2 as isize, y: y2 as isize}) {
+                                match self.get(Point {
+                                    x: x2 as isize,
+                                    y: y2 as isize,
+                                }) {
                                     Some(Snowman(Medium)) | Some(Snowman(LargeMedium)) => {
                                         let dx = (x as i8 - x2 as i8).abs() as i64;
                                         let dy = (y as i8 - y2 as i8).abs() as i64;
@@ -578,7 +638,10 @@ impl<G> State<G, Step> for Map {
                         let mut distance = (self.width as i8 + self.height as i8) as i64;
                         for y2 in 0..self.height {
                             for x2 in 0..self.width {
-                                match self.get(Point{x: x2 as isize, y: y2 as isize}) {
+                                match self.get(Point {
+                                    x: x2 as isize,
+                                    y: y2 as isize,
+                                }) {
                                     Some(Snowman(Large)) => {
                                         let dx = (x as i8 - x2 as i8).abs() as i64;
                                         let dy = (y as i8 - y2 as i8).abs() as i64;

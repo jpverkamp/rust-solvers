@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use std::io::{BufRead, Read};
 
-use solver::{Solver, State, Direction, Point};
+use solver::{Direction, Point, Solver, State};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum AngleType {
@@ -469,7 +469,9 @@ impl Local {
         let current_tile = global.tile_at(self.ball);
 
         // If we're on a flat/safe tile, mark this as the last safe spot
-        if let Tile::Flat(_) | Tile::Angle(_, _) | Tile::Sand(_) | Tile::Spring(_) | Tile::Ice(_) = current_tile {
+        if let Tile::Flat(_) | Tile::Angle(_, _) | Tile::Sand(_) | Tile::Spring(_) | Tile::Ice(_) =
+            current_tile
+        {
             // Flags are apparently not safe, this comes up in 9-9
             if global.flag != self.ball {
                 self.last_safe = self.ball;
@@ -526,9 +528,7 @@ impl Local {
         // When this recurs, we'll be moving 'out' of the tile so won't trigger it twice
         // If we're at a different height than the angle, treat it as flat
         match current_tile {
-            Tile::Angle(height, a_type)
-            | Tile::IceAngle(height, a_type) => {
-
+            Tile::Angle(height, a_type) | Tile::IceAngle(height, a_type) => {
                 if height == current_height {
                     if let Some(new_direction) = a_type.try_reflect(direction) {
                         self.last_move = new_direction;
@@ -620,7 +620,7 @@ impl Local {
             | Tile::Warp(height, _)
             | Tile::Sand(height)
             | Tile::Belt(height, _)
-            | Tile::Ice(height) 
+            | Tile::Ice(height)
             | Tile::IceAngle(height, _) => {
                 // On the same level, just move
                 if height == current_height {
@@ -695,7 +695,11 @@ impl Local {
             return false;
         }
 
-        log::debug!("try_slide({:?}) @ {:?}", self.ball, global.tile_at(self.ball));
+        log::debug!(
+            "try_slide({:?}) @ {:?}",
+            self.ball,
+            global.tile_at(self.ball)
+        );
 
         fn is_ice(tile: Tile) -> bool {
             match tile {
@@ -717,7 +721,7 @@ impl Local {
 
                 let start_position = self.ball;
                 let success = self.try_move(global, self.last_move, 1);
-                
+
                 // Fell off the map (most likely)
                 if !success {
                     return false;
@@ -735,7 +739,10 @@ impl Local {
         // Slopes apply a single tile move than recur
         if let Tile::Slope(_, slope_direction) = global.tile_at(self.ball) {
             // Update/check slide loop check
-            if self.slide_loop_cache.contains(&(self.ball, slope_direction)) {
+            if self
+                .slide_loop_cache
+                .contains(&(self.ball, slope_direction))
+            {
                 return false;
             }
             self.slide_loop_cache.push((self.ball, slope_direction));
@@ -878,8 +885,7 @@ impl State<Global, Step> for Local {
                     | Tile::Warp(height, _)
                     | Tile::Belt(height, _)
                     | Tile::Ice(height)
-                    | Tile::IceAngle(height, _)
-                    => {
+                    | Tile::IceAngle(height, _) => {
                         std::char::from_digit(height as u32, 10).unwrap()
                     }
                 });
@@ -1115,13 +1121,15 @@ mod test_solutions {
                 let solver_global = global.clone();
                 let solver_local = local.clone();
 
-                let _ = thread::Builder::new().name(format!("{:?}", path)).spawn(move || {
-                    let solution = solve(solver_global, solver_local);
-                    match tx.send(solution) {
-                        Ok(_) => {}
-                        Err(_) => {}
-                    } // I don't actually care if this succeeds, but need to consume it
-                });
+                let _ = thread::Builder::new()
+                    .name(format!("{:?}", path))
+                    .spawn(move || {
+                        let solution = solve(solver_global, solver_local);
+                        match tx.send(solution) {
+                            Ok(_) => {}
+                            Err(_) => {}
+                        } // I don't actually care if this succeeds, but need to consume it
+                    });
 
                 match rx.recv_timeout(timeout) {
                     Ok(solution) => {

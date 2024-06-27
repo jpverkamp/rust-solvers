@@ -3,7 +3,7 @@ use std::io;
 
 use serde::{Deserialize, Serialize};
 
-use solver::{Solver, State, Point};
+use solver::{Point, Solver, State};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize)]
 enum Color {

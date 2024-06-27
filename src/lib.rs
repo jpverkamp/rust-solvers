@@ -5,11 +5,11 @@ use std::fmt::Display;
 use std::hash::Hash;
 use std::time::Instant;
 
-pub mod point;
 pub mod direction;
+pub mod point;
 
-pub use point::Point;
 pub use direction::Direction;
+pub use point::Point;
 
 /// A trait for a state in a search problem
 ///

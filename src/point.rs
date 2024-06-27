@@ -1,5 +1,5 @@
-use std::ops::{Add, Mul, Sub};
 use serde::{Deserialize, Serialize};
+use std::ops::{Add, Mul, Sub};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord, Serialize, Deserialize)]
 pub struct Point {
@@ -14,7 +14,7 @@ impl Point {
     pub fn manhattan_distance(&self, other: Point) -> isize {
         (self.x - other.x).abs() + (self.y - other.y).abs()
     }
-    
+
     pub fn neighbors(&self) -> Vec<Point> {
         vec![
             Point {

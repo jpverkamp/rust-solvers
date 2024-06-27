@@ -1,7 +1,7 @@
 use anyhow::{anyhow, Result};
 use fxhash::FxHashMap;
+use solver::{Direction, Point, Solver, State};
 use std::io::{BufRead, Read};
-use solver::{Solver, State, Point, Direction};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum Tile {
@@ -387,11 +387,9 @@ impl Local {
 
                     // Statues are supported by spikes
                     if self.snakes[index].is_statue {
-                        if self.snakes[index]
-                            .points
-                            .iter()
-                            .any(|point| global.tile(*point + Direction::Down.into()) == Tile::Spike)
-                        {
+                        if self.snakes[index].points.iter().any(|point| {
+                            global.tile(*point + Direction::Down.into()) == Tile::Spike
+                        }) {
                             supported_indexes.push(index);
                             continue 'finding_support;
                         }
