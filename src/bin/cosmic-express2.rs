@@ -68,8 +68,13 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
         // Flood fill from the current head, stopping at all walls and current path
         // If we can't reach all remaining aliens, houses, and the exit
         if *FLOODFILL_VALIDATOR {
+            let max_size = (g.width * g.height) as usize;
+
             let mut reachable = FxHashSet::default();
-            let mut to_check = vec![self.path.last().unwrap().clone()];
+reachable.reserve(max_size);
+
+            let mut to_check = Vec::with_capacity(max_size);
+            to_check.push(*self.path.last().unwrap());
 
             // All points current under a seat are reachable
             // This took a while to track down
@@ -110,6 +115,8 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
 
             // Expand all points by one: any alien or house *adjacent* to a reachable point is also reachable
             let mut expanded = FxHashSet::default();
+            expanded.reserve(max_size);
+
             for p in reachable.iter() {
                 expanded.insert(*p);
                 for neighbor in p.neighbors().into_iter() {
