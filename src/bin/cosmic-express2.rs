@@ -137,9 +137,7 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
     }
 
     fn is_solved(&self, g: &CosmicExpressGlobal) -> bool {
-        self.aliens.len() == 0
-            && self.houses.len() == 0
-            && self.path.last().unwrap() == &g.exit
+        self.aliens.len() == 0 && self.houses.len() == 0 && self.path.last().unwrap() == &g.exit
     }
 
     fn next_states(&self, g: &CosmicExpressGlobal) -> Option<Vec<(i64, (), Self)>> {
@@ -181,8 +179,7 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
 
                 // Full seats next to the correct house; drop it off
                 if let Some(seat_color) = seat_contents {
-                    for (house_index, (house_point, house_color)) in
-                        self.houses.iter().enumerate()
+                    for (house_index, (house_point, house_color)) in self.houses.iter().enumerate()
                     {
                         if seat_point.manhattan_distance(*house_point) == 1
                             && seat_color == *house_color
@@ -198,8 +195,7 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
                 // Empty seats next to an alien; pick it up
                 // TODO: Multiple loads are not possible
                 if seat_contents.is_none() {
-                    for (alien_index, (alien_point, alien_color)) in
-                        self.aliens.iter().enumerate()
+                    for (alien_index, (alien_point, alien_color)) in self.aliens.iter().enumerate()
                     {
                         if seat_point.manhattan_distance(*alien_point) == 1 {
                             // Goop: Green aliens apply goop to the seat and no one else will sit in those
@@ -289,11 +285,10 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
         for (p, c) in self.houses.iter() {
             output_chars[(p.y * output_width + p.x) as usize] = ('A' as u8 + *c as u8) as char;
         }
-        
+
         // Add entrance and exit(s) (overwrite path ends)
         output_chars[(g.entrance.y * output_width + g.entrance.x) as usize] = '[';
         output_chars[(g.exit.y * output_width + g.exit.x) as usize] = ']';
-        
 
         // Convert to a string
         let mut output = String::new();
@@ -317,13 +312,16 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
         if *HEURISTIC_NEAREST_HOUSE {
             // Distance from the path to the nearest remaining alien
             if let Some(current_point) = self.path.last() {
-                if let Some(distance) = self.aliens.iter().map(|(alien_point, _)| {
-                    alien_point.manhattan_distance(*current_point)
-                }).min() {
+                if let Some(distance) = self
+                    .aliens
+                    .iter()
+                    .map(|(alien_point, _)| alien_point.manhattan_distance(*current_point))
+                    .min()
+                {
                     heuristic += distance as i64;
                 }
             }
-                
+
             // Distance from each alien to the closest matching house
             for (alien_point, alien_color) in self.aliens.iter() {
                 let nearest_house = self
@@ -339,11 +337,7 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
             }
 
             // Also, distance to the exit
-            heuristic += self
-                .path
-                .last()
-                .unwrap()
-                .manhattan_distance(global.exit) as i64;
+            heuristic += self.path.last().unwrap().manhattan_distance(global.exit) as i64;
         }
 
         heuristic
