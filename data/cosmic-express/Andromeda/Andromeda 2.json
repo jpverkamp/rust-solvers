@@ -1,0 +1,15 @@
+{
+  "width": 8,
+  "height": 7,
+  "length": 1,
+
+  "entrances": [{ "x": 0, "y": 4 }],
+  "exits": [{ "x": 9, "y": 4 }],
+  "entities": [
+    [{ "x": 3, "y": 2 }, { "Alien": { "color": "Purple" } }],
+    [{ "x": 3, "y": 6 }, { "Alien": { "color": "Purple" } }],
+
+    [{ "x": 7, "y": 3 }, { "House": { "color": "Purple" } }],
+    [{ "x": 7, "y": 5 }, { "House": { "color": "Purple" } }]
+  ]
+}
