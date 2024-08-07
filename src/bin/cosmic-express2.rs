@@ -10,7 +10,6 @@ use solver::{Point, Solver, State};
 lazy_static! {
     static ref FLOODFILL_VALIDATOR: bool =
         std::env::var("COSMIC_EXPRESS_FLOODFILL_VALIDATOR").is_ok();
-
     static ref HEURISTIC_COUNT_ENTITIES: bool =
         std::env::var("COSMIC_EXPRESS_HEURISTIC_COUNT_ENTITIES").is_ok();
 }
@@ -19,6 +18,7 @@ lazy_static! {
 enum Color {
     Purple,
     Orange,
+    Green,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize)]
@@ -34,14 +34,34 @@ struct CosmicExpressGlobal {
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 struct CosmicExpressLocal {
+    // The path the train has taken so far
     path: Vec<Point>,
+
+    // The current seats of the train
+    // Seats contains the color of the alien in the seat
+    // Goop is a flag on if a seat has been 'gooped' by a green alien
     seats: Vec<Option<Color>>,
+    seat_goop: Vec<bool>,
+
+    // Remaining aliens that haven't been picked up / houses that haven't been delivered to
     aliens: Vec<(Point, Color)>,
     houses: Vec<(Point, Color)>,
 }
 
 impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
     fn is_valid(&self, g: &CosmicExpressGlobal) -> bool {
+        // Check goop, if we have no un-gooped seats and there are non-Green aliens left, it's invalid
+        if self.seat_goop.iter().all(|&b| b)
+            && self
+                .aliens
+                .iter()
+                .filter(|(_, c)| *c != Color::Green)
+                .count()
+                > 0
+        {
+            return false;
+        }
+
         if !*FLOODFILL_VALIDATOR {
             return true;
         }
@@ -181,6 +201,13 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
                             self.aliens.iter().enumerate()
                         {
                             if seat_point.manhattan_distance(*alien_point) == 1 {
+                                // Goop: Green aliens apply goop to the seat and no one else will sit in those
+                                if *alien_color == Color::Green {
+                                    new_local.seat_goop[seat_index] = true;
+                                } else if new_local.seat_goop[seat_index] {
+                                    continue;
+                                }
+
                                 new_local.aliens.remove(alien_index);
                                 new_local.seats[seat_index] = Some(*alien_color);
                                 break;
@@ -336,6 +363,7 @@ fn main() {
     };
 
     let seats = (0..definition.length).map(|_| None).collect();
+    let seat_goop = (0..definition.length).map(|_| false).collect();
 
     let aliens = definition
         .entities
@@ -364,6 +392,7 @@ fn main() {
     let local = CosmicExpressLocal {
         path: Vec::new(),
         seats,
+        seat_goop,
         aliens,
         houses,
     };
