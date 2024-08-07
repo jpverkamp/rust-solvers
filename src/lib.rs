@@ -1,6 +1,6 @@
 use core::fmt::Debug;
+use fxhash::FxHashMap;
 use priority_queue::PriorityQueue;
-use std::collections::HashMap;
 use std::fmt::Display;
 use std::hash::Hash;
 use std::time::Instant;
@@ -48,8 +48,8 @@ pub struct Solver<GlobalState, LocalState: State<GlobalState, Step>, Step> {
     // A* parameters
     solution: Option<LocalState>,
     to_check: PriorityQueue<LocalState, i64>,
-    steps: HashMap<LocalState, (Step, LocalState)>,
-    distances: HashMap<LocalState, i64>,
+    steps: FxHashMap<LocalState, (Step, LocalState)>,
+    distances: FxHashMap<LocalState, i64>,
 
     // Debug values
     states_checked: usize,
@@ -73,9 +73,9 @@ impl<GlobalState, LocalState: State<GlobalState, Step>, Step: Copy>
         let mut to_check = PriorityQueue::new();
         to_check.push(initial_state.clone(), 0);
 
-        let steps = HashMap::new();
+        let steps = FxHashMap::default();
 
-        let mut distances = HashMap::new();
+        let mut distances = FxHashMap::default();
         distances.insert(initial_state.clone(), 0);
 
         Solver {
