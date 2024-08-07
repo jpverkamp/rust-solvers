@@ -65,65 +65,74 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
             return false;
         }
 
-        if !*FLOODFILL_VALIDATOR {
-            return true;
-        }
-
         // Flood fill from the current head, stopping at all walls and current path
-        // If we can't reach all aliens, houses, and at least one exit, it's invalid
+        // If we can't reach all remaining aliens, houses, and the exit
+        if *FLOODFILL_VALIDATOR {
+            let mut reachable = FxHashSet::default();
+            let mut to_check = vec![self.path.last().unwrap().clone()];
 
-        let mut reachable = FxHashSet::default();
-        let mut to_check = vec![self.path.last().unwrap().clone()];
+            // All points current under a seat are reachable
+            // This took a while to track down
+            self.path
+                .iter()
+                .rev()
+                .take(1 + self.seats.len())
+                .for_each(|p| {
+                    reachable.insert(*p);
+                });
 
-        while let Some(p) = to_check.pop() {
-            if reachable.contains(&p) {
-                continue;
-            }
-            reachable.insert(p);
+            // Flood fill from the head of teh current path
+            while let Some(p) = to_check.pop() {
+                reachable.insert(p);
 
-            // Flood fill all empty points
-            for neighbor in p.neighbors().into_iter() {
-                if reachable.contains(&neighbor) || to_check.contains(&neighbor) {
-                    continue;
+                // Flood fill all empty points
+                for neighbor in p.neighbors().into_iter() {
+                    // Only check each point once
+                    if reachable.contains(&neighbor) || to_check.contains(&neighbor) {
+                        continue;
+                    }
+
+                    // Don't add points out of bounds (remember there's a border)
+                    if neighbor.x < 1
+                        || neighbor.y < 1
+                        || neighbor.x > g.width
+                        || neighbor.y > g.height
+                    {
+                        continue;
+                    }
+
+                    // Keep expanding empty points
+                    if !(g.walls.contains(&neighbor) || self.path.contains(&neighbor)) {
+                        to_check.push(neighbor);
+                    }
                 }
+            }
 
-                if neighbor.x < 1 || neighbor.y < 1 || neighbor.x > g.width || neighbor.y > g.height
-                {
-                    continue;
+            // Expand all points by one: any alien or house *adjacent* to a reachable point is also reachable
+            let mut expanded = FxHashSet::default();
+            for p in reachable.iter() {
+                expanded.insert(*p);
+                for neighbor in p.neighbors().into_iter() {
+                    expanded.insert(neighbor);
                 }
+            }
+            let reachable = expanded;
 
-                if g.walls.contains(&neighbor) || self.path.contains(&neighbor) {
-                    continue;
-                }
+            // All aliens and houses must be reachable
+            if self.aliens.iter().any(|(p, _)| !reachable.contains(p)) {
+                return false;
+            }
+            if self.houses.iter().any(|(p, _)| !reachable.contains(p)) {
+                return false;
+            }
 
-                to_check.push(neighbor);
+            // At least one exit must be reachable
+            if !reachable.contains(&g.exit) {
+                return false;
             }
         }
 
-        // Expand all points by one
-        let mut expanded = FxHashSet::default();
-        for p in reachable.iter() {
-            expanded.insert(*p);
-            for neighbor in p.neighbors().into_iter() {
-                expanded.insert(neighbor);
-            }
-        }
-        let reachable = expanded;
-
-        // All aliens and houses must be reachable
-        if self.aliens.iter().any(|(p, _)| !reachable.contains(p)) {
-            return false;
-        }
-
-        if self.houses.iter().any(|(p, _)| !reachable.contains(p)) {
-            return false;
-        }
-
-        // At least one exit must be reachable
-        if !reachable.contains(&g.exit) {
-            return false;
-        }
-
+        // All validators passed
         true
     }
 
