@@ -1,0 +1,20 @@
+{
+  "width": 11,
+  "height": 9,
+  "length": 1,
+
+  "entrances": [{ "x": 12, "y": 8 }],
+  "exits": [{ "x": 0, "y": 2 }],
+  "entities": [
+    [{ "x": 6, "y": 9 }, { "Alien": { "color": "Green" } }],
+    [{ "x": 6, "y": 1 }, { "House": { "color": "Green" } }],
+
+    [{ "x": 3, "y": 4 }, { "Alien": { "color": "Orange" } }],
+    [{ "x": 3, "y": 5 }, { "House": { "color": "Purple" } }],
+    [{ "x": 3, "y": 6 }, { "Alien": { "color": "Orange" } }],
+
+    [{ "x": 9, "y": 4 }, { "House": { "color": "Orange" } }],
+    [{ "x": 9, "y": 5 }, { "Alien": { "color": "Purple" } }],
+    [{ "x": 9, "y": 6 }, { "House": { "color": "Orange" } }]
+  ]
+}
