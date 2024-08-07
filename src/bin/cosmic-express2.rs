@@ -8,10 +8,13 @@ use serde::{Deserialize, Serialize};
 use solver::{Point, Solver, State};
 
 lazy_static! {
+    static ref DEBUG_PRINT: bool = std::env::var("COSMIC_EXPRESS_DEBUG_PRINT").is_ok();
     static ref FLOODFILL_VALIDATOR: bool =
         std::env::var("COSMIC_EXPRESS_FLOODFILL_VALIDATOR").is_ok();
     static ref HEURISTIC_COUNT_ENTITIES: bool =
         std::env::var("COSMIC_EXPRESS_HEURISTIC_COUNT_ENTITIES").is_ok();
+    static ref HEURISTIC_NEAREST_HOUSE: bool =
+        std::env::var("COSMIC_EXPRESS_HEURISTIC_NEAREST_HOUSE").is_ok();
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash)]
@@ -27,8 +30,8 @@ struct CosmicExpressGlobal {
     height: isize,
     length: isize,
 
-    entrances: Vec<Point>,
-    exits: Vec<Point>,
+    entrance: Point,
+    exit: Point,
     walls: Vec<Point>,
 }
 
@@ -117,7 +120,7 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
         }
 
         // At least one exit must be reachable
-        if !g.exits.iter().any(|p| reachable.contains(p)) {
+        if !reachable.contains(&g.exit) {
             return false;
         }
 
@@ -127,97 +130,85 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
     fn is_solved(&self, g: &CosmicExpressGlobal) -> bool {
         self.aliens.len() == 0
             && self.houses.len() == 0
-            && g.exits.contains(&self.path.last().unwrap())
+            && self.path.last().unwrap() == &g.exit
     }
 
     fn next_states(&self, g: &CosmicExpressGlobal) -> Option<Vec<(i64, (), Self)>> {
         let mut result = Vec::new();
 
-        // If we don't have a path yet, start with each entrance
-        if self.path.len() == 0 {
-            for entrance in g.entrances.iter() {
-                let mut new_local = self.clone();
-                new_local.path.push(*entrance);
-
-                result.push((1, (), new_local));
+        'neighbor: for p in self.path.last().unwrap().neighbors() {
+            // Validate that the next point is valid
+            // Cannot leave the bounds unless on entrance or exit
+            if !(g.entrance == p || g.exit == p)
+                && (p.x < 1 || p.y < 1 || p.x > g.width || p.y > g.height)
+            {
+                continue 'neighbor;
             }
-        }
-        // If we do have a path, expand the last node
-        else {
-            'neighbor: for p in self.path.last().unwrap().neighbors() {
-                // Validate that the next point is valid
-                // Cannot leave the bounds unless on entrance or exit
-                if !(g.entrances.contains(&p) || g.exits.contains(&p))
-                    && (p.x < 1 || p.y < 1 || p.x > g.width || p.y > g.height)
-                {
+
+            // Cannot move onto walls
+            if g.walls.contains(&p) {
+                continue 'neighbor;
+            }
+
+            // Cannot visit the same tile more than once
+            for p2 in self.path.iter() {
+                if &p == p2 {
                     continue 'neighbor;
                 }
+            }
 
-                // Cannot move onto walls
-                if g.walls.contains(&p) {
-                    continue 'neighbor;
+            // Assume we can move, create the new state
+            let mut new_local = self.clone();
+            new_local.path.push(p);
+
+            // Update each seat
+            for (seat_index, seat_point) in self.path.iter().rev().skip(1).enumerate() {
+                // If we're over the end of the seats, we're done
+                if seat_index >= new_local.seats.len() {
+                    break;
                 }
 
-                // Cannot visit the same tile more than once
-                for p2 in self.path.iter() {
-                    if &p == p2 {
-                        continue 'neighbor;
-                    }
-                }
+                let mut seat_contents = new_local.seats[seat_index];
 
-                // Assume we can move, create the new state
-                let mut new_local = self.clone();
-                new_local.path.push(p);
-
-                // Update each seat
-                for (seat_index, seat_point) in self.path.iter().rev().skip(1).enumerate() {
-                    // If we're over the end of the seats, we're done
-                    if seat_index >= new_local.seats.len() {
-                        break;
-                    }
-
-                    let mut seat_contents = new_local.seats[seat_index];
-
-                    // Full seats next to the correct house; drop it off
-                    if let Some(seat_color) = seat_contents {
-                        for (house_index, (house_point, house_color)) in
-                            self.houses.iter().enumerate()
+                // Full seats next to the correct house; drop it off
+                if let Some(seat_color) = seat_contents {
+                    for (house_index, (house_point, house_color)) in
+                        self.houses.iter().enumerate()
+                    {
+                        if seat_point.manhattan_distance(*house_point) == 1
+                            && seat_color == *house_color
                         {
-                            if seat_point.manhattan_distance(*house_point) == 1
-                                && seat_color == *house_color
-                            {
-                                new_local.houses.remove(house_index);
-                                new_local.seats[seat_index] = None;
-                                seat_contents = None;
-                                break;
-                            }
-                        }
-                    }
-
-                    // Empty seats next to an alien; pick it up
-                    // TODO: Multiple loads are not possible
-                    if seat_contents.is_none() {
-                        for (alien_index, (alien_point, alien_color)) in
-                            self.aliens.iter().enumerate()
-                        {
-                            if seat_point.manhattan_distance(*alien_point) == 1 {
-                                // Goop: Green aliens apply goop to the seat and no one else will sit in those
-                                if *alien_color == Color::Green {
-                                    new_local.seat_goop[seat_index] = true;
-                                } else if new_local.seat_goop[seat_index] {
-                                    continue;
-                                }
-
-                                new_local.aliens.remove(alien_index);
-                                new_local.seats[seat_index] = Some(*alien_color);
-                                break;
-                            }
+                            new_local.houses.remove(house_index);
+                            new_local.seats[seat_index] = None;
+                            seat_contents = None;
+                            break;
                         }
                     }
                 }
 
-                result.push((1, (), new_local));
+                // Empty seats next to an alien; pick it up
+                // TODO: Multiple loads are not possible
+                if seat_contents.is_none() {
+                    for (alien_index, (alien_point, alien_color)) in
+                        self.aliens.iter().enumerate()
+                    {
+                        if seat_point.manhattan_distance(*alien_point) == 1 {
+                            // Goop: Green aliens apply goop to the seat and no one else will sit in those
+                            if *alien_color == Color::Green {
+                                new_local.seat_goop[seat_index] = true;
+                            } else if new_local.seat_goop[seat_index] {
+                                continue;
+                            }
+
+                            new_local.aliens.remove(alien_index);
+                            new_local.seats[seat_index] = Some(*alien_color);
+                            break;
+                        }
+                    }
+                }
             }
+
+            result.push((1, (), new_local));
         }
 
         // We'll always have nodes, so always return
@@ -235,14 +226,6 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
             for x in 0..g.width {
                 output_chars[((y + 1) * output_width + x + 1) as usize] = '.';
             }
-        }
-
-        // Add entrance and exit(s)
-        for p in g.entrances.iter() {
-            output_chars[(p.y * output_width + p.x) as usize] = '[';
-        }
-        for p in g.exits.iter() {
-            output_chars[(p.y * output_width + p.x) as usize] = ']';
         }
 
         // Add path characters
@@ -297,6 +280,11 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
         for (p, c) in self.houses.iter() {
             output_chars[(p.y * output_width + p.x) as usize] = ('A' as u8 + *c as u8) as char;
         }
+        
+        // Add entrance and exit(s) (overwrite path ends)
+        output_chars[(g.entrance.y * output_width + g.entrance.x) as usize] = '[';
+        output_chars[(g.exit.y * output_width + g.exit.x) as usize] = ']';
+        
 
         // Convert to a string
         let mut output = String::new();
@@ -315,6 +303,38 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
         if *HEURISTIC_COUNT_ENTITIES {
             heuristic += ((self.aliens.len() + self.houses.len()) as isize
                 * global.width.max(global.height)) as i64;
+        }
+
+        if *HEURISTIC_NEAREST_HOUSE {
+            // Distance from the path to the nearest remaining alien
+            if let Some(current_point) = self.path.last() {
+                if let Some(distance) = self.aliens.iter().map(|(alien_point, _)| {
+                    alien_point.manhattan_distance(*current_point)
+                }).min() {
+                    heuristic += distance as i64;
+                }
+            }
+                
+            // Distance from each alien to the closest matching house
+            for (alien_point, alien_color) in self.aliens.iter() {
+                let nearest_house = self
+                    .houses
+                    .iter()
+                    .filter(|(_, house_color)| house_color == alien_color)
+                    .map(|(house_point, _)| alien_point.manhattan_distance(*house_point))
+                    .min();
+
+                if let Some(distance) = nearest_house {
+                    heuristic += distance as i64;
+                }
+            }
+
+            // Also, distance to the exit
+            heuristic += self
+                .path
+                .last()
+                .unwrap()
+                .manhattan_distance(global.exit) as i64;
         }
 
         heuristic
@@ -353,12 +373,15 @@ fn main() {
     // TODO: Entities should have an is_wall property or something
     let walls = definition.entities.iter().map(|(p, _)| *p).collect();
 
+    assert!(definition.entrances.len() == 1);
+    assert!(definition.exits.len() == 1);
+
     let global = CosmicExpressGlobal {
         width: definition.width,
         height: definition.height,
         length: definition.length,
-        entrances: definition.entrances,
-        exits: definition.exits,
+        entrance: *definition.entrances.first().unwrap(),
+        exit: *definition.exits.first().unwrap(),
         walls,
     };
 
@@ -390,7 +413,7 @@ fn main() {
         .collect();
 
     let local = CosmicExpressLocal {
-        path: Vec::new(),
+        path: vec![global.entrance],
         seats,
         seat_goop,
         aliens,
@@ -398,29 +421,36 @@ fn main() {
     };
 
     let mut solver = Solver::new(global.clone(), local.clone());
-    println!("{}", solver.stringify(&local));
+
+    if *DEBUG_PRINT {
+        println!("{}", solver.stringify(&local));
+    }
 
     while let Some(state) = solver.next() {
-        if solver.states_checked() % 100000 == 0 {
+        if *DEBUG_PRINT && solver.states_checked() % 100000 == 0 {
             println!("{}", state.stringify(&global));
             println!(
-                "{} states, {} invalidated, {} seconds",
+                "{} states, {} invalidated, {} queued, {} seconds",
                 solver.states_checked(),
                 solver.states_invalidated(),
+                solver.in_queue(),
                 solver.time_spent()
             );
         }
     }
     let solution = solver.get_solution();
 
-    println!("{:?}", solution);
-    if let Some(path) = solution {
-        println!("{}", solver.stringify(&path));
+    if let Some(solution) = solution {
+        println!("{}", solver.stringify(&solution));
+    } else {
+        println!("No solution found");
     }
 
-    println!(
-        "{} states, {} seconds",
-        solver.states_checked(),
-        solver.time_spent()
-    );
+    if *DEBUG_PRINT {
+        println!(
+            "{} states, {} seconds",
+            solver.states_checked(),
+            solver.time_spent()
+        );
+    }
 }
