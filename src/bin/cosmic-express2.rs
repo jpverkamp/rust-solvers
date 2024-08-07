@@ -141,7 +141,7 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
     }
 
     fn next_states(&self, g: &CosmicExpressGlobal) -> Option<Vec<(i64, (), Self)>> {
-        let mut result = Vec::new();
+        let mut result = Vec::with_capacity(4);
 
         'neighbor: for p in self.path.last().unwrap().neighbors() {
             // Validate that the next point is valid
@@ -235,7 +235,11 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
 
         // Add path characters
         for (i, p) in self.path.iter().enumerate() {
-            let p_before = self.path.get(i - 1);
+            let p_before = if i == 0 { 
+                None 
+            } else { 
+                self.path.get(i - 1)
+            };
             let p_after = self.path.get(i + 1);
 
             if p_before.is_some() && p_after.is_some() {
