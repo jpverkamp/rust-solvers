@@ -4,10 +4,7 @@
   "length": 1,
 
   "entrances": [{ "x": 0, "y": 6 }],
-  "exits": [
-    { "x": 0, "y": 2 },
-    { "x": 9, "y": 4 }
-  ],
+  "exits": [{ "x": 9, "y": 4 }],
   "entities": [
     [{ "x": 4, "y": 3 }, { "Alien": { "color": "Orange" } }],
     [{ "x": 5, "y": 3 }, { "Alien": { "color": "Purple" } }],
