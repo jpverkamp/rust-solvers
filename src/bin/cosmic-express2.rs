@@ -428,7 +428,7 @@ fn main() {
     let seats = (0..definition.length).map(|_| None).collect();
     let seat_goop = (0..definition.length).map(|_| false).collect();
 
-    let aliens = definition
+    let aliens: Vec<(Point, Color)> = definition
         .entities
         .iter()
         .filter_map(|(p, e)| {
@@ -440,7 +440,7 @@ fn main() {
         })
         .collect();
 
-    let houses = definition
+    let houses: Vec<(Point, Color)> = definition
         .entities
         .iter()
         .filter_map(|(p, e)| {
@@ -451,6 +451,30 @@ fn main() {
             }
         })
         .collect();
+
+    // Validity checks
+    {
+        // Counts of each color alien and house match
+        let mut alien_colors = aliens.iter().map(|(_, c)| c).collect::<Vec<_>>();
+        alien_colors.sort();
+
+        let mut house_colors = houses.iter().map(|(_, c)| c).collect::<Vec<_>>();
+        house_colors.sort();
+
+        assert_eq!(alien_colors, house_colors, "Alien and house counts don't match: {alien_colors:?} {house_colors:?}");
+
+        // No entities (from the original definition) overlap
+        let mut points = FxHashSet::default();
+        for (p, _) in definition.entities.iter() {
+            assert!(points.insert(*p), "Entities overlap at {p:?}");
+        }
+        
+        // The entrances and exits are all unique
+        let mut points = FxHashSet::default();
+        for p in definition.entrances.iter().chain(definition.exits.iter()) {
+            assert!(points.insert(*p), "Entrance/exit overlap {p:?}");
+        }
+    }
 
     let local = CosmicExpressLocal {
         path: vec![global.entrance],
