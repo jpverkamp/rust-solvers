@@ -1,0 +1,7 @@
+files:
+  - data/cosmic-express/**/*.json
+command: "cat $file | cargo run --release --bin cosmic-express2"
+env:
+  COSMIC_EXPRESS_FLOODFILL_VALIDATOR: true
+  # HEURISTIC_COUNT_ENTITIES: true
+  COSMIC_EXPRESS_HEURISTIC_NEAREST_HOUSE: true
