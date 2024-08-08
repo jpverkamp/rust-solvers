@@ -17,7 +17,7 @@ lazy_static! {
         std::env::var("COSMIC_EXPRESS_HEURISTIC_NEAREST_HOUSE").is_ok();
 }
 
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash)]
+#[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash, Ord, PartialOrd)]
 enum Color {
     Purple,
     Orange,
@@ -109,7 +109,7 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
                     reachable.insert(*p);
                 });
 
-            // Flood fill from the head of teh current path
+            // Flood fill from the head of the current path
             while let Some(p) = to_check.pop() {
                 reachable.insert(p);
 
@@ -209,7 +209,7 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
 
                 // Full seats next to the correct house; drop it off
                 if let Some(seat_color) = seat_contents {
-                    for (house_index, (house_point, house_color)) in self.houses.iter().enumerate()
+                    for (house_index, (house_point, house_color)) in new_local.houses.iter().enumerate()
                     {
                         if seat_point.manhattan_distance(*house_point) == 1
                             && seat_color == *house_color
@@ -225,18 +225,21 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
                 // Empty seats next to an alien; pick it up
                 // TODO: Multiple loads are not possible
                 if seat_contents.is_none() {
-                    for (alien_index, (alien_point, alien_color)) in self.aliens.iter().enumerate()
+                    for (alien_index, (alien_point, alien_color)) in new_local.aliens.iter().enumerate()
                     {
+                        // Borrow issue, this fix seems hacky
+                        let alien_color = alien_color.clone();
+
                         if seat_point.manhattan_distance(*alien_point) == 1 {
                             // Goop: Green aliens apply goop to the seat and no one else will sit in those
-                            if *alien_color == Color::Green {
+                            if alien_color == Color::Green {
                                 new_local.seat_goop[seat_index] = true;
                             } else if new_local.seat_goop[seat_index] {
                                 continue;
                             }
 
                             new_local.aliens.remove(alien_index);
-                            new_local.seats[seat_index] = Some(*alien_color);
+                            new_local.seats[seat_index] = Some(alien_color);
                             break;
                         }
                     }
