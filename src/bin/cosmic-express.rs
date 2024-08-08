@@ -223,24 +223,32 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
                 }
 
                 // Empty seats next to an alien; pick it up
-                // TODO: Multiple loads are not possible
                 if seat_contents.is_none() {
+                    // Find all viable aliens
+                    // This has to be done this way because if two try to load at once, none get to
+                    let mut viable_aliens = Vec::new();
                     for (alien_index, (alien_point, alien_color)) in new_local.aliens.iter().enumerate()
                     {
-                        // Borrow issue, this fix seems hacky
-                        let alien_color = alien_color.clone();
-
                         if seat_point.manhattan_distance(*alien_point) == 1 {
-                            // Goop: Green aliens apply goop to the seat and no one else will sit in those
-                            if alien_color == Color::Green {
-                                new_local.seat_goop[seat_index] = true;
-                            } else if new_local.seat_goop[seat_index] {
+                            // Non-green aliens will not try to sit in gooped seats
+                            if alien_color != &Color::Green && new_local.seat_goop[seat_index] {
                                 continue;
                             }
 
-                            new_local.aliens.remove(alien_index);
-                            new_local.seats[seat_index] = Some(alien_color);
-                            break;
+                            // Record that this alien can be loaded
+                            viable_aliens.push((alien_index, *alien_color));
+                        }
+                    }
+
+                    // If we found exactly one, load it
+                    if viable_aliens.len() == 1 {
+                        let (alien_index, alien_color) = viable_aliens[0];
+
+                        new_local.aliens.remove(alien_index);
+                        new_local.seats[seat_index] = Some(alien_color);
+
+                        if alien_color == Color::Green {
+                            new_local.seat_goop[seat_index] = true;
                         }
                     }
                 }
