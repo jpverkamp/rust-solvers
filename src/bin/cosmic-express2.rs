@@ -51,6 +51,29 @@ struct CosmicExpressLocal {
     houses: Vec<(Point, Color)>,
 }
 
+// impl Hash for CosmicExpressLocal {
+//     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+//         // Getting to exactly the same points a different way counts as equal
+//         // This isn't *quite* true, but I think it's close enough
+//         let mut path = self.path.clone();
+//         path.sort();
+//         path.hash(state);
+
+//         // We don't care about which aliens since they don't move, just the list
+//         let mut setables = Vec::with_capacity(self.aliens.len() + self.houses.len());
+//         for (p, _) in self.aliens.iter() {
+//             setables.push(p);
+//         }
+//         for (p, _) in self.houses.iter() {
+//             setables.push(p);
+//         }
+//         setables.sort();
+
+//         self.seats.hash(state);
+//         self.seat_goop.hash(state);
+//     }
+// }
+
 impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
     fn is_valid(&self, g: &CosmicExpressGlobal) -> bool {
         // Check goop, if we have no un-gooped seats and there are non-Green aliens left, it's invalid
@@ -71,7 +94,7 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
             let max_size = (g.width * g.height) as usize;
 
             let mut reachable = FxHashSet::default();
-reachable.reserve(max_size);
+            reachable.reserve(max_size);
 
             let mut to_check = Vec::with_capacity(max_size);
             to_check.push(*self.path.last().unwrap());
