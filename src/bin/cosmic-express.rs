@@ -371,16 +371,16 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
         }
 
         if *HEURISTIC_NEAREST_HOUSE {
+            let current_point = self.path.last().unwrap();
+
             // Distance from the path to the nearest remaining alien
-            if let Some(current_point) = self.path.last() {
-                if let Some(distance) = self
-                    .aliens
-                    .iter()
-                    .map(|(alien_point, _)| alien_point.manhattan_distance(*current_point))
-                    .min()
-                {
-                    heuristic += distance as i64;
-                }
+            if let Some(distance) = self
+                .aliens
+                .iter()
+                .map(|(alien_point, _)| alien_point.manhattan_distance(*current_point))
+                .min()
+            {
+                heuristic += distance as i64;
             }
 
             // Distance from each alien to the closest matching house
@@ -397,8 +397,8 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
                 }
             }
 
-            // Also, distance to the exit
-            heuristic += self.path.last().unwrap().manhattan_distance(global.exit) as i64;
+            // Also, distance to the exit if we're out of aliens
+            heuristic += current_point.manhattan_distance(global.exit) as i64;
         }
 
         heuristic
