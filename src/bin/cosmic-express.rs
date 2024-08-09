@@ -15,8 +15,9 @@ lazy_static! {
         std::env::var("COSMIC_EXPRESS_HEURISTIC_COUNT_ENTITIES").is_ok();
     static ref HEURISTIC_NEAREST_HOUSE: bool =
         std::env::var("COSMIC_EXPRESS_HEURISTIC_NEAREST_HOUSE").is_ok();
-    static ref USE_CUSTOM_HASH: bool =
-        std::env::var("COSMIC_EXPRESS_CUSTOM_HASH").is_ok();
+    static ref HEURISTIC_HUG_WALLS: bool =
+        std::env::var("COSMIC_EXPRESS_HEURISTIC_HUG_WALLS").is_ok();
+    static ref USE_CUSTOM_HASH: bool = std::env::var("COSMIC_EXPRESS_CUSTOM_HASH").is_ok();
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash, Ord, PartialOrd)]
@@ -225,7 +226,8 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
 
                 // Full seats next to the correct house; drop it off
                 if let Some(seat_color) = seat_contents {
-                    for (house_index, (house_point, house_color)) in new_local.houses.iter().enumerate()
+                    for (house_index, (house_point, house_color)) in
+                        new_local.houses.iter().enumerate()
                     {
                         if seat_point.manhattan_distance(*house_point) == 1
                             && seat_color == *house_color
@@ -243,7 +245,8 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
                     // Find all viable aliens
                     // This has to be done this way because if two try to load at once, none get to
                     let mut viable_aliens = Vec::new();
-                    for (alien_index, (alien_point, alien_color)) in new_local.aliens.iter().enumerate()
+                    for (alien_index, (alien_point, alien_color)) in
+                        new_local.aliens.iter().enumerate()
                     {
                         if seat_point.manhattan_distance(*alien_point) == 1 {
                             // Non-green aliens will not try to sit in gooped seats
@@ -292,11 +295,7 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
 
         // Add path characters
         for (i, p) in self.path.iter().enumerate() {
-            let p_before = if i == 0 { 
-                None 
-            } else { 
-                self.path.get(i - 1)
-            };
+            let p_before = if i == 0 { None } else { self.path.get(i - 1) };
             let p_after = self.path.get(i + 1);
 
             if p_before.is_some() && p_after.is_some() {
@@ -365,11 +364,36 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
     fn heuristic(&self, global: &CosmicExpressGlobal) -> i64 {
         let mut heuristic = 0;
 
+        // Very basic heuristic; just how many entities are left
         if *HEURISTIC_COUNT_ENTITIES {
             heuristic += ((self.aliens.len() + self.houses.len()) as isize
                 * global.width.max(global.height)) as i64;
         }
 
+        // Custom heuristic to hug walls (hopefully cuts down on path segments)
+        if *HEURISTIC_HUG_WALLS {
+            if self
+                .path
+                .last()
+                .unwrap()
+                .neighbors()
+                .iter()
+                .filter(|n| 
+                    global.walls.contains(n) 
+                    || self.path.contains(n)
+                    || n.x <= 1
+                    || n.y <= 1
+                    || n.x >= global.width
+                    || n.y >= global.height
+                )
+                .count()
+                <= 1
+            {
+                heuristic += 1000;
+            }
+        }
+
+        // Custom heuristic to actually guess the possible path
         if *HEURISTIC_NEAREST_HOUSE {
             let current_point = self.path.last().unwrap();
 
@@ -485,14 +509,17 @@ fn main() {
         let mut house_colors = houses.iter().map(|(_, c)| c).collect::<Vec<_>>();
         house_colors.sort();
 
-        assert_eq!(alien_colors, house_colors, "Alien and house counts don't match: {alien_colors:?} {house_colors:?}");
+        assert_eq!(
+            alien_colors, house_colors,
+            "Alien and house counts don't match: {alien_colors:?} {house_colors:?}"
+        );
 
         // No entities (from the original definition) overlap
         let mut points = FxHashSet::default();
         for (p, _) in definition.entities.iter() {
             assert!(points.insert(*p), "Entities overlap at {p:?}");
         }
-        
+
         // The entrances and exits are all unique
         let mut points = FxHashSet::default();
         for p in definition.entrances.iter().chain(definition.exits.iter()) {
@@ -517,13 +544,7 @@ fn main() {
     while let Some(state) = solver.next() {
         if *DEBUG_PRINT && solver.states_checked() % 100000 == 0 {
             println!("{}", state.stringify(&global));
-            println!(
-                "{} states, {} invalidated, {} queued, {} seconds",
-                solver.states_checked(),
-                solver.states_invalidated(),
-                solver.in_queue(),
-                solver.time_spent()
-            );
+            println!("{solver}");
         }
     }
     let solution = solver.get_solution();
@@ -535,11 +556,6 @@ fn main() {
     }
 
     if *DEBUG_PRINT {
-        println!(
-            "{} states, {} invalidated, {} seconds",
-            solver.states_checked(),
-            solver.states_invalidated(),
-            solver.time_spent()
-        );
+        println!("{solver}");
     }
 }
