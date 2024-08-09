@@ -15,6 +15,8 @@ lazy_static! {
         std::env::var("COSMIC_EXPRESS_HEURISTIC_COUNT_ENTITIES").is_ok();
     static ref HEURISTIC_NEAREST_HOUSE: bool =
         std::env::var("COSMIC_EXPRESS_HEURISTIC_NEAREST_HOUSE").is_ok();
+    static ref USE_CUSTOM_HASH: bool =
+        std::env::var("COSMIC_EXPRESS_CUSTOM_HASH").is_ok();
 }
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash, Ord, PartialOrd)]
@@ -35,7 +37,7 @@ struct CosmicExpressGlobal {
     walls: Vec<Point>,
 }
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Clone, PartialEq, Eq, Debug)]
 struct CosmicExpressLocal {
     // The path the train has taken so far
     path: Vec<Point>,
@@ -51,28 +53,42 @@ struct CosmicExpressLocal {
     houses: Vec<(Point, Color)>,
 }
 
-// impl Hash for CosmicExpressLocal {
-//     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-//         // Getting to exactly the same points a different way counts as equal
-//         // This isn't *quite* true, but I think it's close enough
-//         let mut path = self.path.clone();
-//         path.sort();
-//         path.hash(state);
+impl Hash for CosmicExpressLocal {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        if *USE_CUSTOM_HASH {
+            // Getting to exactly the same points a different way counts as equal
+            // So long as the last step (where we'll expand from) is the same
+            let mut path = self.path.clone();
+            let last = path.pop().unwrap();
 
-//         // We don't care about which aliens since they don't move, just the list
-//         let mut setables = Vec::with_capacity(self.aliens.len() + self.houses.len());
-//         for (p, _) in self.aliens.iter() {
-//             setables.push(p);
-//         }
-//         for (p, _) in self.houses.iter() {
-//             setables.push(p);
-//         }
-//         setables.sort();
+            path.sort();
+            path.push(last);
+            path.hash(state);
 
-//         self.seats.hash(state);
-//         self.seat_goop.hash(state);
-//     }
-// }
+            // We don't care about which aliens since they don't move, just the list of remaining points
+            // Sort so order is preserved
+            let mut entities = Vec::with_capacity(self.aliens.len() + self.houses.len());
+            for (p, _) in self.aliens.iter() {
+                entities.push(p);
+            }
+            for (p, _) in self.houses.iter() {
+                entities.push(p);
+            }
+            entities.sort();
+            entities.hash(state);
+
+            self.seats.hash(state);
+            self.seat_goop.hash(state);
+        } else {
+            // Default hashing
+            self.path.hash(state);
+            self.seats.hash(state);
+            self.seat_goop.hash(state);
+            self.aliens.hash(state);
+            self.houses.hash(state);
+        }
+    }
+}
 
 impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
     fn is_valid(&self, g: &CosmicExpressGlobal) -> bool {
