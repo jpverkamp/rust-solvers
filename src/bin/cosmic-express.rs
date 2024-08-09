@@ -536,8 +536,9 @@ fn main() {
 
     if *DEBUG_PRINT {
         println!(
-            "{} states, {} seconds",
+            "{} states, {} invalidated, {} seconds",
             solver.states_checked(),
+            solver.states_invalidated(),
             solver.time_spent()
         );
     }
