@@ -18,6 +18,3 @@ x - - - o - - - x
 x - - - - - - - x
 
 x x x x x x x x x
-=SSAWDSSSWWWDS
-=SSDWASSSWWWAS
-=SSASSSWWDWDS

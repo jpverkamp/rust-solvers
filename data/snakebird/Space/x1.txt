@@ -10,7 +10,3 @@
 -##------------ABCD--
 ----------------X----
 ---------------#####-
-
-// https://steamcommunity.com/sharedfiles/filedetails/?id=2911763115
-// Start with Blue
-// URRRD RDDL__UURRR__LUUR RUUU__LU_RRRR_RRUUL__UU__UU_ULLL_DLL_RRUUU RUUUL LLL_LLL_LUURR DLLL__U_ULULLL__RUUU__LULUL_RRRRU UURUU ULLLL LLL_L__LULL LLL__LLL_LLLL_LDDLL LLLLL ULLLL LULUU

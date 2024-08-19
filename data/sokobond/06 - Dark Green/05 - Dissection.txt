@@ -10,4 +10,3 @@ x - - - - - - x
 x - - - c - - x
 
 x x x x x x x x
-=AASSDDAWADWASDDDDD

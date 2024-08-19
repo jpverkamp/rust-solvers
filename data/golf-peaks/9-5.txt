@@ -10,6 +10,3 @@ x       x       0,sand  0,sand  0,ice   0,sand  0,sand  x       x
 2,ball  2,right 1,up    0,ice   x       x       x       x       x
 
 1- 3- 1/ 3/ 1/1- 2/1-
-
-1-↘ 3/↗ 2/1-↘ 1/↗ 3-↘ 1/1-↗
-1-↘ 3/↗ 2/1-↘ 1/1-↗ 3-↘ 1/↗

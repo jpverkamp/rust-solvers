@@ -1,0 +1,447 @@
+{
+  "data/sokobond/01 - Yellow/01 - Let's Go.txt": [
+    "WWDDWWDD\n"
+  ],
+  "data/sokobond/01 - Yellow/02 - Cell.txt": [
+    "DWDDAA\n"
+  ],
+  "data/sokobond/01 - Yellow/03 - Loop.txt": [
+    "SSDDWWSSAAAWWWWD\n"
+  ],
+  "data/sokobond/01 - Yellow/04 - Monty Hall.txt": [
+    "WSDDWSAAWWWDAAA\n"
+  ],
+  "data/sokobond/01 - Yellow/05 - Knot.txt": [
+    "WDASASWADDDD\n"
+  ],
+  "data/sokobond/01 - Yellow/06 - Push.txt": [
+    "DDSDWD\n"
+  ],
+  "data/sokobond/01 - Yellow/07 - Structure.txt": [
+    "DSSAWAA\n"
+  ],
+  "data/sokobond/01 - Yellow/08 - Lotus.txt": [
+    "SASSDDSAS\n"
+  ],
+  "data/sokobond/01 - Yellow/09 - Coyote.txt": [
+    "WWAASASSAA\n"
+  ],
+  "data/sokobond/01 - Yellow/10 - Roadrunner.txt": [
+    "WDWDSDDWAAASSD\n"
+  ],
+  "data/sokobond/02 - Orange/01 - Suit.txt": [
+    "SSDDWSSDSAS\n"
+  ],
+  "data/sokobond/02 - Orange/02 - Chimney.txt": [
+    "WDAWSSAAWDDW\n"
+  ],
+  "data/sokobond/02 - Orange/03 - Heart.txt": [
+    "WWDWASAAWDAWWDSDDW\n"
+  ],
+  "data/sokobond/02 - Orange/04 - Factory.txt": [
+    "DDSSAAAAAWWWSDDDDDWWAWAS\n"
+  ],
+  "data/sokobond/02 - Orange/05 - Scoop.txt": [
+    "DAASSDSDDAWAAA\n"
+  ],
+  "data/sokobond/02 - Orange/06 - Block.txt": [
+    "ASSDDSDDWWWADSSAAAW\n"
+  ],
+  "data/sokobond/02 - Orange/07 - Chandelier.txt": [
+    "DSSSAWDWDSSAWWWA\n"
+  ],
+  "data/sokobond/02 - Orange/08 - Creature.txt": [
+    "WDDWWAAWASDDDDSSAASSAWAAW\n"
+  ],
+  "data/sokobond/02 - Orange/09 - Rosie.txt": [
+    "WAWWDDAASASSDDDD\n"
+  ],
+  "data/sokobond/02 - Orange/10 - Kruskal.txt": [
+    "ASAWDWDDSSSWWAAW\n"
+  ],
+  "data/sokobond/03 - Gray/01 - Helium.txt": [
+    "WDDDDDSAAWASSDSSS\n"
+  ],
+  "data/sokobond/03 - Gray/02 - Tee.txt": [
+    "WWASWDDDSAAWASDSSADSSWWW\n"
+  ],
+  "data/sokobond/03 - Gray/03 - Freedom.txt": [
+    "AAWAWDD\n"
+  ],
+  "data/sokobond/03 - Gray/04 - Against the Wall.txt": [
+    "WAASWAWWDSASDDSSSAWWSAAWWDDWWDDSSAAWAWASASDDDD\n"
+  ],
+  "data/sokobond/03 - Gray/05 - Pathways.txt": [
+    "AWWDSDSASSSAAWWDDSSDDWW\n"
+  ],
+  "data/sokobond/03 - Gray/06 - Three Doors.txt": [
+    "DAWWSAAWWAWDDSDSSAASDSDWWWSDDWSDSSAWWAAAAWWDD\n",
+    "AWAWSDDWSDDWWDWAAASSSDDSASAWWWSDDWWAASSSASAWW\n"
+  ],
+  "data/sokobond/03 - Gray/07 - Cloud.txt": [
+    "DWWASDDSWWASSD\n"
+  ],
+  "data/sokobond/03 - Gray/08 - Planning.txt": [
+    "WDSDSAASSAWDWASAAWDDDDSDDW\n"
+  ],
+  "data/sokobond/03 - Gray/09 - Out of the Way.txt": [
+    "AWDDDSAWAAAWWDDDDSWAAAASSDDWSDSDDWAAADDWWAAADSSASAW\n",
+    "DAWAASDWDDDWWAAAASWDDDDSSAAWSASAAWDDDAAWWDDDASSDSDW\n"
+  ],
+  "data/sokobond/03 - Gray/10 - Impasse.txt": [
+    "DWADDSASAAWADDSSWWDWWA\n"
+  ],
+  "data/sokobond/03 - Gray/11 - Fetch.txt": [
+    "WDWASSSADDASWWWWDSAWASDSDAA\n"
+  ],
+  "data/sokobond/03 - Gray/12 - Drill.txt": [
+    "AWWWWDSASSSDWDWAWWAASDSDASSDWAWWDSWWDDSAS\n"
+  ],
+  "data/sokobond/04 - Red/01 - Split.txt": [
+    "DDWWDSSDDDAAWA\n"
+  ],
+  "data/sokobond/04 - Red/02 - Lock.txt": [
+    "DDWDSAWWWWAADDSSSA\n"
+  ],
+  "data/sokobond/04 - Red/03 - Push Up.txt": [
+    "DAAWDSDWA\n"
+  ],
+  "data/sokobond/04 - Red/04 - Out of Reach.txt": [
+    "WDDDDSAWDSAAWW\n"
+  ],
+  "data/sokobond/04 - Red/05 - Small Key.txt": [
+    "ASDWDWASSAWSDWDDD\n",
+    "DSAWAWDSSDWSAWDDD\n"
+  ],
+  "data/sokobond/04 - Red/06 - Anxiety.txt": [
+    "WAASAWDWWSDDSA\n",
+    "WAASAWDWWSDSDW\n"
+  ],
+  "data/sokobond/04 - Red/07 - Wingman.txt": [
+    "DDDSAWWWASAAWSSSSDD\n",
+    "WAWWSDDDSASDSAAAAWW\n"
+  ],
+  "data/sokobond/04 - Red/08 - Ring.txt": [
+    "DDAAWWSDWWDAA\n"
+  ],
+  "data/sokobond/04 - Red/09 - Anvil.txt": [
+    "SDSSDSAADWWWAASSDDDWWADSSAAAWSA\n"
+  ],
+  "data/sokobond/04 - Red/10 - Cottage.txt": [
+    "SWWWWAASASDWWDDDDSDSAWWAASSSS\n",
+    "SWWWWDDSDSAWWAAAASASDWWDDSSSS\n"
+  ],
+  "data/sokobond/04 - Red/11 - Hanoi.txt": [
+    "AASWDDDDSAAWAASDDDDWAAAASDDDDWAAAA\n",
+    "SAAWDDDDSAAWAASDDDDWAAAASDDDDWAAAA\n"
+  ],
+  "data/sokobond/04 - Red/12 - Trap.txt": [
+    "DSDWAASDWWASDSDDDDDWADSAWWDSASAAA\n",
+    "DSDWAASDWWASDSDDDDDWSAWWDSASAAA\n",
+    "DSDWAASDWWASDDASDDDDDWSAWWDSASAAA\n"
+  ],
+  "data/sokobond/05 - Green/01 - Breathe.txt": [
+    "WWDSDSWAW\n"
+  ],
+  "data/sokobond/05 - Green/02 - Doubling.txt": [
+    "WAWWASSDW\n"
+  ],
+  "data/sokobond/05 - Green/03 - Koan.txt": [
+    "WAWAADDSASWDW\n"
+  ],
+  "data/sokobond/05 - Green/04 - Together.txt": [
+    "SSWDDWWSSAWA\n"
+  ],
+  "data/sokobond/05 - Green/05 - Agoraphobia.txt": [
+    "SWDWDDSSSA\n"
+  ],
+  "data/sokobond/05 - Green/06 - Forethought.txt": [
+    "WDWWSSDDDAAASA\n"
+  ],
+  "data/sokobond/05 - Green/07 - Apartment.txt": [
+    "SDDWWDDDSDWWWWAAAADDDDW\n"
+  ],
+  "data/sokobond/05 - Green/08 - Lettuce.txt": [
+    "WDDWAWSSA\n"
+  ],
+  "data/sokobond/05 - Green/09 - Landing Pad.txt": [
+    "SDDDSSWWWWSSAAAAWSS\n"
+  ],
+  "data/sokobond/05 - Green/10 - Matchmaker.txt": [
+    "DDWWWDASAAASDDDSS\n"
+  ],
+  "data/sokobond/05 - Green/11 - Cat's Cradle.txt": [
+    "DWWDAAASSWWDDDSSSAAA\n"
+  ],
+  "data/sokobond/06 - Dark Green/01 - Papers Please.txt": [
+    "DADDDDDDDASWWASAAA\n"
+  ],
+  "data/sokobond/06 - Dark Green/02 - Airplane.txt": [
+    "SSWWWAASDDDWDSAAWWSWDSSSADWDWDDSAAWASSASDWWAAWAASDDWDSSDSAWWWWDADSSSSS\n",
+    "SSWWWAASDDDWDSAAWWSWDSSSADWWDDDSAAWASSASDWWAAWAASDDWDSSDSAWWWWDADSSSSS\n"
+  ],
+  "data/sokobond/06 - Dark Green/03 - Mine Field.txt": [
+    "SDDDDSSSAWAWAWDSAAWWSDSDSDSAAAAAA\n"
+  ],
+  "data/sokobond/06 - Dark Green/04 - Workshop.txt": [
+    "DSDDWDDSAAASDWAD\n"
+  ],
+  "data/sokobond/06 - Dark Green/05 - Dissection.txt": [
+    "AASSDDAWADWASDDDDD\n"
+  ],
+  "data/sokobond/06 - Dark Green/06 - Casket.txt": [
+    "DDAASSDDDWAWSAWSD\n",
+    "DDAASSDDDWAWSAWSD\n"
+  ],
+  "data/sokobond/06 - Dark Green/07 - Three Body Problem.txt": [
+    "DDAWDSDWASDWASDWWWAAD\n",
+    "DDAWDSAWWDDASSAAWWS\n"
+  ],
+  "data/sokobond/06 - Dark Green/08 - Cat.txt": [
+    "WAADDDAADAAWSSDDWD\n"
+  ],
+  "data/sokobond/06 - Dark Green/09 - Halves.txt": [
+    "ADDSAWAAWDSDD\n"
+  ],
+  "data/sokobond/06 - Dark Green/10 - Arrow.txt": [
+    "SWWWADWWSWASSSSDWWWAA\n",
+    "SWWWADWWSWASSSSDWWAWA\n"
+  ],
+  "data/sokobond/06 - Dark Green/11 - Hallway.txt": [
+    "DDASAWSAAWDDDDSAWDSWAADDAASDWSAAWSWASDDDA\n"
+  ],
+  "data/sokobond/07 - Dark Red/01 - Plunge.txt": [
+    "SAWWDDSADSWAWASDSAWDDWASASDWWDSDDD\n",
+    "SAWWSDWDSASDWWAWASSDDWWASASSDDWDDD\n",
+    "WDSSWASAWWDWDSSADWAASDDSAWAWDSSDWSWDDD\n"
+  ],
+  "data/sokobond/07 - Dark Red/02 - Compass.txt": [
+    "SSDDASAAWADSDS\n"
+  ],
+  "data/sokobond/07 - Dark Red/03 - Blocking the Way.txt": [
+    "SSSSAAAWWDDAAWSSASDDDDWWAAAWWDDDSSAAASWDDDDS\n"
+  ],
+  "data/sokobond/07 - Dark Red/04 - Power.txt": [
+    "WWDDSWWDSAAAWDDWSSAAWSSS\n"
+  ],
+  "data/sokobond/07 - Dark Red/05 - Around.txt": [
+    "DWAASWDDSAAASSWWDDDSWAASSSDWAWWASSDWSSDD\n",
+    "DWAASDAASSDAWWDSWSSDSWAAWWDD\n",
+    "DWAASDAASSDAWWDSSDSWAAWWDD\n"
+  ],
+  "data/sokobond/07 - Dark Red/06 - Infinity.txt": [
+    "SSSWDDAWASSWDWSDDWDDAASADWDDSSAWDWSS\n",
+    "SSSWDDAWASSWDWSDDWDDAASADWDDSSADAWDSWW\n",
+    "SSSWDDAWASSWDWSDDWDDAASADWDDSASDAWDWSS\n"
+  ],
+  "data/sokobond/07 - Dark Red/07 - Grater.txt": [
+    "SSAWDSSSWWWDS\n",
+    "SSDWASSSWWWAS\n",
+    "SSASSSWWDWDS\n"
+  ],
+  "data/sokobond/07 - Dark Red/08 - Windows.txt": [
+    "AAAWWSDWAWDSASSSSDDAAWWWWWDSAWDSSSDDDS\n",
+    "WWAAWDSAWASDWDDDDSSWWAAAAASDWASDDDSSSD\n"
+  ],
+  "data/sokobond/07 - Dark Red/09 - Home.txt": [
+    "WWWWAWSSDSSSSDWAWWWAAWDDSSSASDWWWDDWAASSSASWDWWWDWSSASSS\n",
+    "WWWWDWSSASSSSDWAWWWAAWDDSSSASDWWWDDWAASSSASWDWWAWWSSDSSS\n",
+    "WWWWAWSSDSSSSDWAWWWDDWAASSSASDWWWAAWDDSSSASWDWWDWWSSASSS\n",
+    "WWWWDWSSASSSSDWAWWWDDWAASSSASDWWWAAWDDSSSASWDWWWAWSSDSSS\n"
+  ],
+  "data/sokobond/07 - Dark Red/10 - Long Legs.txt": [
+    "DWDDDSSSWWAWAASADDSWWDDD\n"
+  ],
+  "data/sokobond/07 - Dark Red/11 - Station.txt": [
+    "DSSDDDDDAAAAAWWDAWWDDDDSSWWAAAAASS\n"
+  ],
+  "data/sokobond/07 - Dark Red/12 - Arena.txt": [
+    "ASAWWDDDWSAAWDWAADDAA\n",
+    "WDWAASSSADWWASAWWSSWW\n"
+  ],
+  "data/sokobond/08 - Light Gray/01 - Multiple.txt": [
+    "DDWWASAWDD\n"
+  ],
+  "data/sokobond/08 - Light Gray/02 - Water Water.txt": [
+    "DWASSWDDW\n",
+    "SDWWASDW\n"
+  ],
+  "data/sokobond/08 - Light Gray/03 - Twofold.txt": [
+    "ASDWDWDSWAAA\n"
+  ],
+  "data/sokobond/08 - Light Gray/04 - Aye.txt": [
+    "WWDWAASDSSSSASDDWWWAWWASS\n"
+  ],
+  "data/sokobond/08 - Light Gray/05 - Twins.txt": [
+    "WSSWDDWASASSWWAA\n",
+    "SWWSDDSAAWWWSSAA\n"
+  ],
+  "data/sokobond/08 - Light Gray/06 - Double-Bleached.txt": [
+    "WWAAASSSDSDAASDWDDWWWWAASSSASDWWWWDDSSSSAADDDSDDWAAADDDWWWWAAAAWASSSS\n"
+  ],
+  "data/sokobond/08 - Light Gray/07 - Spaceship.txt": [
+    "DDDSDDWAWAASASAAWWSDDDWASAAWDDDSDSDWWWSSSSS\n"
+  ],
+  "data/sokobond/08 - Light Gray/08 - Counterintuitive.txt": [
+    "WWAWDSSSDWASAWDWWAASDWDSWDDSAWASASDSWWDSASSSWWDDAAAA\n",
+    "WWDWASSSAWSDDWAWWDDSAWASWAASDWDSDSAWASDSAADDSSWWDD\n",
+    "WWDWASSSAWSDDWAWWDDSAWASWAASDWDSDSAWASDSSSWWDDAAAA\n"
+  ],
+  "data/sokobond/08 - Light Gray/10 - Ocean.txt": [
+    "AAAWWSDDWWWWAASDSAWASAWSS\n",
+    "AWASDDAAAAAWWDDDSDWAWWAA\n"
+  ],
+  "data/sokobond/08 - Light Gray/11 - Much Methane.txt": [
+    "ASSSDWWADSADWAWWASDSDSADWAWDWSAA\n",
+    "ASSSDWWAWDSADSADWAWWASSDSAWWWDD\n"
+  ],
+  "data/sokobond/08 - Light Gray/12 - Hydrogen Machine.txt": [
+    "DDDWAAAASDWAADDDSAADWASDWSDDWASWAADDD\n",
+    "DDDWAAAASDWAADDDSAAWDSDDWASWDAAASDWA\n"
+  ],
+  "data/sokobond/09 - Blue/01 - Rotate.txt": [
+    "ASADDWWDSSAAS\n",
+    "ASSWWDWDSAASA\n"
+  ],
+  "data/sokobond/09 - Blue/02 - Key.txt": [
+    "DDASDWWWWA\n"
+  ],
+  "data/sokobond/09 - Blue/03 - Kitten.txt": [
+    "WDWASDSAWDDW\n",
+    "WDWASDSAWDWD\n"
+  ],
+  "data/sokobond/09 - Blue/04 - Tracks.txt": [
+    "DDSSSDAWWWADSSSDDA\n"
+  ],
+  "data/sokobond/09 - Blue/05 - Fish.txt": [
+    "AAWAWADDSAAWDSADDDDD\n"
+  ],
+  "data/sokobond/09 - Blue/07 - Middle.txt": [
+    "DSWWWAAAADDSSD\n"
+  ],
+  "data/sokobond/09 - Blue/08 - Goblet.txt": [
+    "WWDWASAWDSDWDWAASSWDDSSASS\n",
+    "WWWDSDWASAAWWDSDSWAASSDSS\n"
+  ],
+  "data/sokobond/09 - Blue/09 - Plus.txt": [
+    "SSSWWAWDDDDSDSSWWAD\n"
+  ],
+  "data/sokobond/09 - Blue/10 - Feng Shui.txt": [
+    "WAASADWAASSWDDDWSSSAWASD\n",
+    "WAASADWAASSWDDDWSSSAAW\n"
+  ],
+  "data/sokobond/09 - Blue/11 - Jumbo Jet.txt": [
+    "SDDDAWWADDSSAAAAWWSSDWWAA\n",
+    "WDDDASSADDWWAAAASWDSASDAA\n"
+  ],
+  "data/sokobond/09 - Blue/12 - Cross.txt": [
+    "ADDDWASWADDAWWASSWDSSSASWA\n",
+    "SWWWDSADSWWSDDSAADWAAAADSS\n",
+    "ADDWSSADDASSAWWSDWWWAWSA\n"
+  ],
+  "data/sokobond/10 - Blue Green/01 - Turn and Bond.txt": [
+    "WWSADDSWAAWDDDSDDWA\n",
+    "WWDDAASAWDDDDDSA\n"
+  ],
+  "data/sokobond/10 - Blue Green/02 - Affair.txt": [
+    "WDDWWSSASSDSDAWWWWS\n",
+    "DWADWWSSDSSAWWS\n"
+  ],
+  "data/sokobond/10 - Blue Green/04 - Temple.txt": [
+    "SSWDSADWAADSDDAWWWWWW\n"
+  ],
+  "data/sokobond/10 - Blue Green/05 - Fizzy.txt": [
+    "AASDDSAAWWDSSDD\n"
+  ],
+  "data/sokobond/10 - Blue Green/06 - Orientation.txt": [
+    "SDDWAADSAWDSDWSDSWAAAWDSADDDDAAAAWDSDDDD\n"
+  ],
+  "data/sokobond/10 - Blue Green/07 - Diagonal.txt": [
+    "AAWAAWDAWSSDDDDSAWWASWAAW\n"
+  ],
+  "data/sokobond/10 - Blue Green/08 - Playful.txt": [
+    "SSSDAAWSDDWWSS\n"
+  ],
+  "data/sokobond/10 - Blue Green/10 - Right Angle.txt": [
+    "DAWSASAAWDDSWWASSAWDSWWWW\n"
+  ],
+  "data/sokobond/10 - Blue Green/11 - Fountain.txt": [
+    "SASDAWWSDWASSSDWWWWAW\n"
+  ],
+  "data/sokobond/10 - Blue Green/12 - Clockwork.txt": [
+    "DDDDAAWWDWSAAWADSSSSAWDWDDWWDSAASSDDSSWWAAAAS\n"
+  ],
+  "data/sokobond/11 - Dark Blue/01 - Eight.txt": [
+    "DDDAAAWWWDDDDWWSSSSSAAAAWWWDDDDWWWAAADDDSSSSSSAAAAWWWDDDDSSSAAAAWW\n"
+  ],
+  "data/sokobond/11 - Dark Blue/02 - Two Worlds.txt-disabled": [
+    "DDWWSSDAAAWDSDAAAAAWSSWDDSWDASSDDWWAAA\n"
+  ],
+  "data/sokobond/11 - Dark Blue/03 - Castle.txt": [
+    "AASWWDDDWDSSAAAAWDDSSWWDWDSSSWWAAAA\n",
+    "SWWDWDSSAAAASWWDDDWDSSSWWAAAA\n"
+  ],
+  "data/sokobond/11 - Dark Blue/04 - Roundabout.txt": [
+    "WWDAWSSSDDWSAAWWWWDDDASWDDSSSWWWAAAASSSSDDDDW\n"
+  ],
+  "data/sokobond/11 - Dark Blue/05 - Quadro.txt": [
+    "SSDDAAWWDDSSWWAASSDDWWAAWWAADDSSSSAAWWWWDDDD\n"
+  ],
+  "data/sokobond/11 - Dark Blue/06 - Stuck in the Corner.txt": [
+    "DDSSAWAWSDDSAAWWAAWSDDDDASDSADWWAAW\n"
+  ],
+  "data/sokobond/11 - Dark Blue/07 - Zara.txt-disabled": [
+    "DDWWWDWDDSSSSWWWWWASASSAWSSAASDDWWWSSAAWWWWSSSSDASDDWWWS\n"
+  ],
+  "data/sokobond/11 - Dark Blue/08 - Construction.txt-disabled": [
+    "SDDDSSAAWWWDDDSSAAWASSDDDDDSAAWWAWDDDSSSAAWDWAAWASDDSDWWWAAAASSSSWWWDDDSASWW\n"
+  ],
+  "data/sokobond/11 - Dark Blue/09 - Bateleur.txt-disabled": [
+    "AAAAWWWDDDAADWWDSDDSAAAWWDDASAS\n"
+  ],
+  "data/sokobond/11 - Dark Blue/10 - Pendant.txt": [
+    "WWAADDWSAASSWWDDSSSSAAWWWWDDWSDDAAAASSSSDDWWSSDDAA\n"
+  ],
+  "data/sokobond/12 - Bonus/01 - Juggle.txt": [
+    "WDSAAWAWDAWWWWDDDSSS\n"
+  ],
+  "data/sokobond/12 - Bonus/02 - Grand Slam.txt": [
+    "SSSSDDASAAWWDDD\n"
+  ],
+  "data/sokobond/12 - Bonus/03 - Bunny Ears.txt": [
+    "WAWSSDDWADSAWDDSAWDWSSAS\n"
+  ],
+  "data/sokobond/12 - Bonus/04 - Skull.txt": [
+    "AAWSSDDDDWASSWWAWSDSAADWWSSDDWAAAAWWWDD\n"
+  ],
+  "data/sokobond/12 - Bonus/05 - Church.txt": [
+    "DDAAAAADSDDDDWDSAAAAAWDSAWDDDDAAAASAWDASDDWSAWDDWWW\n"
+  ],
+  "data/sokobond/12 - Bonus/06 - Combine.txt": [
+    "SDSSDDDWDWASSSWAAAAWASDDDWDDS\n"
+  ],
+  "data/sokobond/12 - Bonus/07 - Interference.txt": [
+    "DDWAWWAWSAAWWDDDASSAD\n"
+  ],
+  "data/sokobond/12 - Bonus/08 - Guards.txt": [
+    "WWADSDDDAAASSSAWWWADSDSSWADDWDD\n"
+  ],
+  "data/sokobond/12 - Bonus/09 - Wiggle.txt": [
+    "WDSADWASDWAAWDADSADDSAWW\n"
+  ],
+  "data/sokobond/12 - Bonus/10 - Flower.txt": [
+    "DDDDAAWWAAWSDDDWSSSAAAASSWWDDWWDDWSSSSWWAWAWADSDDW\n"
+  ],
+  "data/sokobond/12 - Bonus/11 - Jellyfish.txt": [
+    "ASWWDDDSDSWWAAASSAASWDDD\n"
+  ],
+  "data/sokobond/12 - Bonus/15 - Square.txt": [
+    "WDSSSDAWAAWWDDSSAASADWDDSDSWWAWAASDDAASAS\n"
+  ],
+  "data/sokobond/12 - Bonus/17 - Fortress.txt": [
+    "DDDWWWWWWSSSSSSAAWWWSSSAAWWWWSSSSDDDDWWWWWAAWSAAW\n"
+  ],
+  "data/sokobond/Test.txt": [
+    "SD\n"
+  ]
+}

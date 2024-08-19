@@ -2,7 +2,7 @@ use std::io;
 use std::ops::Add;
 use std::ops::Sub;
 
-use solver::{Solver, State};
+use solver::{Point, Solver, State};
 
 const SINGLE_HORIZONTAL: char = '-';
 const SINGLE_VERTICAL: char = '|';
@@ -10,52 +10,6 @@ const DOUBLE_HORIZONTAL: char = '=';
 const DOUBLE_VERTICAL: char = '‖';
 const TRIPLE_HORIZONTAL: char = '≡';
 const TRIPLE_VERTICAL: char = '⦀';
-
-// A point in 2D space
-#[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
-struct Point {
-    x: isize,
-    y: isize,
-}
-
-impl Add<Point> for Point {
-    type Output = Point;
-
-    fn add(self, rhs: Point) -> Self::Output {
-        Point {
-            x: self.x + rhs.x,
-            y: self.y + rhs.y,
-        }
-    }
-}
-
-impl Sub<Point> for Point {
-    type Output = Point;
-
-    fn sub(self, rhs: Point) -> Self::Output {
-        Point {
-            x: self.x - rhs.x,
-            y: self.y - rhs.y,
-        }
-    }
-}
-
-impl Into<Point> for (isize, isize) {
-    fn into(self) -> Point {
-        Point {
-            x: self.0,
-            y: self.1,
-        }
-    }
-}
-
-impl Point {
-    const ZERO: Point = Point { x: 0, y: 0 };
-
-    fn manhattan_distance(&self, other: Point) -> isize {
-        (self.x - other.x).abs() + (self.y - other.y).abs()
-    }
-}
 
 // Possible kinds of map modifiers
 #[derive(Copy, Clone, PartialEq, Eq, Hash, Debug, PartialOrd, Ord)]
@@ -100,7 +54,6 @@ struct Map {
     walls: Vec<bool>,
     modifiers: Vec<Modifier>,
     allow_multiple: bool,
-    solutions: Vec<String>,
 }
 
 impl Map {
@@ -112,8 +65,6 @@ impl Map {
         let mut modifiers = Vec::new();
 
         let mut molecules = Vec::new();
-
-        let mut solutions = Vec::new();
 
         // Version 1 files are just the grid of elements
 
@@ -181,13 +132,6 @@ impl Map {
 
         // Now grid contains just the elements, walls, and empty space
         for (y, line) in grid.lines().enumerate() {
-            // Lines starting with = represent solutions
-            // They should only be at the end of the file
-            if line.starts_with('=') {
-                solutions.push(line[1..].to_string());
-                continue;
-            }
-
             width = width.max(line.len());
             height += 1;
 
@@ -255,7 +199,6 @@ impl Map {
                 walls,
                 modifiers,
                 allow_multiple: multiple,
-                solutions,
             },
             LocalState { molecules },
         )
@@ -556,7 +499,6 @@ mod test_molecule {
             ],
             modifiers: vec![],
             allow_multiple: false,
-            solutions: vec![],
         };
 
         assert!(a.intersects_wall(Point { x: 1, y: 0 }, &map));
@@ -1974,138 +1916,4 @@ fn main() {
 
     let solution = solution.unwrap();
     println!("{}", solution);
-}
-
-#[cfg(test)]
-mod test_solutions {
-    use std::{fs::File, io::Read, sync::mpsc, thread};
-
-    use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
-
-    use super::*;
-
-    #[test]
-    fn test_all_solutions() {
-        // Timeout after 1 second or SOKOBOND_TEST_TIMEOUT if set
-        let timeout = std::time::Duration::from_secs(
-            std::env::var("SOKOBOND_TEST_TIMEOUT")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(1),
-        );
-
-        // Collect all tests to run in order
-        let mut test_files = Vec::new();
-        for entry in std::fs::read_dir("data/sokobond").unwrap() {
-            let entry = entry.unwrap();
-            let path = entry.path();
-            if !path.is_dir() {
-                continue;
-            }
-
-            for entry in std::fs::read_dir(&path).unwrap() {
-                let entry = entry.unwrap();
-                let path = entry.path();
-                if path.extension().unwrap() != "txt" {
-                    continue;
-                }
-
-                test_files.push(path);
-            }
-        }
-        test_files.sort();
-
-        // Run each test with timeout
-        #[derive(Debug, Clone, Eq, PartialEq)]
-        enum TestResult {
-            Success,
-            NoSolution,
-            InvalidSolution(String),
-            TimedOut,
-        }
-
-        let results = test_files
-            .par_iter()
-            .map(move |path| {
-                let mut file = File::open(&path).unwrap();
-                let mut input = String::new();
-                file.read_to_string(&mut input).unwrap();
-
-                let (map, _) = Map::load(&input);
-
-                let (tx, rx) = mpsc::channel();
-                thread::spawn(move || {
-                    let solution = solve(&input);
-                    match tx.send(solution) {
-                        Ok(_) => {}
-                        Err(_) => {}
-                    } // I don't actually care if this succeeds, but need to consume it
-                });
-
-                match rx.recv_timeout(timeout) {
-                    Ok(solution) => {
-                        if solution.is_none() {
-                            log::debug!("No solution: {:?}", path);
-                            return TestResult::NoSolution;
-                        }
-                        let solution = solution.unwrap();
-
-                        if !map.solutions.contains(&solution) {
-                            log::debug!("Invalid solution ({}): {:?}", solution, path);
-                            return TestResult::InvalidSolution(solution);
-                        }
-
-                        log::debug!("Solved: {:?}", path);
-                        return TestResult::Success;
-                    }
-                    Err(_) => {
-                        log::debug!("Timed out: {:?}", path);
-                        return TestResult::TimedOut;
-                    }
-                }
-            })
-            .collect::<Vec<_>>();
-
-        // Print out the results
-        if results.iter().any(|r| *r == TestResult::TimedOut) {
-            println!("\nTimed out tests:");
-            for (path, result) in test_files.iter().zip(results.iter()) {
-                if *result == TestResult::TimedOut {
-                    println!("  {:?}", path);
-                }
-            }
-        }
-
-        if results.iter().any(|r| *r == TestResult::NoSolution) {
-            println!("\nUnsolved tests:");
-            for (path, result) in test_files.iter().zip(results.iter()) {
-                if *result == TestResult::NoSolution {
-                    println!("  {:?}", path);
-                }
-            }
-        }
-
-        if results.iter().any(|r| {
-            if let TestResult::InvalidSolution(_) = r {
-                true
-            } else {
-                false
-            }
-        }) {
-            println!("\nFailed tests:");
-            for (path, result) in test_files.iter().zip(results.iter()) {
-                if let TestResult::InvalidSolution(solution) = result {
-                    println!("  {:?} -> {:?}", path, solution);
-                }
-            }
-        }
-
-        let perfect = results
-            .iter()
-            .all(|r| *r == TestResult::Success || *r == TestResult::TimedOut);
-        if !perfect {
-            println!();
-        }
-        assert!(perfect);
-    }
 }

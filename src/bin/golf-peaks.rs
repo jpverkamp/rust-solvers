@@ -1,109 +1,7 @@
 use anyhow::{anyhow, Result};
-use std::{
-    io::{BufRead, Read},
-    ops::{Add, Mul, Sub},
-};
+use std::io::{BufRead, Read};
 
-use solver::{Solver, State};
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-struct Point {
-    x: isize,
-    y: isize,
-}
-
-impl Point {
-    #[allow(dead_code)]
-    fn manhattan_distance(&self, other: Point) -> isize {
-        (self.x - other.x).abs() + (self.y - other.y).abs()
-    }
-}
-
-impl Add<Point> for Point {
-    type Output = Point;
-
-    fn add(self, other: Point) -> Point {
-        Point {
-            x: self.x + other.x,
-            y: self.y + other.y,
-        }
-    }
-}
-
-impl Sub<Point> for Point {
-    type Output = Point;
-
-    fn sub(self, other: Point) -> Point {
-        Point {
-            x: self.x - other.x,
-            y: self.y - other.y,
-        }
-    }
-}
-
-impl Mul<isize> for Point {
-    type Output = Point;
-
-    fn mul(self, other: isize) -> Point {
-        Point {
-            x: self.x * other,
-            y: self.y * other,
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
-impl From<Direction> for Point {
-    fn from(direction: Direction) -> Point {
-        match direction {
-            Direction::Up => Point { x: 0, y: -1 },
-            Direction::Down => Point { x: 0, y: 1 },
-            Direction::Left => Point { x: -1, y: 0 },
-            Direction::Right => Point { x: 1, y: 0 },
-        }
-    }
-}
-
-impl Direction {
-    fn all() -> Vec<Direction> {
-        vec![
-            Direction::Up,
-            Direction::Down,
-            Direction::Left,
-            Direction::Right,
-        ]
-    }
-
-    fn flip(&self) -> Direction {
-        match self {
-            Direction::Up => Direction::Down,
-            Direction::Down => Direction::Up,
-            Direction::Left => Direction::Right,
-            Direction::Right => Direction::Left,
-        }
-    }
-}
-
-impl TryFrom<&str> for Direction {
-    type Error = anyhow::Error;
-
-    fn try_from(value: &str) -> Result<Self> {
-        match value {
-            "up" => Ok(Direction::Up),
-            "down" => Ok(Direction::Down),
-            "left" => Ok(Direction::Left),
-            "right" => Ok(Direction::Right),
-            _ => Err(anyhow!("Invalid direction: {value}")),
-        }
-    }
-}
+use solver::{Direction, Point, Solver, State};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum AngleType {
@@ -162,7 +60,6 @@ struct Global {
     height: usize,
     tiles: Vec<Tile>,
     flag: Point,
-    solutions: Vec<String>,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -265,8 +162,7 @@ impl Global {
         let mut tiles = vec![Tile::Empty; width * height];
         let mut flag = None;
         let mut ball = None;
-        let mut solutions = Vec::new();
-
+        
         // Read tiles (plus flag and ball)
         for y in 0..height {
             let line = lines
@@ -450,25 +346,12 @@ impl Global {
             cards.push(Card::from(card));
         }
 
-        // Read another empty line then any solutions
-        lines.next();
-
-        for line in lines {
-            let line = line.expect("Missing solution line").trim().to_string();
-            if line.is_empty() {
-                break;
-            }
-
-            solutions.push(line);
-        }
-
         Ok((
             Global {
                 width,
                 height,
                 tiles,
                 flag: flag.expect("No flag in map"),
-                solutions,
             },
             Local {
                 ball: ball.expect("No ball in map"),
@@ -571,7 +454,9 @@ impl Local {
         let current_tile = global.tile_at(self.ball);
 
         // If we're on a flat/safe tile, mark this as the last safe spot
-        if let Tile::Flat(_) | Tile::Angle(_, _) | Tile::Sand(_) | Tile::Spring(_) | Tile::Ice(_) = current_tile {
+        if let Tile::Flat(_) | Tile::Angle(_, _) | Tile::Sand(_) | Tile::Spring(_) | Tile::Ice(_) =
+            current_tile
+        {
             // Flags are apparently not safe, this comes up in 9-9
             if global.flag != self.ball {
                 self.last_safe = self.ball;
@@ -628,9 +513,7 @@ impl Local {
         // When this recurs, we'll be moving 'out' of the tile so won't trigger it twice
         // If we're at a different height than the angle, treat it as flat
         match current_tile {
-            Tile::Angle(height, a_type)
-            | Tile::IceAngle(height, a_type) => {
-
+            Tile::Angle(height, a_type) | Tile::IceAngle(height, a_type) => {
                 if height == current_height {
                     if let Some(new_direction) = a_type.try_reflect(direction) {
                         self.last_move = new_direction;
@@ -722,7 +605,7 @@ impl Local {
             | Tile::Warp(height, _)
             | Tile::Sand(height)
             | Tile::Belt(height, _)
-            | Tile::Ice(height) 
+            | Tile::Ice(height)
             | Tile::IceAngle(height, _) => {
                 // On the same level, just move
                 if height == current_height {
@@ -797,7 +680,11 @@ impl Local {
             return false;
         }
 
-        log::debug!("try_slide({:?}) @ {:?}", self.ball, global.tile_at(self.ball));
+        log::debug!(
+            "try_slide({:?}) @ {:?}",
+            self.ball,
+            global.tile_at(self.ball)
+        );
 
         fn is_ice(tile: Tile) -> bool {
             match tile {
@@ -819,7 +706,7 @@ impl Local {
 
                 let start_position = self.ball;
                 let success = self.try_move(global, self.last_move, 1);
-                
+
                 // Fell off the map (most likely)
                 if !success {
                     return false;
@@ -837,7 +724,10 @@ impl Local {
         // Slopes apply a single tile move than recur
         if let Tile::Slope(_, slope_direction) = global.tile_at(self.ball) {
             // Update/check slide loop check
-            if self.slide_loop_cache.contains(&(self.ball, slope_direction)) {
+            if self
+                .slide_loop_cache
+                .contains(&(self.ball, slope_direction))
+            {
                 return false;
             }
             self.slide_loop_cache.push((self.ball, slope_direction));
@@ -980,8 +870,7 @@ impl State<Global, Step> for Local {
                     | Tile::Warp(height, _)
                     | Tile::Belt(height, _)
                     | Tile::Ice(height)
-                    | Tile::IceAngle(height, _)
-                    => {
+                    | Tile::IceAngle(height, _) => {
                         std::char::from_digit(height as u32, 10).unwrap()
                     }
                 });
@@ -1145,152 +1034,8 @@ fn main() -> Result<()> {
     if let Some((solver, solution)) = solve(global.clone(), local.clone()) {
         let path = stringify_solution(&solver, &local, &solution);
         println!("{path}");
-
-        // Check against known solutions
-        if !global.solutions.iter().any(|s| s == &path) {
-            log::warn!("Solution does not match known solution")
-        }
-
         return Ok(());
     }
 
     Err(anyhow!("No solution found"))
-}
-
-#[cfg(test)]
-mod test_solutions {
-    use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
-    use std::{fs::File, io::Read, sync::mpsc, thread};
-
-    use super::*;
-
-    #[test]
-    fn test_all_solutions() {
-        // Timeout after 1 second or GOLF_PEAKS_TEST_TIMEOUT if set
-        let timeout = std::time::Duration::from_secs(
-            std::env::var("GOLF_PEAKS_TEST_TIMEOUT")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(1),
-        );
-
-        // Collect all tests to run in order
-        let mut test_files = Vec::new();
-
-        let folders = ["data/golf-peaks"];
-
-        for folder in folders.iter() {
-            for entry in std::fs::read_dir(folder).unwrap() {
-                let entry = entry.unwrap();
-                let path = entry.path();
-
-                if path.extension().is_none() || path.extension().unwrap() != "txt" {
-                    continue;
-                }
-
-                test_files.push(path);
-            }
-        }
-        test_files.sort();
-        println!("Running {} tests", test_files.len());
-
-        // Run each test with timeout
-        #[derive(Debug, Clone, Eq, PartialEq)]
-        enum TestResult {
-            Success,
-            NoSolution,
-            InvalidSolution(String),
-            TimedOut,
-        }
-
-        let results = test_files
-            .par_iter()
-            .map(move |path| {
-                let mut file = File::open(&path).unwrap();
-                let mut input = String::new();
-                file.read_to_string(&mut input).unwrap();
-
-                let (global, local) = Global::read(&mut input.as_bytes()).unwrap();
-
-                let (tx, rx) = mpsc::channel();
-
-                let solver_global = global.clone();
-                let solver_local = local.clone();
-
-                let _ = thread::Builder::new().name(format!("{:?}", path)).spawn(move || {
-                    let solution = solve(solver_global, solver_local);
-                    match tx.send(solution) {
-                        Ok(_) => {}
-                        Err(_) => {}
-                    } // I don't actually care if this succeeds, but need to consume it
-                });
-
-                match rx.recv_timeout(timeout) {
-                    Ok(solution) => {
-                        if solution.is_none() {
-                            log::debug!("No solution: {:?}", path);
-                            return TestResult::NoSolution;
-                        }
-
-                        let (solver, solution) = solution.unwrap();
-                        let path = stringify_solution(&solver, &local, &solution);
-
-                        if !global.solutions.contains(&path) {
-                            log::debug!("Invalid solution: {:?}", path);
-                            return TestResult::InvalidSolution(path);
-                        }
-
-                        log::debug!("Solved: {:?}", path);
-                        return TestResult::Success;
-                    }
-                    Err(_) => {
-                        log::debug!("Timed out: {:?}", path);
-                        return TestResult::TimedOut;
-                    }
-                }
-            })
-            .collect::<Vec<_>>();
-
-        // Print out the results
-        if results.iter().any(|r| *r == TestResult::TimedOut) {
-            println!("\nTimed out tests:");
-            for (path, result) in test_files.iter().zip(results.iter()) {
-                if *result == TestResult::TimedOut {
-                    println!("  {:?}", path);
-                }
-            }
-        }
-
-        if results.iter().any(|r| *r == TestResult::NoSolution) {
-            println!("\nUnsolved tests:");
-            for (path, result) in test_files.iter().zip(results.iter()) {
-                if *result == TestResult::NoSolution {
-                    println!("  {:?}", path);
-                }
-            }
-        }
-
-        if results.iter().any(|r| {
-            if let TestResult::InvalidSolution(_) = r {
-                true
-            } else {
-                false
-            }
-        }) {
-            println!("\nFailed tests:");
-            for (path, result) in test_files.iter().zip(results.iter()) {
-                if let TestResult::InvalidSolution(solution) = result {
-                    println!("  {:?} -> {:?}", path, solution);
-                }
-            }
-        }
-
-        let perfect = results
-            .iter()
-            .all(|r| *r == TestResult::Success || *r == TestResult::TimedOut);
-        if !perfect {
-            println!();
-        }
-        assert!(perfect);
-    }
 }

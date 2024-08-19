@@ -1,11 +1,7 @@
 use anyhow::{anyhow, Result};
 use fxhash::FxHashMap;
-use std::{
-    io::{BufRead, Read},
-    ops::{Add, Sub},
-};
-
-use solver::{Solver, State};
+use solver::{Direction, Point, Solver, State};
+use std::io::{BufRead, Read};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum Tile {
@@ -21,7 +17,6 @@ struct Global {
     width: usize,
     height: usize,
     tiles: FxHashMap<Point, Tile>,
-    solutions: Vec<String>,
 }
 
 // Stores the minimum and maximum character for each snake type
@@ -135,22 +130,11 @@ impl Global {
 
         let local = Local { snakes, fruit };
 
-        // Any remaining lines are solutions
-        let mut solutions = Vec::new();
-        for line in reader.lines() {
-            let line = line?.trim().to_string();
-            if line.is_empty() {
-                break;
-            }
-            solutions.push(line);
-        }
-
         Ok((
             Global {
                 width,
                 height,
                 tiles,
-                solutions,
             },
             local,
         ))
@@ -159,40 +143,6 @@ impl Global {
     // Get the tile at a point
     fn tile(&self, point: Point) -> Tile {
         self.tiles.get(&point).copied().unwrap_or(Tile::Empty)
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, PartialOrd, Ord)]
-struct Point {
-    x: isize,
-    y: isize,
-}
-
-impl Point {
-    fn manhattan_distance(&self, other: Point) -> isize {
-        (self.x - other.x).abs() + (self.y - other.y).abs()
-    }
-}
-
-impl Add<Point> for Point {
-    type Output = Point;
-
-    fn add(self, other: Point) -> Point {
-        Point {
-            x: self.x + other.x,
-            y: self.y + other.y,
-        }
-    }
-}
-
-impl Sub<Point> for Point {
-    type Output = Point;
-
-    fn sub(self, other: Point) -> Point {
-        Point {
-            x: self.x - other.x,
-            y: self.y - other.y,
-        }
     }
 }
 
@@ -210,39 +160,6 @@ struct Local {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-enum Direction {
-    Up,
-    Down,
-    Left,
-    Right,
-}
-
-impl Add<Direction> for Point {
-    type Output = Point;
-
-    fn add(self, direction: Direction) -> Point {
-        match direction {
-            Direction::Up => Point {
-                x: self.x,
-                y: self.y - 1,
-            },
-            Direction::Down => Point {
-                x: self.x,
-                y: self.y + 1,
-            },
-            Direction::Left => Point {
-                x: self.x - 1,
-                y: self.y,
-            },
-            Direction::Right => Point {
-                x: self.x + 1,
-                y: self.y,
-            },
-        }
-    }
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 struct Step {
     snake_head: char,
     direction: Direction,
@@ -257,7 +174,7 @@ impl Local {
         }
 
         let head = self.snakes[index].points.first().unwrap().clone();
-        let new_head = head + direction;
+        let new_head = head + direction.into();
 
         // Cannot move into a wall
         if global.tile(new_head) == Tile::Wall {
@@ -366,7 +283,7 @@ impl Local {
                         self.snakes[other_index]
                             .points
                             .iter()
-                            .map(|p| *p + direction),
+                            .map(|p| *p + direction.into()),
                     );
 
                     continue 'daisies_remain;
@@ -395,7 +312,7 @@ impl Local {
         // If we have snakes to push, move them all
         for snake_index in pushing_indexes.iter() {
             for point in self.snakes[*snake_index].points.iter_mut() {
-                *point = *point + direction;
+                *point = *point + direction.into();
             }
         }
 
@@ -440,7 +357,7 @@ impl Local {
                     if self.snakes[index]
                         .points
                         .iter()
-                        .any(|point| global.tile(*point + Direction::Down) == Tile::Wall)
+                        .any(|point| global.tile(*point + Direction::Down.into()) == Tile::Wall)
                     {
                         supported_indexes.push(index);
                         continue 'finding_support;
@@ -450,7 +367,7 @@ impl Local {
                     if self.snakes[index]
                         .points
                         .iter()
-                        .any(|point| self.fruit.contains(&(*point + Direction::Down)))
+                        .any(|point| self.fruit.contains(&(*point + Direction::Down.into())))
                     {
                         supported_indexes.push(index);
                         continue 'finding_support;
@@ -458,11 +375,9 @@ impl Local {
 
                     // Statues are supported by spikes
                     if self.snakes[index].is_statue {
-                        if self.snakes[index]
-                            .points
-                            .iter()
-                            .any(|point| global.tile(*point + Direction::Down) == Tile::Spike)
-                        {
+                        if self.snakes[index].points.iter().any(|point| {
+                            global.tile(*point + Direction::Down.into()) == Tile::Spike
+                        }) {
                             supported_indexes.push(index);
                             continue 'finding_support;
                         }
@@ -473,7 +388,7 @@ impl Local {
                         if self.snakes[index].points.iter().any(|point| {
                             self.snakes[*other_index]
                                 .points
-                                .contains(&(*point + Direction::Down))
+                                .contains(&(*point + Direction::Down.into()))
                         }) {
                             supported_indexes.push(index);
                             continue 'finding_support;
@@ -501,7 +416,7 @@ impl Local {
                     .collect::<Vec<_>>();
 
                 for point in self.snakes[index].points.iter_mut() {
-                    *point = *point + Direction::Down;
+                    *point = *point + Direction::Down.into();
                 }
 
                 // If a snake falls onto a portal, go through it
@@ -1169,160 +1084,8 @@ fn main() -> Result<()> {
     if let Some((solver, solution)) = solve(global.clone(), local.clone()) {
         let path = stringify_solution(&solver, &local, &solution);
         println!("{path}");
-
-        // Check against known solutions
-        if !global.solutions.iter().any(|s| s == &path) {
-            log::warn!("Solution does not match known solution")
-        }
-
         return Ok(());
     }
 
     Err(anyhow!("No solution found"))
-}
-
-#[cfg(test)]
-mod test_solutions {
-    use rayon::iter::{IntoParallelRefIterator, ParallelIterator};
-    use std::{fs::File, io::Read, sync::mpsc, thread};
-
-    use super::*;
-
-    #[test]
-    fn test_all_solutions() {
-        // Timeout after 1 second or SNAKEBIRD_TEST_TIMEOUT if set
-        let timeout = std::time::Duration::from_secs(
-            std::env::var("SNAKEBIRD_TEST_TIMEOUT")
-                .ok()
-                .and_then(|s| s.parse().ok())
-                .unwrap_or(1),
-        );
-
-        // Collect all tests to run in order
-        let mut test_files = Vec::new();
-
-        let folders = ["data/snakebird", "data/snakebird/primer"];
-
-        for folder in folders.iter() {
-            for entry in std::fs::read_dir(folder).unwrap() {
-                let entry = entry.unwrap();
-                let path = entry.path();
-                if !path.is_dir() {
-                    continue;
-                }
-
-                for entry in std::fs::read_dir(&path).unwrap() {
-                    let entry = entry.unwrap();
-                    let path = entry.path();
-
-                    if path.extension().is_none() || path.extension().unwrap() != "txt" {
-                        continue;
-                    }
-
-                    test_files.push(path);
-                }
-            }
-        }
-        test_files.sort();
-        println!("Running {} tests", test_files.len());
-
-        // Run each test with timeout
-        #[derive(Debug, Clone, Eq, PartialEq)]
-        enum TestResult {
-            Success,
-            NoSolution,
-            InvalidSolution(String),
-            TimedOut,
-        }
-
-        let results = test_files
-            .par_iter()
-            .map(move |path| {
-                let mut file = File::open(&path).unwrap();
-                let mut input = String::new();
-                file.read_to_string(&mut input).unwrap();
-
-                let (global, local) = Global::read(&mut input.as_bytes()).unwrap();
-
-                let (tx, rx) = mpsc::channel();
-
-                let solver_global = global.clone();
-                let solver_local = local.clone();
-
-                thread::spawn(move || {
-                    let solution = solve(solver_global, solver_local);
-                    match tx.send(solution) {
-                        Ok(_) => {}
-                        Err(_) => {}
-                    } // I don't actually care if this succeeds, but need to consume it
-                });
-
-                match rx.recv_timeout(timeout) {
-                    Ok(solution) => {
-                        if solution.is_none() {
-                            log::debug!("No solution: {:?}", path);
-                            return TestResult::NoSolution;
-                        }
-
-                        let (solver, solution) = solution.unwrap();
-                        let path = stringify_solution(&solver, &local, &solution);
-
-                        if !global.solutions.contains(&path) {
-                            log::debug!("Invalid solution: {:?}", path);
-                            return TestResult::InvalidSolution(path);
-                        }
-
-                        log::debug!("Solved: {:?}", path);
-                        return TestResult::Success;
-                    }
-                    Err(_) => {
-                        log::debug!("Timed out: {:?}", path);
-                        return TestResult::TimedOut;
-                    }
-                }
-            })
-            .collect::<Vec<_>>();
-
-        // Print out the results
-        if results.iter().any(|r| *r == TestResult::TimedOut) {
-            println!("\nTimed out tests:");
-            for (path, result) in test_files.iter().zip(results.iter()) {
-                if *result == TestResult::TimedOut {
-                    println!("  {:?}", path);
-                }
-            }
-        }
-
-        if results.iter().any(|r| *r == TestResult::NoSolution) {
-            println!("\nUnsolved tests:");
-            for (path, result) in test_files.iter().zip(results.iter()) {
-                if *result == TestResult::NoSolution {
-                    println!("  {:?}", path);
-                }
-            }
-        }
-
-        if results.iter().any(|r| {
-            if let TestResult::InvalidSolution(_) = r {
-                true
-            } else {
-                false
-            }
-        }) {
-            println!("\nFailed tests:");
-            for (path, result) in test_files.iter().zip(results.iter()) {
-                if let TestResult::InvalidSolution(solution) = result {
-                    println!("  {:?} -> {:?}", path, solution);
-                }
-            }
-        }
-
-        let perfect = results
-            .iter()
-            .all(|r| *r == TestResult::Success || *r == TestResult::TimedOut);
-        if !perfect {
-            println!();
-        }
-        assert!(perfect);
-    }
 }
