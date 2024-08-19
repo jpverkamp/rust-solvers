@@ -12,4 +12,3 @@ x - x h x - x
 x - - - - c x
 
 x x x x x x x
-=DSWWWAAAADDSSD

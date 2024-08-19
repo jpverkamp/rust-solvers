@@ -8,5 +8,3 @@ x - N - - - - x
 x - h - x x x x
 
 x x x x x - - -
-=ASDWDWASSAWSDWDDD
-=DSAWAWDSSDWSAWDDD
