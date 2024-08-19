@@ -10,5 +10,3 @@ x       0       x       0       x       0       x       0       x
 2,ball  x       1,boing x       2,sand  x       2,boing x       2,warp
 
 2- 1/ 2/ 2/ 4/ 2/2-
-
-2/2-↗ 2/↘ 2/↗ 2-↘ 1/↗ 4/↘

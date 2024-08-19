@@ -5,6 +5,3 @@ x       0,warp2 0,warp1 0,warp6 0,warp2 x
 x       0,warp4 0,warp3 0,warp5 0,warp0 0,ball
 
 1- 1- 1- 1- 1- 1- 1- 1-
-
-1-↖ 1-↘ 1-↖ 1-↗ 1-
-1-↖ 1-↘ 1-↖ 1-↗ 1-↖

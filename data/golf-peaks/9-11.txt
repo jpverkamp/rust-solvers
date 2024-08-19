@@ -10,5 +10,3 @@ x       0,icetl 0,icetr 0,icetl 0,ice   0,ice   0       0,icetr x
 x       0,*e    0,*e    0,*n    0       0,*s    0,*w    0       x
 
 2- 2- 3- 5- 8-
-
-5-↖ 8-↖ 2-↘ 3-↘ 2-↗
