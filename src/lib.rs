@@ -1,6 +1,7 @@
 use core::fmt::Debug;
 use fxhash::FxHashMap;
-use priority_queue::PriorityQueue;
+// use priority_queue::PriorityQueue;
+use keyed_priority_queue::KeyedPriorityQueue as PriorityQueue;
 use std::fmt::Display;
 use std::hash::Hash;
 use std::time::Instant;
@@ -221,7 +222,14 @@ impl<GlobalState, LocalState: State<GlobalState, Step> + Debug, Step> Iterator
                 // Otherwise, record this step and add to queue
                 self.steps
                     .insert(next_state.clone(), (step, current_state.clone()));
-                self.to_check.push(next_state, -estimated_distance);
+
+                // Insert the next state with estimated distance
+                // Or if was already queued, updated to lower priority
+                // 'Biggest' priority will be popped first, so we negate the estimated distance 
+                let old_priority = self.to_check.get_priority(&next_state);
+                if old_priority.is_none() || -estimated_distance < *old_priority.unwrap() {
+                    self.to_check.push(next_state, -estimated_distance);
+                }
             }
         }
 
