@@ -1,0 +1,28 @@
+{
+  "results": {
+    "data/sudoku/easy.txt": [
+      "initial: sudoku <\n     |26 |7 1\n  68 | 7 | 9 \n  19 |  4|5  \n  ---+---+---\n  82 |1  | 4 \n    4|6 2|9  \n   5 |  3| 28\n  ---+---+---\n    9|3  | 74\n   4 | 5 | 36\n  7 3| 18|   \n>\nsolution: sudoku <\n  435|269|781\n  682|571|493\n  197|834|562\n  ---+---+---\n  826|195|347\n  374|682|915\n  951|743|628\n  ---+---+---\n  519|326|874\n  248|957|136\n  763|418|259\n>\n69 states, 0.00044674508 seconds\n"
+    ],
+    "data/sudoku/evil.txt": [
+      "initial: sudoku <\n  3  |   | 2 \n  4  | 9 |   \n   92|6  |8  \n  ---+---+---\n  9  |   |   \n   51| 6 | 4 \n     |8  |  7\n  ---+---+---\n     |  1|4  \n    3|   |   \n   26| 5 | 1 \n>\nsolution: sudoku <\n  365|178|924\n  418|293|675\n  792|645|831\n  ---+---+---\n  987|534|162\n  251|967|348\n  634|812|597\n  ---+---+---\n  579|321|486\n  143|786|259\n  826|459|713\n>\n848325 states, 0.6405053 seconds\n"
+    ],
+    "data/sudoku/hard.txt": [
+      "initial: sudoku <\n  385|   |   \n    1|  9|   \n    2| 61|   \n  ---+---+---\n   2 | 5 |  8\n     | 3 |   \n     |1  | 35\n  ---+---+---\n     |7 4|6  \n  8  |   |2  \n   7 |   | 1 \n>\nsolution: sudoku <\n  385|247|961\n  761|589|342\n  942|361|857\n  ---+---+---\n  123|456|798\n  457|938|126\n  698|172|435\n  ---+---+---\n  519|724|683\n  834|615|279\n  276|893|514\n>\n119772 states, 0.12598176 seconds\n"
+    ],
+    "data/sudoku/old-hardest.txt": [
+      "initial: sudoku <\n  8  |   |   \n    3|6  |   \n   7 | 9 |2  \n  ---+---+---\n   5 |  7|   \n     | 45|7  \n     |1  | 3 \n  ---+---+---\n    1|   | 68\n    8|5  | 1 \n   9 |   |4  \n>\nsolution: sudoku <\n  812|753|649\n  943|682|175\n  675|491|283\n  ---+---+---\n  154|237|896\n  369|845|721\n  287|169|534\n  ---+---+---\n  521|974|368\n  438|526|917\n  796|318|452\n>\n1197562 states, 0.9382937 seconds\n"
+    ]
+  },
+  "%metadata%": {
+    "command": "./target/release/sudoku",
+    "directory": null,
+    "files": "data/sudoku/*.txt"
+  },
+  "%options%": {
+    "stdout_mode": "Both",
+    "stderr_mode": "Print",
+    "env": [],
+    "preserve_env": false,
+    "timeout": 10
+  }
+}
