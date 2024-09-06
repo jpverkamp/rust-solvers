@@ -1,6 +1,7 @@
 use core::fmt::Debug;
-use priority_queue::PriorityQueue;
-use std::collections::HashMap;
+use fxhash::FxHashMap;
+// use priority_queue::PriorityQueue;
+use keyed_priority_queue::KeyedPriorityQueue as PriorityQueue;
 use std::fmt::Display;
 use std::hash::Hash;
 use std::time::Instant;
@@ -48,8 +49,8 @@ pub struct Solver<GlobalState, LocalState: State<GlobalState, Step>, Step> {
     // A* parameters
     solution: Option<LocalState>,
     to_check: PriorityQueue<LocalState, i64>,
-    steps: HashMap<LocalState, (Step, LocalState)>,
-    distances: HashMap<LocalState, i64>,
+    steps: FxHashMap<LocalState, (Step, LocalState)>,
+    distances: FxHashMap<LocalState, i64>,
 
     // Debug values
     states_checked: usize,
@@ -73,9 +74,9 @@ impl<GlobalState, LocalState: State<GlobalState, Step>, Step: Copy>
         let mut to_check = PriorityQueue::new();
         to_check.push(initial_state.clone(), 0);
 
-        let steps = HashMap::new();
+        let steps = FxHashMap::default();
 
-        let mut distances = HashMap::new();
+        let mut distances = FxHashMap::default();
         distances.insert(initial_state.clone(), 0);
 
         Solver {
@@ -143,7 +144,7 @@ impl<GlobalState, LocalState: State<GlobalState, Step> + Debug, Step> Display
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(
             f,
-            "Solver<time={}, checked={}, queue={}, invalid={}, timed={}>",
+            "Solver<time={}, checked={}, queue={}, invalid={}, time_pruned={}>",
             self.time_spent,
             self.states_checked,
             self.to_check.len(),
@@ -208,7 +209,8 @@ impl<GlobalState, LocalState: State<GlobalState, Step> + Debug, Step> Iterator
                     self.distances.get(&next_state).cloned().unwrap_or(i64::MAX);
 
                 // If we've already found a better path, ignore this one
-                if estimated_distance >= best_next_distance {
+                // if estimated_distance >= best_next_distance {
+                if current_distance + step_distance >= best_next_distance {
                     self.states_time_pruned += 1;
                     continue;
                 }
@@ -220,7 +222,14 @@ impl<GlobalState, LocalState: State<GlobalState, Step> + Debug, Step> Iterator
                 // Otherwise, record this step and add to queue
                 self.steps
                     .insert(next_state.clone(), (step, current_state.clone()));
-                self.to_check.push(next_state, -estimated_distance);
+
+                // Insert the next state with estimated distance
+                // Or if was already queued, updated to lower priority
+                // 'Biggest' priority will be popped first, so we negate the estimated distance 
+                let old_priority = self.to_check.get_priority(&next_state);
+                if old_priority.is_none() || -estimated_distance < *old_priority.unwrap() {
+                    self.to_check.push(next_state, -estimated_distance);
+                }
             }
         }
 
