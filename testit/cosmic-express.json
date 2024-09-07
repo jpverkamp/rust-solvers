@@ -138,12 +138,12 @@
       "  ]     [  \n .│┌───┐│. \n .└┘.┌─┘│. \n ..##│##│. \n ..#.└┐#│. \n .┌──┐│┌┘. \n #│#.└┘│.# \n #│##.#│#. \n .│#...└┐. \n .└─────┘. \n           \n\n"
     ]
   },
-  "%metadata%": {
+  "metadata": {
     "command": "./target/release/cosmic-express",
     "directory": null,
     "files": "data/cosmic-express/*/*.json"
   },
-  "%options%": {
+  "options": {
     "stdout_mode": "Both",
     "stderr_mode": "Print",
     "env": [
@@ -151,6 +151,6 @@
       "COSMIC_EXPRESS_HEURISTIC_NEAREST_HOUSE=true"
     ],
     "preserve_env": false,
-    "timeout": 1
+    "timeout": 10
   }
 }

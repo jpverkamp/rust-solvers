@@ -4,19 +4,13 @@
       "0→→↑→↓→→↑↑→→→↓→→→→→↑→→↑←←←←↑↑↑←\n",
       "0→→→↓→→↑↑→→→→↓→→→↑→→→↑←←←←↑↑↑←\n"
     ],
-    "data/snakebird/Island/01.txt": [
-      "0↑←↑←←↑→→→→↑↑↑←↑↑\n"
-    ],
-    "data/snakebird/Island/02.txt": [
-      "0←←←←←↑→↑←↑→→→→→→→→↑←←↑↑↑←\n"
-    ],
+    "data/snakebird/Island/01.txt": ["0↑←↑←←↑→→→→↑↑↑←↑↑\n"],
+    "data/snakebird/Island/02.txt": ["0←←←←←↑→↑←↑→→→→→→→→↑←←↑↑↑←\n"],
     "data/snakebird/Island/03.txt": [
       "0→→↓→↑→→↑←←←↑←←↓↓←↑↑→↑↑→→↓→↑↑↑\n",
       "0→→↓→→→↑←←←↑↑←←←↓↓→↑↑→→↓→↑↑↑\n"
     ],
-    "data/snakebird/Island/04.txt": [
-      "0↑←←↓↓→→→↓↓←↓←←↑→→↑→↑↑←←↑↑→→→↑↑\n"
-    ],
+    "data/snakebird/Island/04.txt": ["0↑←←↓↓→→→↓↓←↓←←↑→→↑→↑↑←←↑↑→→→↑↑\n"],
     "data/snakebird/Island/05.txt": [
       "0↑↑←↑→↑→↑→→↑↑←←←↓←↑←↑↑→→→\n",
       "0↑↑←↑→↑→↑→→↑↑←←↓←←↑←↑↑→→→\n"
@@ -93,22 +87,14 @@
       "0↑←←↑→→→↑↑→↑←↑↑→↑\n",
       "0←←↑→→→↑↑←↑→↑↑→↑\n"
     ],
-    "data/snakebird/Ruin/31.txt": [
-      "0←←←←↑→↑→↑←←←←←\n"
-    ],
-    "data/snakebird/Ruin/32.txt": [
-      "0↑←←←←↑→a←0→→→↑←←←↑a←←0↑a←↑↑\n"
-    ],
+    "data/snakebird/Ruin/31.txt": ["0←←←←↑→↑→↑←←←←←\n"],
+    "data/snakebird/Ruin/32.txt": ["0↑←←←←↑→a←0→→→↑←←←↑a←←0↑a←↑↑\n"],
     "data/snakebird/Ruin/33.txt": [
       "0←↑←←←↑→→↓↓←←↑←←↑↑↑←←↑↑→→→→→↓←↓↓←←↑←←←←←↑↑↑→\n",
       "0←←←←↑→→↓↓←←↑←←↑↑↑←←↑↑→→→→→↓←↓↓←←↑←←←←←↑↑↑→\n"
     ],
-    "data/snakebird/Ruin/34.txt": [
-      "0←a↑←←0←a↑↑←0↑←a←←↑0↑a←0←↑←\n"
-    ],
-    "data/snakebird/Ruin/35.txt": [
-      "0↑→→→↑↑↑←←↓↓↓↓→→↓↓←←←↑↑→→↑←←←↓\n"
-    ],
+    "data/snakebird/Ruin/34.txt": ["0←a↑←←0←a↑↑←0↑←a←←↑0↑a←0←↑←\n"],
+    "data/snakebird/Ruin/35.txt": ["0↑→→→↑↑↑←←↓↓↓↓→→↓↓←←←↑↑→→↑←←←↓\n"],
     "data/snakebird/Ruin/36.txt": [
       "a↑→0↑↑a→↑←←↑→→→→→→↑↑→0↑a→→0↑a→0→→→→a↑→\n",
       "a↑→0↑a→0↑a↑←←↑→→→→→→↑↑→0↑a→→0↑a→0→→→→a↑→\n"
@@ -243,14 +229,8 @@
       "1→→→↓↓←←←←←←↑↑→↑→→→→→↓↓→→→\n",
       "1→→→↓↓←←←←←←↑↑→↑→→→→→↓→→→↓\n"
     ],
-    "data/snakebird/primer/Island/04.txt": [
-      "0↑→→→→↑←↑←←←←↑↑↑→↑\n",
-      "\n"
-    ],
-    "data/snakebird/primer/Island/05.txt": [
-      "0→→→↓→↑←←←↑\n",
-      "0→→→↓→↑←←↑←\n"
-    ],
+    "data/snakebird/primer/Island/04.txt": ["0↑→→→→↑←↑←←←←↑↑↑→↑\n", "\n"],
+    "data/snakebird/primer/Island/05.txt": ["0→→→↓→↑←←←↑\n", "0→→→↓→↑←←↑←\n"],
     "data/snakebird/primer/Island/06.txt": [
       "0→→↑→↑→↑←←←↑↑→→↑←←←←←←↓↓↓←←↓↓→→→↓→↑↑\n",
       "1→→↑→↑→↑↑↑←←↓↓←↑↑↑←←←←←↓↓↓←↓↓→→→↓→↑↑\n",
@@ -274,10 +254,7 @@
       "0←←←↑←↑↑←←←←←↑↑→↓↓←←←←←↑←↑←↑↑→→↑\n",
       "0←↑←←←↑↑←←←←←↑↑→↓↓←←←←←↑↑←←↑↑→→↑\n"
     ],
-    "data/snakebird/primer/Island/10.txt": [
-      "0→→→↑→→→→↑←←←←↑←←↑↑→↑→→\n",
-      "\n"
-    ],
+    "data/snakebird/primer/Island/10.txt": ["0→→→↑→→→→↑←←←←↑←←↑↑→↑→→\n", "\n"],
     "data/snakebird/primer/Island/17.txt": [
       "0→→→→→→↑↑←↑→→→→→→↑←←↑←←←←↑→↑↑←←←←←←←↑\n",
       "0→→→→→→↑↑←↑→→→→→→↑←←←←←↑←↑→↑↑←←←←←←↑←\n",
@@ -309,12 +286,8 @@
       "0↑←←↑←←←↑→→→↓→→↑↑→→→↑←←↑↑←←←↑↑↑→\n",
       "0↑←←↑←←←↑→→→→↓→↑↑→→→↑←←←↑↑←←↑↑→↑\n"
     ],
-    "data/snakebird/primer/Jungle/21.txt": [
-      "0←←←↑↑←←↑↑←↑←\n"
-    ],
-    "data/snakebird/primer/Jungle/22.txt": [
-      "0→↓→↑→→↑→\n"
-    ],
+    "data/snakebird/primer/Jungle/21.txt": ["0←←←↑↑←←↑↑←↑←\n"],
+    "data/snakebird/primer/Jungle/22.txt": ["0→↓→↑→→↑→\n"],
     "data/snakebird/primer/Jungle/23.txt": [
       "0→→→→↑↑←↓↓↓←←↑←↑\n",
       "0→→→→→↑←←↓↓↓←←↑←↑\n"
@@ -349,10 +322,7 @@
       "0↑a←←←←←↑←0↑←↑a←←0→\n",
       "a←←←←0↑←a←←←↑←0←↑↑←↑←\n"
     ],
-    "data/snakebird/primer/Ocean/12.txt": [
-      "0→→→→a↑0→↑→↑\n",
-      "0→→→→a↑0→↑→a↑\n"
-    ],
+    "data/snakebird/primer/Ocean/12.txt": ["0→→→→a↑0→↑→↑\n", "0→→→→a↑0→↑→a↑\n"],
     "data/snakebird/primer/Ocean/13.txt": [
       "a→→↑↑→→→↓↓←↑0←a←0←↑a←↑←←0↑\n",
       "a↑→→↑↑→→→↓↓←↑←←↑↑0←↑a←←0↑\n",
@@ -402,9 +372,7 @@
       "a←←0→a←0→a←↑←←←←←↑←↑→→0↑a→→→→→0←\n",
       "0→a←←0→a←↑←←←←←↑←↑→→0↑a→→→→→0←\n"
     ],
-    "data/snakebird/primer/Ruin/36.txt": [
-      "0→→→↑→↑→→↓←↑←↑←↑←←↑←\n"
-    ],
+    "data/snakebird/primer/Ruin/36.txt": ["0→→→↑→↑→→↓←↑←↑←↑←←↑←\n"],
     "data/snakebird/primer/Ruin/37.txt": [
       "0↑→↑↑→↑↑↑→→↑←←←↑←↑←←←\n",
       "0↑→↑↑→↑↑↑→→↑←←←←↑↑←←←\n"
@@ -421,12 +389,8 @@
       "0→→→↑→→→→↑→↑←←↑←←←←←↓→→↑→→→→↑→↑→\n",
       "0→→→↑→→→→↑→↑←←←↑←←←←↓→→↑→→→→↑→↑→\n"
     ],
-    "data/snakebird/primer/Ruin/41.txt": [
-      "0→↑→↑→→↑←↑←←↑→↑→→↑←←↑↑\n"
-    ],
-    "data/snakebird/primer/Ruin/42.txt": [
-      "0→↑→↑→→↑←↑←←↑→↑→→↑←←↑↑\n"
-    ],
+    "data/snakebird/primer/Ruin/41.txt": ["0→↑→↑→→↑←↑←←↑→↑→→↑←←↑↑\n"],
+    "data/snakebird/primer/Ruin/42.txt": ["0→↑→↑→→↑←↑←←↑→↑→→↑←←↑↑\n"],
     "data/snakebird/primer/Ruin/43.txt": [
       "0→→→→→→→→↑→→→↑→↓←←←↓←←←←←↑←←←↑↑↑↑→↑→\n",
       "0→→→→→→→→↑→→→→↑←←↓←←←←←←↑←←←↑↑↑↑→↑→\n"
@@ -482,38 +446,18 @@
       "0→↑→→↑→→→↑→↑←←←←↑→↑↑→↑→→↑\n",
       "0→↑→→↑→→→↑→↑←←←←↑→↑↑→→↑→↑\n"
     ],
-    "data/snakebird/primer/Temple/32.txt": [
-      "0←←←↑→→↑→\n"
-    ],
-    "data/snakebird/primer/Temple/33.txt": [
-      "0←←↑←←←←\n"
-    ],
+    "data/snakebird/primer/Temple/32.txt": ["0←←←↑→→↑→\n"],
+    "data/snakebird/primer/Temple/33.txt": ["0←←↑←←←←\n"],
     "data/snakebird/primer/Temple/34.txt": [
       "0→→↑←↓←←←←↑↑←←↑←↑↑→↑→\n",
       "0→→↑←↓←←←←↑↑←↑←←↑↑→↑→\n"
     ],
-    "data/snakebird/primer/Temple/35.txt": [
-      "0←←←↑←↑→→↓→↑←←↑←\n",
-      "0←←↑←↑←\n"
-    ],
-    "data/snakebird/primer/Temple/60.txt": [
-      "0←↑←↑↑→→↑→\n",
-      "0←←↑↑→→↑→\n"
-    ],
-    "data/snakebird/primer/Temple/61.txt": [
-      "0←↑←←↑→→→↑↑→\n",
-      "0←←↑←↑→→→↑↑→\n"
-    ],
-    "data/snakebird/primer/Temple/62.txt": [
-      "0←↑←↑↑→→↑↑→\n",
-      "0←←↑↑→→↑↑→\n"
-    ],
-    "data/snakebird/primer/Temple/63.txt": [
-      "0↑→↑←←←↑←↑→→→→↑→→↑→↑→\n"
-    ],
-    "data/snakebird/primer/Winter/25.txt": [
-      "0←←←↑→→→→↑←←←←←←↑←\n"
-    ],
+    "data/snakebird/primer/Temple/35.txt": ["0←←←↑←↑→→↓→↑←←↑←\n", "0←←↑←↑←\n"],
+    "data/snakebird/primer/Temple/60.txt": ["0←↑←↑↑→→↑→\n", "0←←↑↑→→↑→\n"],
+    "data/snakebird/primer/Temple/61.txt": ["0←↑←←↑→→→↑↑→\n", "0←←↑←↑→→→↑↑→\n"],
+    "data/snakebird/primer/Temple/62.txt": ["0←↑←↑↑→→↑↑→\n", "0←←↑↑→→↑↑→\n"],
+    "data/snakebird/primer/Temple/63.txt": ["0↑→↑←←←↑←↑→→→→↑→→↑→↑→\n"],
+    "data/snakebird/primer/Winter/25.txt": ["0←←←↑→→→→↑←←←←←←↑←\n"],
     "data/snakebird/primer/Winter/26.txt": [
       "0↑←↑←←↑↑←↑→→→↑→↑←↑←↑↑→→→→↑\n",
       "0↑←←↑←↑↑←↑→→→→↑←↑←↑↑→→→→↑\n"
@@ -540,12 +484,12 @@
       "0←↑→→↓←←↑↑→→↑↑←←←←↑↑→→↓↓↓→→↑↑←←↑↑←←↑↑→↑→→→\n"
     ]
   },
-  "%metadata%": {
+  "metadata": {
     "command": "./target/release/snakebird",
     "directory": null,
     "files": "data/snakebird/**/*.txt"
   },
-  "%options%": {
+  "options": {
     "stdout_mode": "Both",
     "stderr_mode": "Print",
     "env": [],

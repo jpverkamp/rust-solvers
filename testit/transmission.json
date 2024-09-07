@@ -72,9 +72,7 @@
     "data/transmission/4-11.json": [
       "[1] Transmitter1(3, 5) -> Antenna(5, 2)\n[2] Transceiver1(6, 1) -> Antenna(3, 2)\n[3] Transceiver1(6, 3) -> Transceiver4(2, 2)\n[4] Transmitter1(2, 0) -> Antenna(3, 2)\n[5] Transceiver4(2, 2) -> Receiver3(0, 3)\n[6] Transceiver4(2, 2) -> Transceiver1(4, 0)\n\ndigraph G {\n\tnode0[pos=\"2,0!\" shape=\"triangle\" label=\"2/1\" style=\"filled\" fillcolor=\"White\"]\n\tnode1[pos=\"4,0!\" shape=\"circle\" label=\"1\" style=\"filled\" fillcolor=\"White\"]\n\tnode2[pos=\"6,-1!\" shape=\"circle\" label=\"1\" style=\"filled\" fillcolor=\"White\"]\n\tnode3[pos=\"1,-2!\" shape=\"star\" label=\"\" style=\"filled\" fillcolor=\"White\"]\n\tnode4[pos=\"2,-2!\" shape=\"circle\" label=\"4\" style=\"filled\" fillcolor=\"White\"]\n\tnode5[pos=\"3,-2!\" shape=\"star\" label=\"\" style=\"filled\" fillcolor=\"White\"]\n\tnode6[pos=\"4,-2!\" shape=\"box\" label=\"4\" style=\"filled\" fillcolor=\"White\"]\n\tnode7[pos=\"5,-2!\" shape=\"star\" label=\"\" style=\"filled\" fillcolor=\"White\"]\n\tnode8[pos=\"0,-3!\" shape=\"box\" label=\"3\" style=\"filled\" fillcolor=\"White\"]\n\tnode9[pos=\"6,-3!\" shape=\"circle\" label=\"1\" style=\"filled\" fillcolor=\"White\"]\n\tnode10[pos=\"3,-5!\" shape=\"triangle\" label=\"1/1\" style=\"filled\" fillcolor=\"White\"]\n\n\tnode10 -> node7 [label=\"1\"]\n\tnode2 -> node5 [label=\"2\"]\n\tnode9 -> node4 [label=\"3\"]\n\tnode0 -> node5 [label=\"4\"]\n\tnode4 -> node8 [label=\"5\"]\n\tnode4 -> node1 [label=\"6\"]\n\tnode3 -> node4 [style=\"dashed\"]\n\tnode3 -> node8 [style=\"dashed\"]\n\tnode5 -> node4 [style=\"dashed\"]\n\tnode5 -> node6 [style=\"dashed\"]\n\tnode7 -> node2 [style=\"dashed\"]\n\tnode7 -> node6 [style=\"dashed\"]\n\tnode7 -> node9 [style=\"dashed\"]\n}\n"
     ],
-    "data/transmission/4-2.json": [
-      "\ndigraph G {\n\n}\n"
-    ],
+    "data/transmission/4-2.json": ["\ndigraph G {\n\n}\n"],
     "data/transmission/4-9.json": [
       "[1] Transceiver2(0, 2) -> Antenna(2, 4)\n[2] Transceiver2(3, 3) -> Antenna(2, 0)\n[3] Transceiver2(4, 2) -> Receiver2(5, 3)\n[4] Transceiver1(3, 1) -> Transceiver2(4, 2)\n[5] Transceiver4(2, 2) -> Transceiver2(0, 2)\n[6] Transceiver4(2, 2) -> Receiver2(5, 1)\n\ndigraph G {\n\tnode0[pos=\"2,0!\" shape=\"star\" label=\"\" style=\"filled\" fillcolor=\"White\"]\n\tnode1[pos=\"3,-1!\" shape=\"circle\" label=\"1\" style=\"filled\" fillcolor=\"White\"]\n\tnode2[pos=\"5,-1!\" shape=\"box\" label=\"2\" style=\"filled\" fillcolor=\"White\"]\n\tnode3[pos=\"0,-2!\" shape=\"circle\" label=\"1/2\" style=\"filled\" fillcolor=\"White\"]\n\tnode4[pos=\"2,-2!\" shape=\"circle\" label=\"4\" style=\"filled\" fillcolor=\"White\"]\n\tnode5[pos=\"4,-2!\" shape=\"circle\" label=\"1/2\" style=\"filled\" fillcolor=\"White\"]\n\tnode6[pos=\"3,-3!\" shape=\"circle\" label=\"2\" style=\"filled\" fillcolor=\"White\"]\n\tnode7[pos=\"5,-3!\" shape=\"box\" label=\"2\" style=\"filled\" fillcolor=\"White\"]\n\tnode8[pos=\"2,-4!\" shape=\"star\" label=\"\" style=\"filled\" fillcolor=\"White\"]\n\n\tnode3 -> node8 [label=\"1\"]\n\tnode6 -> node0 [label=\"2\"]\n\tnode5 -> node7 [label=\"3\"]\n\tnode1 -> node5 [label=\"4\"]\n\tnode4 -> node3 [label=\"5\"]\n\tnode4 -> node2 [label=\"6\"]\n\tnode0 -> node1 [style=\"dashed\"]\n\tnode0 -> node4 [style=\"dashed\"]\n\tnode8 -> node4 [style=\"dashed\"]\n\tnode8 -> node6 [style=\"dashed\"]\n}\n"
     ],
@@ -88,12 +86,12 @@
       "[1] Transmitter1(4, 1)+Yellow -> Transceiver1(1, 1)+Yellow\n[2] Transmitter1(0, 0) -> Receiver2(3, 0)\n[3] Transmitter1(2, 2) -> Receiver2(3, 0)\n[4] Transceiver1(1, 1)+Yellow -> Receiver1(0, 2)+Yellow\n\ndigraph G {\n\tnode0[pos=\"0,0!\" shape=\"triangle\" label=\"1/1\" style=\"filled\" fillcolor=\"White\"]\n\tnode1[pos=\"3,0!\" shape=\"box\" label=\"2\" style=\"filled\" fillcolor=\"White\"]\n\tnode2[pos=\"1,-1!\" shape=\"circle\" label=\"1\" style=\"filled\" fillcolor=\"Yellow\"]\n\tnode3[pos=\"4,-1!\" shape=\"triangle\" label=\"1/1\" style=\"filled\" fillcolor=\"Yellow\"]\n\tnode4[pos=\"0,-2!\" shape=\"box\" label=\"1\" style=\"filled\" fillcolor=\"Yellow\"]\n\tnode5[pos=\"2,-2!\" shape=\"triangle\" label=\"1/1\" style=\"filled\" fillcolor=\"White\"]\n\n\tnode3 -> node2 [label=\"1\"]\n\tnode0 -> node1 [label=\"2\"]\n\tnode5 -> node1 [label=\"3\"]\n\tnode2 -> node4 [label=\"4\"]\n}\n"
     ]
   },
-  "%metadata%": {
+  "metadata": {
     "command": "./target/release/transmission",
     "directory": null,
     "files": "data/transmission/*.json"
   },
-  "%options%": {
+  "options": {
     "stdout_mode": "Both",
     "stderr_mode": "Print",
     "env": [],

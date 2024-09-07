@@ -1,14 +1,8 @@
 {
   "results": {
-    "data/sokobond/01 - Yellow/01 - Let's Go.txt": [
-      "WWDDWWDD\n"
-    ],
-    "data/sokobond/01 - Yellow/02 - Cell.txt": [
-      "DWDDAA\n"
-    ],
-    "data/sokobond/01 - Yellow/03 - Loop.txt": [
-      "SSDDWWSSAAAWWWWD\n"
-    ],
+    "data/sokobond/01 - Yellow/01 - Let's Go.txt": ["WWDDWWDD\n"],
+    "data/sokobond/01 - Yellow/02 - Cell.txt": ["DWDDAA\n"],
+    "data/sokobond/01 - Yellow/03 - Loop.txt": ["SSDDWWSSAAAWWWWD\n"],
     "data/sokobond/01 - Yellow/04 - Monty Hall.txt": [
       "WSDDWSAAWWWDAAA\n",
       "WSAAWSDDWWWADDD\n"
@@ -17,16 +11,9 @@
       "WDASASWADDDD\n",
       "SDAWWASADDDD\n"
     ],
-    "data/sokobond/01 - Yellow/06 - Push.txt": [
-      "DDSDWD\n"
-    ],
-    "data/sokobond/01 - Yellow/07 - Structure.txt": [
-      "DSSAWAA\n",
-      "DSSWAAA\n"
-    ],
-    "data/sokobond/01 - Yellow/08 - Lotus.txt": [
-      "SASSDDSAS\n"
-    ],
+    "data/sokobond/01 - Yellow/06 - Push.txt": ["DDSDWD\n"],
+    "data/sokobond/01 - Yellow/07 - Structure.txt": ["DSSAWAA\n", "DSSWAAA\n"],
+    "data/sokobond/01 - Yellow/08 - Lotus.txt": ["SASSDDSAS\n"],
     "data/sokobond/01 - Yellow/09 - Coyote.txt": [
       "WWAASASSAA\n",
       "SSAAWAWWAA\n"
@@ -35,16 +22,12 @@
       "WDWDSDDWAAASSD\n",
       "WWDDSDDAWAAASS\n"
     ],
-    "data/sokobond/02 - Orange/01 - Suit.txt": [
-      "SSDDWSSDSAS\n"
-    ],
+    "data/sokobond/02 - Orange/01 - Suit.txt": ["SSDDWSSDSAS\n"],
     "data/sokobond/02 - Orange/02 - Chimney.txt": [
       "WDAWSSAAWDDW\n",
       "WDWASSAAWDDW\n"
     ],
-    "data/sokobond/02 - Orange/03 - Heart.txt": [
-      "WWDWASAAWDAWWDSDDW\n"
-    ],
+    "data/sokobond/02 - Orange/03 - Heart.txt": ["WWDWASAAWDAWWDSDDW\n"],
     "data/sokobond/02 - Orange/04 - Factory.txt": [
       "DDSSAAAAAWWWSDDDDDWWAWAS\n",
       "AASSDDDDDWWWSAAAAAWWDWDS\n"
@@ -54,12 +37,8 @@
       "DAASSDSDDWAAAA\n",
       "DAASSDSDDAAWAA\n"
     ],
-    "data/sokobond/02 - Orange/06 - Block.txt": [
-      "ASSDDSDDWWWADSSAAAW\n"
-    ],
-    "data/sokobond/02 - Orange/07 - Chandelier.txt": [
-      "DSSSAWDWDSSAWWWA\n"
-    ],
+    "data/sokobond/02 - Orange/06 - Block.txt": ["ASSDDSDDWWWADSSAAAW\n"],
+    "data/sokobond/02 - Orange/07 - Chandelier.txt": ["DSSSAWDWDSSAWWWA\n"],
     "data/sokobond/02 - Orange/08 - Creature.txt": [
       "WDDWWAAWASDDDDSSAASSAWAAW\n",
       "WAAWWDDWDSAAAASSDDSSWDDDW\n"
@@ -80,9 +59,7 @@
       "WWASWDDDSAAWASDSSADSSWWW\n",
       "WWASWDDDSAAWASDSSSSAWDWW\n"
     ],
-    "data/sokobond/03 - Gray/03 - Freedom.txt": [
-      "AAWAWDD\n"
-    ],
+    "data/sokobond/03 - Gray/03 - Freedom.txt": ["AAWAWDD\n"],
     "data/sokobond/03 - Gray/04 - Against the Wall.txt": [
       "WAASWAWWDSASDDSSSAWWSAAWWDDWWDDSSAAWAWASASDDDD\n",
       "WAASWAWWDSASDDSSSAWWSAAWWDDWWDDSSWWAAAASASDDDD\n"
@@ -96,9 +73,7 @@
       "DAWWSAAWWAWDDSDSSAASDSDWWWSDDWSDSSAWWAAAAWWDD\n",
       "AWAWSDDWSDDWWDWAAASSSDDSASAWWWSDDWWAASSSASAWW\n"
     ],
-    "data/sokobond/03 - Gray/07 - Cloud.txt": [
-      "DWWASDDSWWASSD\n"
-    ],
+    "data/sokobond/03 - Gray/07 - Cloud.txt": ["DWWASDDSWWASSD\n"],
     "data/sokobond/03 - Gray/08 - Planning.txt": [
       "WDSDSAASSAWDWASAAWDDDDSDDW\n",
       "WASASDSDSDWAWDSDDWAAAASAAW\n"
@@ -112,9 +87,7 @@
       "WDWASASSDDWWDSAASSWAWA\n",
       "SDWSSAWAWWDWSSAADSDDDW\n"
     ],
-    "data/sokobond/03 - Gray/11 - Fetch.txt": [
-      "WDWASSSADDASWWWWDSAWASDSDAA\n"
-    ],
+    "data/sokobond/03 - Gray/11 - Fetch.txt": ["WDWASSSADDASWWWWDSAWASDSDAA\n"],
     "data/sokobond/03 - Gray/12 - Drill.txt": [
       "AWWWWDSASSSDWDWAWWAASDSDASSDWAWWDSWWDDSAS\n",
       "DWWWWASDSSSAWAWWDWDDSASADSSAWDWWASWWAASDS\n",
@@ -124,15 +97,9 @@
       "DDWWDSSDDDAAWA\n",
       "DDWWDSSDDDAAAW\n"
     ],
-    "data/sokobond/04 - Red/02 - Lock.txt": [
-      "DDWDSAWWWWAADDSSSA\n"
-    ],
-    "data/sokobond/04 - Red/03 - Push Up.txt": [
-      "DAAWDSDWA\n"
-    ],
-    "data/sokobond/04 - Red/04 - Out of Reach.txt": [
-      "WDDDDSAWDSAAWW\n"
-    ],
+    "data/sokobond/04 - Red/02 - Lock.txt": ["DDWDSAWWWWAADDSSSA\n"],
+    "data/sokobond/04 - Red/03 - Push Up.txt": ["DAAWDSDWA\n"],
+    "data/sokobond/04 - Red/04 - Out of Reach.txt": ["WDDDDSAWDSAAWW\n"],
     "data/sokobond/04 - Red/05 - Small Key.txt": [
       "ASDWDWASSAWSDWDDD\n",
       "DSAWAWDSSDWSAWDDD\n",
@@ -169,13 +136,8 @@
       "DSDWAASDWWASDSDDDDDWSAWWDSASAAA\n",
       "DSDWAASDWWASDDASDDDDDWSAWWDSASAAA\n"
     ],
-    "data/sokobond/05 - Green/01 - Breathe.txt": [
-      "WWDSDSWAW\n",
-      "DDAWWADSD\n"
-    ],
-    "data/sokobond/05 - Green/02 - Doubling.txt": [
-      "WAWWASSDW\n"
-    ],
+    "data/sokobond/05 - Green/01 - Breathe.txt": ["WWDSDSWAW\n", "DDAWWADSD\n"],
+    "data/sokobond/05 - Green/02 - Doubling.txt": ["WAWWASSDW\n"],
     "data/sokobond/05 - Green/03 - Koan.txt": [
       "WAWAADDSASWDW\n",
       "WAWAWSSDWDSAA\n"
@@ -195,9 +157,7 @@
     "data/sokobond/05 - Green/07 - Apartment.txt": [
       "SDDWWDDDSDWWWWAAAADDDDW\n"
     ],
-    "data/sokobond/05 - Green/08 - Lettuce.txt": [
-      "WDDWAWSSA\n"
-    ],
+    "data/sokobond/05 - Green/08 - Lettuce.txt": ["WDDWAWSSA\n"],
     "data/sokobond/05 - Green/09 - Landing Pad.txt": [
       "SDDDSSWWWWSSAAAAWSS\n",
       "SDDDWWSSSSWWAAAAWSS\n",
@@ -223,9 +183,7 @@
     "data/sokobond/06 - Dark Green/03 - Mine Field.txt": [
       "SDDDDSSSAWAWAWDSAAWWSDSDSDSAAAAAA\n"
     ],
-    "data/sokobond/06 - Dark Green/04 - Workshop.txt": [
-      "DSDDWDDSAAASDWAD\n"
-    ],
+    "data/sokobond/06 - Dark Green/04 - Workshop.txt": ["DSDDWDDSAAASDWAD\n"],
     "data/sokobond/06 - Dark Green/05 - Dissection.txt": [
       "AASSDDAWADWASDDDDD\n"
     ],
@@ -237,9 +195,7 @@
       "DDAWDSDWASDWASDWWWAAD\n",
       "DDAWDSAWWDDASSAAWWS\n"
     ],
-    "data/sokobond/06 - Dark Green/08 - Cat.txt": [
-      "WAADDDAADAAWSSDDWD\n"
-    ],
+    "data/sokobond/06 - Dark Green/08 - Cat.txt": ["WAADDDAADAAWSSDDWD\n"],
     "data/sokobond/06 - Dark Green/09 - Halves.txt": [
       "ADDSAWAAWDSDD\n",
       "ASAWWDSDDSA\n",
@@ -258,9 +214,7 @@
       "SAWWSDWDSASDWWAWASSDDWWASASSDDWDDD\n",
       "WDSSWASAWWDWDSSADWAASDDSAWAWDSSDWSWDDD\n"
     ],
-    "data/sokobond/07 - Dark Red/02 - Compass.txt": [
-      "SSDDASAAWADSDS\n"
-    ],
+    "data/sokobond/07 - Dark Red/02 - Compass.txt": ["SSDDASAAWADSDS\n"],
     "data/sokobond/07 - Dark Red/03 - Blocking the Way.txt": [
       "SSSSAAAWWDDAAWSSASDDDDWWAAAWWDDDSSAAASWDDDDS\n",
       "SSSSAAAWWDDAAWSASSDDDDWWAAAWWDDDSSAAASWDDDDS\n"
@@ -310,9 +264,7 @@
       "ASAWWDDDWSAAWDWAADDAA\n",
       "WDWAASSSADWWASAWWSSWW\n"
     ],
-    "data/sokobond/08 - Light Gray/01 - Multiple.txt": [
-      "DDWWASAWDD\n"
-    ],
+    "data/sokobond/08 - Light Gray/01 - Multiple.txt": ["DDWWASAWDD\n"],
     "data/sokobond/08 - Light Gray/02 - Water Water.txt": [
       "DWASSWDDW\n",
       "SDWWASDW\n"
@@ -366,24 +318,18 @@
       "ASSWWDWDSAASA\n",
       "ASADDDWWASASS\n"
     ],
-    "data/sokobond/09 - Blue/02 - Key.txt": [
-      "DDASDWWWWA\n"
-    ],
+    "data/sokobond/09 - Blue/02 - Key.txt": ["DDASDWWWWA\n"],
     "data/sokobond/09 - Blue/03 - Kitten.txt": [
       "WDWASDSAWDDW\n",
       "WDWASDSAWDWD\n",
       "WDAWSDSAWDWD\n"
     ],
-    "data/sokobond/09 - Blue/04 - Tracks.txt": [
-      "DDSSSDAWWWADSSSDDA\n"
-    ],
+    "data/sokobond/09 - Blue/04 - Tracks.txt": ["DDSSSDAWWWADSSSDDA\n"],
     "data/sokobond/09 - Blue/05 - Fish.txt": [
       "AAWAWADDSAAWDSADDDDD\n",
       "AAWAWADDASAWDSADDDDD\n"
     ],
-    "data/sokobond/09 - Blue/07 - Middle.txt": [
-      "DSWWWAAAADDSSD\n"
-    ],
+    "data/sokobond/09 - Blue/07 - Middle.txt": ["DSWWWAAAADDSSD\n"],
     "data/sokobond/09 - Blue/08 - Goblet.txt": [
       "WWDWASAWDSDWDWAASSWDDSSASS\n",
       "WWWDSDWASAAWWDSDSWAASSDSS\n",
@@ -484,9 +430,7 @@
       "WWAADDWSAASSWWDDSSSSAAWWWWDDWSDDAAAASSSSDDWWSSDDAA\n",
       "WWAADDWSAASSWWDDSSSSAAWWWWDDWSDDAAAASSSSDDDDAAWWSS\n"
     ],
-    "data/sokobond/12 - Bonus/01 - Juggle.txt": [
-      "WDSAAWAWDAWWWWDDDSSS\n"
-    ],
+    "data/sokobond/12 - Bonus/01 - Juggle.txt": ["WDSAAWAWDAWWWWDDDSSS\n"],
     "data/sokobond/12 - Bonus/02 - Grand Slam.txt": [
       "SSSSDDASAAWWDDD\n",
       "SSSSDDWSASAAWW\n",
@@ -518,9 +462,7 @@
       "WWDASAAADDSDSSDWWWDAASSSWDAWAAA\n",
       "WWDSAAAADDSDSSDWWWDASASSWDWAAAA\n"
     ],
-    "data/sokobond/12 - Bonus/09 - Wiggle.txt": [
-      "WDSADWASDWAAWDADSADDSAWW\n"
-    ],
+    "data/sokobond/12 - Bonus/09 - Wiggle.txt": ["WDSADWASDWAAWDADSADDSAWW\n"],
     "data/sokobond/12 - Bonus/10 - Flower.txt": [
       "DDDDAAWWAAWSDDDWSSSAAAASSWWDDWWDDWSSSSWWAWAWADSDDW\n",
       "DDDDAAWWAAWSDDDWSSSAAAASSWWDDWWDDWSSSSWWWAAWADSDDW\n",
@@ -539,16 +481,14 @@
       "DDDWWWWWWSSSSSSAAWWWSSSAAWWWWSSSSDDDDWWWWWAAWSAAW\n",
       "DDWDWWWWWSSSSSSAAAAWWWWSSSSDDWWWSSSDDWWWWWAAWSAAW\n"
     ],
-    "data/sokobond/Test.txt": [
-      "SD\n"
-    ]
+    "data/sokobond/Test.txt": ["SD\n"]
   },
-  "%metadata%": {
+  "metadata": {
     "command": "./target/release/sokobond",
     "directory": null,
     "files": "data/sokobond/**/*.txt"
   },
-  "%options%": {
+  "options": {
     "stdout_mode": "Both",
     "stderr_mode": "Print",
     "env": [],
