@@ -10,6 +10,10 @@ pub struct Point {
 #[allow(dead_code)]
 impl Point {
     pub const ZERO: Point = Point { x: 0, y: 0 };
+    pub const UP: Point = Point { x: 0, y: -1 };
+    pub const DOWN: Point = Point { x: 0, y: 1 };
+    pub const LEFT: Point = Point { x: -1, y: 0 };
+    pub const RIGHT: Point = Point { x: 1, y: 0 };
 
     pub fn manhattan_distance(&self, other: Point) -> isize {
         (self.x - other.x).abs() + (self.y - other.y).abs()
