@@ -1,0 +1,9 @@
+map 6 7
+cut 6 4
+track 2 2 down
+exit 2 6 down
+
+atom 2 2 carbon
+atom 5 3 hydrogen
+atom 5 4 oxygen
+atom 5 5 hydrogen

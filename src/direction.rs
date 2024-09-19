@@ -21,6 +21,18 @@ impl From<Direction> for Point {
     }
 }
 
+impl From<Point> for Direction {
+    fn from(point: Point) -> Direction {
+        match point {
+            Point { x: 0, y: -1 } => Direction::Up,
+            Point { x: 0, y: 1 } => Direction::Down,
+            Point { x: -1, y: 0 } => Direction::Left,
+            Point { x: 1, y: 0 } => Direction::Right,
+            _ => panic!("Invalid point: {:?}", point),
+        }
+    }
+}
+
 impl TryFrom<&str> for Direction {
     type Error = anyhow::Error;
 
@@ -30,6 +42,20 @@ impl TryFrom<&str> for Direction {
             "down" => Ok(Direction::Down),
             "left" => Ok(Direction::Left),
             "right" => Ok(Direction::Right),
+            _ => Err(anyhow!("Invalid direction: {value}")),
+        }
+    }
+}
+
+impl TryFrom<char> for Direction {
+    type Error = anyhow::Error;
+
+    fn try_from(value: char) -> Result<Self> {
+        match value {
+            'U' | 'u' | 'N' | 'n' => Ok(Direction::Up),
+            'D' | 'd' | 'S' | 's' => Ok(Direction::Down),
+            'L' | 'l' | 'W' | 'w' => Ok(Direction::Left),
+            'R' | 'r' | 'E' | 'e' => Ok(Direction::Right),
             _ => Err(anyhow!("Invalid direction: {value}")),
         }
     }
