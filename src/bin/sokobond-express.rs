@@ -286,6 +286,13 @@ struct Step;
 
 impl State<Global, Step> for Local {
     fn is_valid(&self, _global: &Global) -> bool {
+        // If the molecule on the track has no more free electrons and we need to connect to more, fail
+        // TODO: This might not be valid for all levels
+        let track_molecule = self.molecules.iter().find(|m| m.contains(&self.head)).unwrap();
+        if track_molecule.free_electrons() == 0 && self.molecules.iter().any(|m| m.free_electrons() > 0) {
+            return false;
+        }
+
         true
     }
 

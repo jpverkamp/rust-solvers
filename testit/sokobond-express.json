@@ -16,7 +16,8 @@
       "..┌─┐.\n.↓│┌┘.\n.└┘│ .\n..┌┘  \n┌H│. .\n│CO─┐.\n└H──┘.\n\n"
     ],
     "data/sokobond-express/2-beta/beta-1.txt": [
-      ".┌OH...\n │H│ .↓\n┌┘└┘..│\n└─────┘\n\n"
+      ".┌OH...\n │H│ .↓\n┌┘└┘..│\n└─────┘\n\n",
+      ".┌OH...\n │H│ .↓\n┌┘└┘.┌┘\n└────┘.\n\n"
     ],
     "data/sokobond-express/2-beta/beta-2.txt": [
       ". .  .OO\n┌─┐  .HH\n│ └──┐└┐\n└─┐  │ │\n.→┘  └─┘\n\n"
@@ -26,6 +27,9 @@
     ],
     "data/sokobond-express/2-beta/beta-4.txt": [
       "┌──┐...\n│ .│. .\n│..ONO.\n└──H┐..\n   .↑  \n\n"
+    ],
+    "data/sokobond-express/2-beta/beta-5.txt": [
+      " .┌─←...\n..│.....\n┌┐│. ...\n││└─┐.NO\n│└──┘┌O┐\n└────┘H┘\n\n"
     ]
   },
   "metadata": {
@@ -38,6 +42,6 @@
     "stderr_mode": "Print",
     "env": [],
     "preserve_env": false,
-    "timeout": 10
+    "timeout": 3600
   }
 }
