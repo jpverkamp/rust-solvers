@@ -1,9 +1,9 @@
 use solver::{Solver, State};
 
-#[derive(Debug, )]
+#[derive(Debug)]
 struct Global;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Local;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]

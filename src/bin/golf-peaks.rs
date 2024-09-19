@@ -162,7 +162,7 @@ impl Global {
         let mut tiles = vec![Tile::Empty; width * height];
         let mut flag = None;
         let mut ball = None;
-        
+
         // Read tiles (plus flag and ball)
         for y in 0..height {
             let line = lines

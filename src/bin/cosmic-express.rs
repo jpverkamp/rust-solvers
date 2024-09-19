@@ -378,14 +378,14 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
                 .unwrap()
                 .neighbors()
                 .iter()
-                .filter(|n| 
-                    global.walls.contains(n) 
-                    || self.path.contains(n)
-                    || n.x <= 1
-                    || n.y <= 1
-                    || n.x >= global.width
-                    || n.y >= global.height
-                )
+                .filter(|n| {
+                    global.walls.contains(n)
+                        || self.path.contains(n)
+                        || n.x <= 1
+                        || n.y <= 1
+                        || n.x >= global.width
+                        || n.y >= global.height
+                })
                 .count()
                 <= 1
             {
