@@ -1,0 +1,29 @@
+map 9 7
+
+cut 1 1
+cut 2 1
+cut 1 2
+cut 2 2
+cut 1 3
+
+cut 1 5
+cut 1 6
+cut 2 6
+cut 1 7
+cut 2 7
+
+cut 9 1
+cut 9 2
+cut 9 3
+cut 9 5
+cut 9 6
+cut 9 7
+
+track 9 4 left
+exit 1 4 left
+
+atom 4 1 hydrogen
+atom 6 2 hydrogen
+atom 4 7 hydrogen
+atom 6 6 carbon
+atom 9 4 hydrogen

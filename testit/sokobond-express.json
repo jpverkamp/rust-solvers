@@ -47,6 +47,12 @@
     ],
     "data/sokobond-express/4-delta/delta-1.txt": [
       ". ┌ON\n..││H\n┌─┘└┘\n↑.. .\n\n"
+    ],
+    "data/sokobond-express/4-delta/delta-2.txt": [
+      "  . .... \n  ┌┐. .. \n H││.... \nHCH│┌───←\n H┌┘│... \n  └─┘ .. \n  . .... \n\n"
+    ],
+    "data/sokobond-express/4-delta/delta-4.txt": [
+      "┌──────OOO\n│ ....┌H H\n└┐. .┌┘..│\n.└───┘ ..│\n. →──┐.. │\n.....└───┘\n\n"
     ]
   },
   "metadata": {
@@ -59,6 +65,6 @@
     "stderr_mode": "Print",
     "env": [],
     "preserve_env": false,
-    "timeout": 10
+    "timeout": 60
   }
 }

@@ -706,7 +706,7 @@ fn main() -> Result<()> {
     let mut solver = Solver::new(global.clone(), local);
 
     while let Some(state) = solver.next() {
-        if solver.states_checked() % 10000 == 0 {
+        if solver.states_checked() % 100000 == 0 {
             log::debug!("=== Current state: ===\n{}", state.stringify(&global));
             log::debug!("{solver}");
         }
