@@ -271,6 +271,7 @@ impl Local {
         // Check all molecules/electrons for bonding
         self.apply_electrons();
         self.apply_bonds();
+        self.apply_self_bonds();
 
         // Success!
         true
@@ -333,6 +334,62 @@ impl Local {
                 self.molecules.push(new_m);
             } else {
                 break 'bonding;
+            }
+        }
+    }
+
+    // Apply additional bonds within active molecules
+    fn apply_self_bonds(&mut self) {
+        'self_bonding: loop {
+            let mut to_bond = None;
+
+            'find_bond: for (i, m) in self.molecules.iter().enumerate() {
+                for (j, el1) in m.elements.iter().enumerate() {
+                    for (k, el2) in m.elements.iter().enumerate() {
+                        if j == k {
+                            continue;
+                        }
+
+                        if el1.offset.manhattan_distance(el2.offset) != 1 {
+                            continue;
+                        }
+
+                        let bond_strength = el1.electrons.min(el2.electrons);
+                        if bond_strength == 0 {
+                            continue;
+                        }
+
+                        to_bond = Some((i, j, k, bond_strength));
+                        break 'find_bond;
+                    }
+                }
+            }
+
+            if let Some((i, j, k, bond_strength)) = to_bond {
+                let m = &mut self.molecules[i];
+
+                // We already had a bond
+                if let Some(bond_index) = m.bonds.iter().position(|b| b.i == j && b.j == k) {
+                    m.bonds[bond_index].strength += bond_strength;
+                    m.elements[j].electrons -= bond_strength;
+                    m.elements[k].electrons -= bond_strength;                        
+                } else if let Some(bond_index) = m.bonds.iter().position(|b| b.i == k && b.j == j) {
+                    m.bonds[bond_index].strength += bond_strength;
+                    m.elements[j].electrons -= bond_strength;
+                    m.elements[k].electrons -= bond_strength;                        
+                } else {
+                    // Didn't have one, Create a new bond!
+                    m.bonds.push(BondData {
+                        i: j,
+                        j: k,
+                        strength: bond_strength,
+                    });
+
+                    m.elements[j].electrons -= bond_strength;
+                    m.elements[k].electrons -= bond_strength;
+                }
+            } else {
+                break 'self_bonding;
             }
         }
     }
