@@ -1,0 +1,19 @@
+map 9 9
+
+cut 2 5
+cut 2 6
+cut 2 7
+
+cut 8 3
+cut 8 4
+cut 8 5
+
+track 4 4 right
+exit 5 9 left
+
+atom 2 2 nitrogen
+atom 2 8 carbon
+atom 4 4 hydrogen
+atom 6 6 hydrogen
+atom 8 2 carbon
+atom 8 8 nitrogen

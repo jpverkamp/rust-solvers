@@ -113,6 +113,12 @@
     ],
     "data/sokobond-express/8-theta/theta-2.txt": [
       "┌───┐..\n│.. │ON\n│→┐.└┘N\n└─┘ . O\n.......\n\n"
+    ],
+    "data/sokobond-express/8-theta/theta-4.txt": [
+      ".........\n. ..... .\n.┌──┐┌┐ .\n┌┘.→┘││ .\n│ ..┌┘│ .\n│ ..│ │..\n│ ..│H│..\n│ .┌NCC .\n└──┘H┘N..\n\n"
+    ],
+    "data/sokobond-express/8-theta/theta-5.txt": [
+      " ..........\n ┌──┐.. . .\n │. │┌───┐.\n→┘..││┌──┘ \n .. └┘│.ONO\n .. ..│ ON.\n .....└─┘O.\n\n"
     ]
   },
   "metadata": {
@@ -125,6 +131,6 @@
     "stderr_mode": "Print",
     "env": [],
     "preserve_env": false,
-    "timeout": 300
+    "timeout": 10
   }
 }
