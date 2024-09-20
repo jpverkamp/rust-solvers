@@ -1,0 +1,9 @@
+map 9 6
+track 2 5 right
+exit 8 2 right
+
+atom 2 2 oxygen
+anion 6 2 nitrogen 1
+atom 2 5 oxygen
+electron 6 5
+atom 8 5 hydrogen

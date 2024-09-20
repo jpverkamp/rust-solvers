@@ -4,7 +4,8 @@
       ".↓.\n.│.\n │ \n.│.\n.HH\n\n"
     ],
     "data/sokobond-express/1-alpha/alpha-2.txt": [
-      ".. ...\n..┌─┐H\n→─┘.└O\n.. ..H\n\n"
+      ".. ...\n..┌─┐H\n→─┘.└O\n.. ..H\n\n",
+      ".. ...\n..┌┐.H\n→─┘└─O\n.. ..H\n\n"
     ],
     "data/sokobond-express/1-alpha/alpha-3.txt": [
       " ...... \n.H.. ┌─┐\nHNH .└←│\n..│. .┌┘\n .└───┘ \n\n",
@@ -12,7 +13,8 @@
     ],
     "data/sokobond-express/1-alpha/alpha-4.txt": [
       ".┌─┐..\n┌┘↓└┐.\n│┌┘.│.\n││  └┐\n└┘  .│\n...H─┘\n..HCH.\n...H..\n\n",
-      ".┌──┐.\n┌┘↓.│.\n│┌┘.│.\n││  └┐\n└┘  .│\n...H─┘\n..HCH.\n...H..\n\n"
+      ".┌──┐.\n┌┘↓.│.\n│┌┘.│.\n││  └┐\n└┘  .│\n...H─┘\n..HCH.\n...H..\n\n",
+      "┌───┐.\n│.↓.│.\n│┌┘.│.\n││  └┐\n└┘  .│\n...H─┘\n..HCH.\n...H..\n\n"
     ],
     "data/sokobond-express/1-alpha/alpha-5.txt": [
       "..┌─┐.\n.↓│┌┘.\n.└┘│ .\n..┌┘  \n┌H│. .\n│CO─┐.\n└H──┘.\n\n"
@@ -28,10 +30,12 @@
       ". .  .OO\n┌─┐  .HH\n│ └──┐└┐\n└─┐  │ │\n.→┘  └─┘\n\n"
     ],
     "data/sokobond-express/2-beta/beta-4.txt": [
-      "┌──┐...\n│ .│. .\n│..ONO.\n└──H┐..\n   .↑  \n\n"
+      "┌──┐...\n│ .│. .\n│..ONO.\n└──H┐..\n   .↑  \n\n",
+      "┌─┐....\n│ └┐. .\n│..ONO.\n└──H┐..\n   .↑  \n\n"
     ],
     "data/sokobond-express/2-beta/beta-5.txt": [
-      " .┌─←...\n..│.....\n┌┐│. ...\n││└─┐.NO\n│└──┘┌O┐\n└────┘H┘\n\n"
+      " .┌─←...\n..│.....\n┌┐│. ...\n││└─┐.NO\n│└──┘┌O┐\n└────┘H┘\n\n",
+      " ..┌←...\n..┌┘....\n┌┐│. ...\n││└─┐.NO\n│└──┘┌O┐\n└────┘H┘\n\n"
     ],
     "data/sokobond-express/3-gamma/gamma-1.txt": [
       ".....\n.→┐..\n┌H┘  \n│H──┐\n└───┘\n\n"
@@ -46,7 +50,8 @@
     "data/sokobond-express/3-gamma/gamma-4.txt": [
       ".......\n. .OH. \n...N┌─┐\n┌─┐O│.│\n│ └┘↑.│\n└─────┘\n. .....\n\n",
       ".......\n. .. . \n┌─┐NOH┐\n│.│O│.│\n│ └┘↑┌┘\n└────┘.\n. .....\n\n",
-      ".......\n. .. . \n┌─┐NOH┐\n│.│O┌┘│\n│ └┘↑.│\n└─────┘\n. .....\n\n"
+      ".......\n. .. . \n┌─┐NOH┐\n│.│O┌┘│\n│ └┘↑.│\n└─────┘\n. .....\n\n",
+      ".......\n. .. . \n┌─┐NOH┐\n│.│O│.│\n│ └┘↑.│\n└─────┘\n. .....\n\n"
     ],
     "data/sokobond-express/4-delta/delta-1.txt": [
       ". ┌ON\n..││H\n┌─┘└┘\n↑.. .\n\n"
@@ -57,18 +62,27 @@
     ],
     "data/sokobond-express/4-delta/delta-4.txt": [
       "┌──────OOO\n│ ....┌H H\n└┐. .┌┘..│\n.└───┘ ..│\n. →──┐.. │\n.....└───┘\n\n",
-      "┌──────OOO\n│ ..┌──H H\n│.. │....│\n└───┘. ..│\n. →┐.... │\n...└─────┘\n\n"
+      "┌──────OOO\n│ ..┌──H H\n│.. │....│\n└───┘. ..│\n. →┐.... │\n...└─────┘\n\n",
+      "┌──────OOO\n│ ....┌H H\n└┐. .┌┘..│\n.└───┘ ..│\n. →─┐... │\n....└────┘\n\n"
     ],
     "data/sokobond-express/4-delta/delta-5.txt": [
-      "   ┌┐   \n   ││.┌┐\n  →┘│.││\n.┌──┘┌┘│\n.└───┘.│\n .... .│\n .┌──ONH\n .└──HOH\n\n"
+      "   ┌┐   \n   ││.┌┐\n  →┘│.││\n.┌──┘┌┘│\n.└───┘.│\n .... .│\n .┌──ONH\n .└──HOH\n\n",
+      "   ┌┐   \n   ││┌─┐\n  →┘││.│\n.┌──┘│.│\n.└───┘.│\n .... .│\n .┌──ONH\n .└──HOH\n\n"
     ],
     "data/sokobond-express/5-epislon/epsilon-1.txt": [
       ".. . ┌┐\n.┌┐┌─┘│\n.│└│┐┌┘\n.│.H││.\n→┘HNH┘ \n\n",
       ".. . ┌┐\n.┌┐┌─┘│\n.│└│┐.│\n.│.H│┌┘\n→┘HNH┘ \n\n"
     ],
+    "data/sokobond-express/6-zeta/zeta-1.txt": [
+      ".......\n. ┌─┐ .\n..│↓│..\n..└┘│..\n┌──┐H..\n│ HOO .\n└───┘..\n\n"
+    ],
+    "data/sokobond-express/6-zeta/zeta-2.txt": [
+      "┌──────HO\n│ .┌┐ ┌ON\n│..││.│.│\n│..││.│.│\n│→─┘│ │ │\n└───┘.└─┘\n\n"
+    ],
     "data/sokobond-express/7-eta/eta-1.txt": [
       ".ON  ↓..\nHOO  └┐.\n┌┘....│.\n│.┌───┘.\n│ └──┐ .\n└────┘..\n...  ...\n\n",
-      ".ON  ↓..\nHOO  │..\n.┌┘..└┐.\n┌┘┌───┘.\n│ └──┐ .\n└────┘..\n...  ...\n\n"
+      ".ON  ↓..\nHOO  │..\n.┌┘..└┐.\n┌┘┌───┘.\n│ └──┐ .\n└────┘..\n...  ...\n\n",
+      ".ON  ↓..\nHOO  └┐.\n│.....│.\n│.┌───┘.\n│ └──┐ .\n└────┘..\n...  ...\n\n"
     ],
     "data/sokobond-express/7-eta/eta-2.txt": [
       "┌────────┐\n│...┌ONO┐│\n│   │. OH│\n└┐.┌┘..└┘↑\n └─┘  ... \n\n"

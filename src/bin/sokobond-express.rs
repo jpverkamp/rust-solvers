@@ -428,6 +428,7 @@ impl State<Global, Step> for Local {
             }
 
             // The radius of the tracked molecule is the largest manhattan distance from the track
+            // This is an intentional simplification: assume the furthest 'out' atom can pick up more molecules because it's faster to calculate
             let tracked_molecule = self
                 .molecules
                 .iter()
@@ -437,7 +438,10 @@ impl State<Global, Step> for Local {
             let radius = tracked_molecule
                 .elements
                 .iter()
-                .map(|el| self.head.manhattan_distance(tracked_molecule.pt + el.offset))
+                .map(|el| {
+                    self.head
+                        .manhattan_distance(tracked_molecule.pt + el.offset)
+                })
                 .max()
                 .unwrap();
 
@@ -446,10 +450,28 @@ impl State<Global, Step> for Local {
                 for el in m.elements.iter() {
                     let map_pt = m.pt + el.offset;
 
-                    if !reachable.iter().any(|pt| pt.manhattan_distance(map_pt) <= radius + 1) {
+                    if !reachable
+                        .iter()
+                        .any(|pt| pt.manhattan_distance(map_pt) <= radius + 1)
+                    {
                         return false;
                     }
                 }
+            }
+
+            // All electrons must also be within radius + 1
+            for pt in self.electrons.iter() {
+                if !reachable
+                    .iter()
+                    .any(|pt2| pt.manhattan_distance(*pt2) <= radius + 1)
+                {
+                    return false;
+                }
+            }
+
+            // The exit must be outright reachable
+            if !reachable.contains(&global.exit.0) {
+                return false;
             }
         }
 
@@ -466,9 +488,10 @@ impl State<Global, Step> for Local {
         self.molecules.len() == 1
             && self.head == global.exit.0
             && m0.available_bonds() == 0
-            && m0.elements.iter().all(|e| 
-                global.is_walkable(&(m0.pt + e.offset))
-            )
+            && m0
+                .elements
+                .iter()
+                .all(|e| global.is_walkable(&(m0.pt + e.offset)))
     }
 
     fn next_states(&self, global: &Global) -> Option<Vec<(i64, Step, Local)>> {
