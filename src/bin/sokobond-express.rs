@@ -251,8 +251,8 @@ impl Local {
         self.head = new_head;
 
         // Check all molecules/electrons for bonding
-        self.apply_bonds();
         self.apply_electrons();
+        self.apply_bonds();
 
         // Success!
         true
