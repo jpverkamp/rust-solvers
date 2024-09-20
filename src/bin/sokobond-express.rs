@@ -582,7 +582,38 @@ impl State<Global, Step> for Local {
     }
 
     fn heuristic(&self, _g: &Global) -> i64 {
-        0
+        let mut score = 0;
+        
+        // Calculate the distance between each molecule and the nearest other
+        // Because molecules expand, this will over estimate
+        // Filter i < j avoids double counting, it at least needs to be !-
+        score += self
+            .molecules
+            .iter()
+            .enumerate()
+            .map(|(i, m)| {
+                self
+                    .molecules
+                    .iter()
+                    .enumerate()
+                    .filter(|(j, _)| i < *j)
+                    .map(|(_, m2)| {
+                        m.pt.manhattan_distance(m2.pt)
+                    })
+                    .min()
+                    .unwrap_or_default()
+            })
+            .sum::<isize>();
+
+        // Add the distance from any molecule to the exit
+        score += self
+            .molecules
+            .iter()
+            .map(|m| m.pt.manhattan_distance(_g.exit.0))
+            .min()
+            .unwrap();
+
+        score as i64
     }
 
     fn stringify(&self, g: &Global) -> String {
