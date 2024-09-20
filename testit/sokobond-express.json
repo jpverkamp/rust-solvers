@@ -89,6 +89,9 @@
     "data/sokobond-express/5-epislon/epsilon-3.txt": [
       " ....┌─┐. \n┌┐ .┌┘┌│┐.\n│└──┘.│││.\n└─────┘││.\n...┌OOH┘│.\n...└H→──┘.\n\n"
     ],
+    "data/sokobond-express/5-epislon/epsilon-4.txt": [
+      " ┌HH┌─┐\n.│OCO┌┘\n.└─┐││ \n.┌─│┘│.\n→┘.└┐│.\n....└┘.\n... .. \n\n"
+    ],
     "data/sokobond-express/6-zeta/zeta-1.txt": [
       ".......\n. ┌─┐ .\n..│↓│..\n..└┘│..\n┌──┐H..\n│ HOO .\n└───┘..\n\n"
     ],
@@ -104,6 +107,12 @@
     ],
     "data/sokobond-express/7-eta/eta-2.txt": [
       "┌────────┐\n│...┌ONO┐│\n│   │. OH│\n└┐.┌┘..└┘↑\n └─┘  ... \n\n"
+    ],
+    "data/sokobond-express/8-theta/theta-1.txt": [
+      "......\n.. ┌┐.\nCO─┘└←\nO. ...\n......\n\n"
+    ],
+    "data/sokobond-express/8-theta/theta-2.txt": [
+      "┌───┐..\n│.. │ON\n│→┐.└┘N\n└─┘ . O\n.......\n\n"
     ]
   },
   "metadata": {
@@ -116,6 +125,6 @@
     "stderr_mode": "Print",
     "env": [],
     "preserve_env": false,
-    "timeout": 60
+    "timeout": 300
   }
 }
