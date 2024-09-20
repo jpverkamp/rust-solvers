@@ -373,7 +373,7 @@ impl Local {
 struct Step;
 
 impl State<Global, Step> for Local {
-    fn is_valid(&self, _global: &Global) -> bool {
+    fn is_valid(&self, global: &Global) -> bool {
         // If the molecule on the track has no more free electrons and we need to connect to more, fail
         // This improved beta 5 from 340s to 145s
         // TODO: This might not be valid for all levels
@@ -387,6 +387,70 @@ impl State<Global, Step> for Local {
             && self.molecules.iter().any(|m| m.available_bonds() > 0)
         {
             return false;
+        }
+
+        // Floodfill validator
+        // TODO: Add a flag for this
+        if true {
+            // Determine all points the track can still reach
+            let mut reachable = vec![];
+            let mut to_check = vec![self.head];
+
+            while let Some(pt) = to_check.pop() {
+                reachable.push(pt);
+
+                for d in [
+                    Direction::Up,
+                    Direction::Right,
+                    Direction::Down,
+                    Direction::Left,
+                ] {
+                    let new_pt = pt + d.into();
+
+                    if !global.is_walkable(&new_pt) {
+                        continue;
+                    }
+
+                    if reachable.contains(&new_pt) {
+                        continue;
+                    }
+
+                    if to_check.contains(&new_pt) {
+                        continue;
+                    }
+
+                    if self.track.contains(&new_pt) {
+                        continue;
+                    }
+
+                    to_check.push(new_pt);
+                }
+            }
+
+            // The radius of the tracked molecule is the largest manhattan distance from the track
+            let tracked_molecule = self
+                .molecules
+                .iter()
+                .find(|m| m.contains(&self.head))
+                .unwrap();
+
+            let radius = tracked_molecule
+                .elements
+                .iter()
+                .map(|el| self.head.manhattan_distance(tracked_molecule.pt + el.offset))
+                .max()
+                .unwrap();
+
+            // All points of all molecules must be within radius + 1 (for a new bond) of a reachable point
+            for m in self.molecules.iter() {
+                for el in m.elements.iter() {
+                    let map_pt = m.pt + el.offset;
+
+                    if !reachable.iter().any(|pt| pt.manhattan_distance(map_pt) <= radius + 1) {
+                        return false;
+                    }
+                }
+            }
         }
 
         true

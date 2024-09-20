@@ -1,0 +1,19 @@
+map 10 5
+
+cut 1 5
+cut 5 5
+cut 6 5
+cut 10 5
+
+track 10 4 up
+exit 8 3 up
+
+atom 2 3 hydrogen
+atom 3 3 nitrogen
+atom 4 3 oxygen
+atom 7 3 oxygen
+atom 10 4 oxygen
+
+# I expect this one isn't going to work until I duplicate the chain binding functionality. The rules appear to be:
+# - Prefer to double bond the atoms we didn't run into
+# - If there are two options, prefer the higher valence N=N over N=O

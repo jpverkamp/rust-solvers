@@ -1,0 +1,9 @@
+map 7 7
+cross 4 4
+track 1 1 right
+exit 7 1 right
+
+atom 1 1 nitrogen
+atom 4 1 nitrogen
+atom 1 7 carbon
+atom 7 7 oxygen
