@@ -379,9 +379,14 @@ impl State<Global, Step> for Local {
     // - the molecule is at the exit
     // - the molecule has no free electrons
     fn is_solved(&self, global: &Global) -> bool {
+        let m0 = &self.molecules[0];
+
         self.molecules.len() == 1
             && self.head == global.exit.0
-            && self.molecules[0].available_bonds() == 0
+            && m0.available_bonds() == 0
+            && m0.elements.iter().all(|e| 
+                global.is_walkable(&(m0.pt + e.offset))
+            )
     }
 
     fn next_states(&self, global: &Global) -> Option<Vec<(i64, Step, Local)>> {
@@ -613,8 +618,6 @@ fn load(input: &str) -> Result<(Global, Local)> {
                 let mut element = ElementData::atom(parts[3].try_into()?);
 
                 let holes: usize = parts[4].parse()?;
-                dbg!(holes, element.electrons);
-
                 assert!(
                     holes <= element.electrons,
                     "anion: cannot have holes > valence"

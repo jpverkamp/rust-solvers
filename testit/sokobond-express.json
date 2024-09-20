@@ -33,6 +33,20 @@
     ],
     "data/sokobond-express/3-gamma/gamma-1.txt": [
       ".....\n.→┐..\n┌H┘  \n│H──┐\n└───┘\n\n"
+    ],
+    "data/sokobond-express/3-gamma/gamma-2.txt": [
+      "..┌──┐\n.→┘. │\n┌──┐OH\n│ .└H│\n└────┘\n\n",
+      "┌────┐\n│→─┐ │\n└──┘ │\n. .┌H│\n...└OH\n\n"
+    ],
+    "data/sokobond-express/3-gamma/gamma-3.txt": [
+      "┌─────┐\n│→┐ . │\n│H└─┐.│\nHO┐ │ │\n└─┘.└─┘\n\n"
+    ],
+    "data/sokobond-express/3-gamma/gamma-4.txt": [
+      ".......\n. .OH. \n...N┌─┐\n┌─┐O│.│\n│ └┘↑.│\n└─────┘\n. .....\n\n",
+      ".......\n. .. . \n┌─┐NOH┐\n│.│O│.│\n│ └┘↑┌┘\n└────┘.\n. .....\n\n"
+    ],
+    "data/sokobond-express/4-delta/delta-1.txt": [
+      ". ┌ON\n..││H\n┌─┘└┘\n↑.. .\n\n"
     ]
   },
   "metadata": {
