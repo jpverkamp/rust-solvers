@@ -482,7 +482,7 @@ impl State<Global, Step> for Local {
                         continue;
                     }
 
-                    if self.track.contains(&new_pt) {
+                    if self.track.contains(&new_pt) && !global.crosses.contains(&new_pt) {
                         continue;
                     }
 

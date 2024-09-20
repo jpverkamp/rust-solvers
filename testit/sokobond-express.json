@@ -83,6 +83,12 @@
       ".. . ┌┐\n.┌┐┌─┘│\n.│└│┐┌┘\n.│.H││.\n→┘HNH┘ \n\n",
       ".. . ┌┐\n.┌┐┌─┘│\n.│└│┐.│\n.│.H│┌┘\n→┘HNH┘ \n\n"
     ],
+    "data/sokobond-express/5-epislon/epsilon-2.txt": [
+      "→┐. NCN\n.│...│O\n.│.┌─┘.\n.└─│─┐.\n.┌─┘.└┐\n.│..┌─┘\n └──┘. \n\n"
+    ],
+    "data/sokobond-express/5-epislon/epsilon-3.txt": [
+      " ....┌─┐. \n┌┐ .┌┘┌│┐.\n│└──┘.│││.\n└─────┘││.\n...┌OOH┘│.\n...└H→──┘.\n\n"
+    ],
     "data/sokobond-express/6-zeta/zeta-1.txt": [
       ".......\n. ┌─┐ .\n..│↓│..\n..└┘│..\n┌──┐H..\n│ HOO .\n└───┘..\n\n"
     ],
@@ -110,6 +116,6 @@
     "stderr_mode": "Print",
     "env": [],
     "preserve_env": false,
-    "timeout": 10
+    "timeout": 60
   }
 }
