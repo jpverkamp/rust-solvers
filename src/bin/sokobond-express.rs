@@ -287,6 +287,7 @@ impl Local {
                     return true;
                 }
 
+                // Hit another molecule
                 for (j, m2) in self.molecules.iter().enumerate() {
                     if i == j {
                         continue;
@@ -299,6 +300,11 @@ impl Local {
                             return true;
                         }
                     }
+                }
+
+                // Hit an electron
+                if self.electrons.contains(&map_pt) {
+                    return true;
                 }
             }
         }
