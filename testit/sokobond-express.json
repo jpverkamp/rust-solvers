@@ -30,6 +30,9 @@
     ],
     "data/sokobond-express/2-beta/beta-5.txt": [
       " .┌─←...\n..│.....\n┌┐│. ...\n││└─┐.NO\n│└──┘┌O┐\n└────┘H┘\n\n"
+    ],
+    "data/sokobond-express/3-gamma/gamma-1.txt": [
+      ".....\n.→┐..\n┌H┘  \n│H──┐\n└───┘\n\n"
     ]
   },
   "metadata": {
@@ -42,6 +45,6 @@
     "stderr_mode": "Print",
     "env": [],
     "preserve_env": false,
-    "timeout": 3600
+    "timeout": 10
   }
 }

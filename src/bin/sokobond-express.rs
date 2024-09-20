@@ -46,27 +46,50 @@ impl Element {
     }
 }
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+struct ElementData {
+    element: Element,
+    offset: Point,
+    electrons: usize,
+    holes: usize,
+}
+impl ElementData {
+    fn atom(el: Element) -> ElementData {
+        ElementData {
+            element: el,
+            offset: Point { x: 0, y: 0 },
+            electrons: el.valence(),
+            holes: 0,
+        }
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+struct BondData {
+    i: usize,
+    j: usize,
+    strength: usize,
+}
+
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 struct Molecule {
     pt: Point,
-
-    elements: Vec<Element>,
-    element_points: Vec<Point>,
-    element_electrons: Vec<usize>,
-
-    // Index, index, strength
-    bonds: Vec<(usize, usize, usize)>,
-
     active: bool,
+
+    elements: Vec<ElementData>,
+    bonds: Vec<BondData>,
 }
 
 impl Molecule {
-    fn free_electrons(&self) -> usize {
-        self.element_electrons.iter().sum()
+    fn available_bonds(&self) -> usize {
+        self.elements.iter().map(|e| e.electrons + e.holes).sum()
     }
 
     fn contains(&self, pt: &Point) -> bool {
-        self.element_points.contains(&(*pt - self.pt))
+        self.elements
+            .iter()
+            .find(|e| self.pt + e.offset == *pt)
+            .is_some()
     }
 
     fn maybe_bond(&self, other: &Molecule) -> Option<Molecule> {
@@ -76,47 +99,62 @@ impl Molecule {
         }
 
         // Look for the first pair of points that are 1 apart and both have at least one free electron
-        for (i, &self_pt) in self.element_points.iter().enumerate() {
-            for (j, &other_pt) in other.element_points.iter().enumerate() {
-                let map_self_pt = self.pt + self_pt;
-                let map_other_pt = other.pt + other_pt;
+        for (i, &self_el) in self.elements.iter().enumerate() {
+            for (j, &other_el) in other.elements.iter().enumerate() {
+                let map_self_pt = self.pt + self_el.offset;
+                let map_other_pt = other.pt + other_el.offset;
 
                 if map_self_pt.manhattan_distance(map_other_pt) != 1 {
                     continue;
                 }
 
-                if self.element_electrons[i] == 0 || other.element_electrons[j] == 0 {
+                let bond_strength = self_el.electrons.min(other_el.electrons);
+                if bond_strength == 0 {
                     continue;
                 }
 
                 // If we made it here, create a new molecule that merges the two
-                let bond_strength = self.element_electrons[i].min(other.element_electrons[j]);
 
-                // Elements is a straight combination
-                let mut elements = self.elements.clone();
-                elements.extend(other.elements.iter().cloned());
+                // Combine the new elements by:
+                // - Removing electrons used in the bond
+                // - Updating the offset from other_el to center on self_el
+                let mut elements = Vec::new();
 
-                // Points are adjusted relative to the first molecules point
-                let mut element_points = self.element_points.clone();
-                element_points.extend(other.element_points.iter().map(|p| *p - self.pt + other.pt));
+                for (k, el) in self.elements.iter().enumerate() {
+                    let mut new_el = el.clone();
 
-                // Free electrons are merged, but subtract the bond_strength from i and j
-                let mut element_electrons = self.element_electrons.clone();
-                element_electrons[i] -= bond_strength;
+                    if k == i {
+                        new_el.electrons -= bond_strength;
+                    }
 
-                element_electrons.extend(other.element_electrons.iter().cloned());
-                element_electrons[self.elements.len() + j] -= bond_strength;
+                    elements.push(new_el);
+                }
+
+                for (k, el) in other.elements.iter().enumerate() {
+                    let mut new_el = el.clone();
+
+                    new_el.offset = new_el.offset - self.pt + other.pt;
+
+                    if k == j {
+                        new_el.electrons -= bond_strength;
+                    }
+
+                    elements.push(new_el);
+                }
 
                 // Bonds are copied + the new one
                 let mut bonds = self.bonds.clone();
                 bonds.extend(other.bonds.iter().cloned());
-                bonds.push((i, self.elements.len() + j, bond_strength));
+
+                bonds.push(BondData {
+                    i,
+                    j: j + self.elements.len(),
+                    strength: bond_strength,
+                });
 
                 return Some(Molecule {
                     pt: self.pt,
                     elements,
-                    element_points,
-                    element_electrons,
                     bonds,
                     active: true,
                 });
@@ -160,6 +198,7 @@ struct Local {
     head: Point,
     track: Vec<Point>,
     molecules: Vec<Molecule>,
+    electrons: Vec<Point>,
 }
 
 impl Local {
@@ -211,8 +250,9 @@ impl Local {
         self.track.push(self.head);
         self.head = new_head;
 
-        // Check all molecules for bonding
+        // Check all molecules/electrons for bonding
         self.apply_bonds();
+        self.apply_electrons();
 
         // Success!
         true
@@ -221,8 +261,8 @@ impl Local {
     // Check collisions between the current state of molecules
     fn has_collision(&self, global: &Global) -> bool {
         for (i, m) in self.molecules.iter().enumerate() {
-            for pt in m.element_points.iter() {
-                let map_pt = m.pt + *pt;
+            for el in m.elements.iter() {
+                let map_pt = m.pt + el.offset;
 
                 if !global.is_empty(&map_pt) {
                     return true;
@@ -233,8 +273,8 @@ impl Local {
                         continue;
                     }
 
-                    for pt2 in m2.element_points.iter() {
-                        let map_pt2 = m2.pt + *pt2;
+                    for el2 in m2.elements.iter() {
+                        let map_pt2 = m2.pt + el2.offset;
 
                         if map_pt == map_pt2 {
                             return true;
@@ -266,7 +306,6 @@ impl Local {
                 }
             }
 
-
             // If we have some, remove the old molecules, add the new one, and continue
             // The i,j removal is intentionally ordered to avoid invalidating the indexes
             // If to_remove is none, that means we've settled
@@ -279,6 +318,37 @@ impl Local {
             }
         }
     }
+
+    // Any atoms that are missing electrons can grab them
+    fn apply_electrons(&mut self) {
+        // Keep looping until we settle
+        'electroning: loop {
+            // Find the atom j of molecule i with a hole adjacent to electron k
+            let mut to_electron = None;
+            'find_electron: for (i, m) in self.molecules.iter().enumerate() {
+                for (j, el) in m.elements.iter().enumerate() {
+                    if el.holes == 0 {
+                        continue;
+                    }
+
+                    for (k, pt) in self.electrons.iter().enumerate() {
+                        if pt.manhattan_distance(m.pt + el.offset) == 1 {
+                            to_electron = Some((i, j, k));
+                            break 'find_electron;
+                        }
+                    }
+                }
+            }
+
+            if let Some((i, j, k)) = to_electron {
+                self.molecules[i].elements[j].electrons += 1;
+                self.molecules[i].elements[j].holes -= 1;
+                self.electrons.remove(k);
+            } else {
+                break 'electroning;
+            }
+        }
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -287,9 +357,17 @@ struct Step;
 impl State<Global, Step> for Local {
     fn is_valid(&self, _global: &Global) -> bool {
         // If the molecule on the track has no more free electrons and we need to connect to more, fail
+        // This improved beta 5 from 340s to 145s
         // TODO: This might not be valid for all levels
-        let track_molecule = self.molecules.iter().find(|m| m.contains(&self.head)).unwrap();
-        if track_molecule.free_electrons() == 0 && self.molecules.iter().any(|m| m.free_electrons() > 0) {
+        let track_molecule = self
+            .molecules
+            .iter()
+            .find(|m| m.contains(&self.head))
+            .unwrap();
+
+        if track_molecule.available_bonds() == 0
+            && self.molecules.iter().any(|m| m.available_bonds() > 0)
+        {
             return false;
         }
 
@@ -303,7 +381,7 @@ impl State<Global, Step> for Local {
     fn is_solved(&self, global: &Global) -> bool {
         self.molecules.len() == 1
             && self.head == global.exit.0
-            && self.molecules[0].free_electrons() == 0
+            && self.molecules[0].available_bonds() == 0
     }
 
     fn next_states(&self, global: &Global) -> Option<Vec<(i64, Step, Local)>> {
@@ -336,7 +414,7 @@ impl State<Global, Step> for Local {
         let mut chars = HashMap::new();
 
         // Anything added here might overlap, so draw most important things last
-        
+
         // Add floors (width and height but not cuts)
         for y in 0..g.height as isize {
             for x in 0..g.width as isize {
@@ -403,7 +481,7 @@ impl State<Global, Step> for Local {
 
                     (Direction::Right, Direction::Up) => '┘',
                     (Direction::Right, Direction::Down) => '┐',
-                    
+
                     _ => panic!("invalid track"),
                 };
 
@@ -424,10 +502,15 @@ impl State<Global, Step> for Local {
             chars.insert(exit, c);
         }
 
+        // Add any electrons
+        for p in self.electrons.iter() {
+            chars.insert(*p, '+');
+        }
+
         // Add all molecules to the map
         for m in self.molecules.iter() {
-            for (el, pt) in m.elements.iter().zip(m.element_points.iter()) {
-                chars.insert(m.pt + *pt, el.as_char());
+            for el in m.elements.iter() {
+                chars.insert(m.pt + el.offset, el.element.as_char());
             }
         }
 
@@ -463,6 +546,7 @@ fn load(input: &str) -> Result<(Global, Local)> {
         head: Point { x: 0, y: 0 },
         track: Vec::new(),
         molecules: Vec::new(),
+        electrons: Vec::new(),
     };
 
     let mut first_move = Direction::Down;
@@ -513,27 +597,60 @@ fn load(input: &str) -> Result<(Global, Local)> {
                 assert!(parts.len() == 4);
                 let x: isize = parts[1].parse()?;
                 let y: isize = parts[2].parse()?;
-                let element = parts[3].try_into()?;
+                let element = ElementData::atom(parts[3].try_into()?);
 
                 local.molecules.push(Molecule {
                     pt: Point { x: x - 1, y: y - 1 },
                     elements: vec![element],
-                    element_points: vec![Point { x: 0, y: 0 }],
-                    element_electrons: vec![element.valence()],
                     bonds: Vec::new(),
                     active: false,
                 });
+            }
+            "anion" => {
+                assert!(parts.len() == 5);
+                let x: isize = parts[1].parse()?;
+                let y: isize = parts[2].parse()?;
+                let mut element = ElementData::atom(parts[3].try_into()?);
+
+                let holes: usize = parts[4].parse()?;
+                dbg!(holes, element.electrons);
+
+                assert!(
+                    holes <= element.electrons,
+                    "anion: cannot have holes > valence"
+                );
+
+                element.electrons -= holes;
+                element.holes = holes;
+
+                local.molecules.push(Molecule {
+                    pt: Point { x: x - 1, y: y - 1 },
+                    elements: vec![element],
+                    bonds: Vec::new(),
+                    active: false,
+                });
+            }
+            "electron" => {
+                assert!(parts.len() == 3);
+                let x: isize = parts[1].parse()?;
+                let y: isize = parts[2].parse()?;
+
+                local.electrons.push(Point { x: x - 1, y: y - 1 });
             }
             _ => return Err(anyhow!("unknown command: {}", parts[0])),
         }
     }
 
-    // Add a cut where each atom is so we don't try to move onto those points
-    // TODO: This seems hacky, fix it? 
+    // Add a cut where each molecule/atom is since the track can't go there
+    // TODO: This seems hacky, fix it?
     for m in local.molecules.iter() {
-        for pt in &m.element_points {
-            global.cuts.push(m.pt + *pt);
+        for el in m.elements.iter() {
+            global.cuts.push(m.pt + el.offset);
         }
+    }
+
+    for pt in local.electrons.iter() {
+        global.cuts.push(*pt);
     }
 
     // TODO: Validity checks
