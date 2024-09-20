@@ -170,8 +170,11 @@ impl Molecule {
 struct Global {
     width: usize,
     height: usize,
+
     cuts: Vec<Point>,
     walls: Vec<Point>,
+    crosses: Vec<Point>,
+
     exit: (Point, Direction),
 }
 
@@ -207,7 +210,9 @@ impl Local {
         let new_head = self.head + d.into();
 
         // If we're moving back onto the track... don't do that
-        if self.track.contains(&new_head) {
+        // The exception is a cross allows exactly two crossings
+        // There's no way to get into a cross more than twice, so just ignore them
+        if self.track.contains(&new_head) && !global.crosses.contains(&new_head) {
             return false;
         }
 
@@ -219,6 +224,19 @@ impl Local {
         // If we're moving onto the exit, we have to be going in the correct direction
         if new_head == global.exit.0 {
             if d != global.exit.1 {
+                return false;
+            }
+        }
+
+        // If we're moving off a cross, we have to continue straight
+        if global.crosses.contains(&self.head) {
+            let delta_1 = new_head - self.head;
+            let delta_2 = self.head - self.track[self.track.len() - 1];
+
+            let d1: Direction = delta_1.try_into().unwrap();
+            let d2: Direction = delta_2.try_into().unwrap();
+
+            if d1 != d2 {
                 return false;
             }
         }
@@ -487,7 +505,7 @@ impl State<Global, Step> for Local {
                     (Direction::Right, Direction::Up) => '┘',
                     (Direction::Right, Direction::Down) => '┐',
 
-                    _ => panic!("invalid track"),
+                    _ => panic!("invalid track: {d1:?}, {d2:?}"),
                 };
 
                 chars.insert(self.track[i + 1], c);
@@ -542,8 +560,11 @@ fn load(input: &str) -> Result<(Global, Local)> {
     let mut global = Global {
         width: 0,
         height: 0,
+
         cuts: Vec::new(),
         walls: Vec::new(),
+        crosses: Vec::new(),
+
         exit: (Point { x: 0, y: 0 }, Direction::Up),
     };
 
@@ -575,6 +596,12 @@ fn load(input: &str) -> Result<(Global, Local)> {
                 let x: isize = parts[1].parse()?;
                 let y: isize = parts[2].parse()?;
                 global.cuts.push(Point { x: x - 1, y: y - 1 });
+            }
+            "cross" => {
+                assert!(parts.len() == 3);
+                let x: isize = parts[1].parse()?;
+                let y: isize = parts[2].parse()?;
+                global.crosses.push(Point { x: x - 1, y: y - 1 });
             }
             "wall" => {
                 assert!(parts.len() == 3);

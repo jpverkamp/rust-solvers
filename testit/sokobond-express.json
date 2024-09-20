@@ -53,6 +53,9 @@
     ],
     "data/sokobond-express/4-delta/delta-4.txt": [
       "┌──────OOO\n│ ....┌H H\n└┐. .┌┘..│\n.└───┘ ..│\n. →──┐.. │\n.....└───┘\n\n"
+    ],
+    "data/sokobond-express/5-epislon/epsilon-1.txt": [
+      ".. . ┌┐\n.┌┐┌─┘│\n.│└│┐┌┘\n.│.H││.\n→┘HNH┘ \n\n"
     ]
   },
   "metadata": {
@@ -65,6 +68,6 @@
     "stderr_mode": "Print",
     "env": [],
     "preserve_env": false,
-    "timeout": 60
+    "timeout": 2
   }
 }
