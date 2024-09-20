@@ -416,6 +416,14 @@ impl State<Global, Step> for Local {
             Direction::Down,
             Direction::Left,
         ] {
+            // We cannot double back
+            let previous_delta = self.head - *self.track.last().unwrap();
+            let previous_d: Direction = previous_delta.into();
+
+            if previous_d == d.flip() {
+                continue;
+            }
+
             let mut new_state = self.clone();
             if new_state.maybe_move(*d, global) {
                 next_states.push((1, Step, new_state));
@@ -452,6 +460,11 @@ impl State<Global, Step> for Local {
         // Add walls
         for p in g.walls.iter() {
             chars.insert(*p, '#');
+        }
+
+        // Add (unused) crossovers
+        for p in g.crosses.iter() {
+            chars.insert(*p, '╬');
         }
 
         // Add the first part of the track
