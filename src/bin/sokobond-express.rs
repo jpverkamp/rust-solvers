@@ -277,7 +277,7 @@ impl Local {
         true
     }
 
-    // Check collisions between the current state of molecules
+    // Check collisions between the current state of molecules and electrons
     fn has_collision(&self, global: &Global) -> bool {
         for (i, m) in self.molecules.iter().enumerate() {
             for el in m.elements.iter() {
