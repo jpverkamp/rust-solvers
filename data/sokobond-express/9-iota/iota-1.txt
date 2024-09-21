@@ -1,0 +1,8 @@
+map 6 6
+track 5 5 up
+exit 5 5 right
+
+atom 1 1 nitrogen
+atom 5 2 hydrogen
+atom 2 5 hydrogen
+atom 5 5 hydrogen

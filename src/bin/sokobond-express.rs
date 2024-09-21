@@ -171,6 +171,8 @@ struct Global {
     width: usize,
     height: usize,
 
+    is_loop: bool,
+
     spawns: Vec<Point>,     // Where atoms/electrons start
     cuts: Vec<Point>,       // Where there are holes in the map
     walls: Vec<Point>,      // Solid parts of the map things can't go through
@@ -187,8 +189,10 @@ impl Global {
     }
 
     // Points that the track can be extended onto
+    // Iota special case: the exit is always walkable
     fn is_walkable(&self, pt: &Point) -> bool {
-        pt.x >= 0
+        self.exit.0 == *pt 
+            || pt.x >= 0
             && pt.x < self.width as isize
             && pt.y >= 0
             && pt.y < self.height as isize
@@ -224,10 +228,15 @@ impl Local {
         let new_head = self.head + d.into();
 
         // If we're moving back onto the track... don't do that
-        // The exception is a cross allows exactly two crossings
-        // There's no way to get into a cross more than twice, so just ignore them
-        if self.track.contains(&new_head) && !global.crosses.contains(&new_head) {
-            return false;
+        if self.track.contains(&new_head) {
+            if global.crosses.contains(&new_head) {
+                // The exception is a cross allows exactly two crossings
+                // There's no way to get into a cross more than twice, so just ignore them
+            } else if global.is_loop && new_head == global.exit.0 {
+                // Another special case is Iota levels where the start and exit are the same
+            } else {
+                return false
+            }
         }
 
         // The global state has to allow moving to that point
@@ -255,8 +264,9 @@ impl Local {
             }
         }
 
-        // We can't move off of the exit
-        if self.head == global.exit.0 {
+        // We can't move off of the exit 
+        // Unless it's also the starting point (Iota)
+        if self.head == global.exit.0 && !self.track.is_empty() {
             return false;
         }
 
@@ -496,7 +506,8 @@ impl State<Global, Step> for Local {
                         continue;
                     }
 
-                    if self.track.contains(&new_pt) && !global.crosses.contains(&new_pt) {
+                    // TODO: Is this just disabling this check for iota levels?
+                    if self.track.contains(&new_pt) && !global.crosses.contains(&new_pt) && !global.is_loop {
                         continue;
                     }
 
@@ -769,6 +780,8 @@ fn load(input: &str) -> Result<(Global, Local)> {
         width: 0,
         height: 0,
 
+        is_loop: false,
+
         spawns: Vec::new(),
         cuts: Vec::new(),
         walls: Vec::new(),
@@ -890,6 +903,11 @@ fn load(input: &str) -> Result<(Global, Local)> {
 
     for pt in local.electrons.iter() {
         global.spawns.push(*pt);
+    }
+
+    // If the track is a loop, flag it
+    if local.head == global.exit.0 {
+        global.is_loop = true;
     }
 
     // TODO: Validity checks
