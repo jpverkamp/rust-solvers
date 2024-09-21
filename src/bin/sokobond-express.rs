@@ -171,9 +171,10 @@ struct Global {
     width: usize,
     height: usize,
 
-    cuts: Vec<Point>,
-    walls: Vec<Point>,
-    crosses: Vec<Point>,
+    spawns: Vec<Point>,     // Where atoms/electrons start
+    cuts: Vec<Point>,       // Where there are holes in the map
+    walls: Vec<Point>,      // Solid parts of the map things can't go through
+    crosses: Vec<Point>,    // Points where the track can cross
 
     exit: (Point, Direction),
 }
@@ -193,6 +194,19 @@ impl Global {
             && pt.y < self.height as isize
             && !self.walls.contains(&pt)
             && !self.cuts.contains(&pt)
+            && !self.crosses.contains(&pt)
+            && !self.spawns.contains(pt)
+    }
+
+    // Points that can contains a final molecule
+    fn is_exitable(&self, pt: &Point) -> bool {
+        pt.x >= 0
+            && pt.x < self.width as isize
+            && pt.y >= 0
+            && pt.y < self.height as isize
+            && !self.walls.contains(&pt)
+            && !self.cuts.contains(&pt)
+            && !self.crosses.contains(&pt)
     }
 }
 
@@ -378,11 +392,11 @@ impl Local {
                 if let Some(bond_index) = m.bonds.iter().position(|b| b.i == j && b.j == k) {
                     m.bonds[bond_index].strength += bond_strength;
                     m.elements[j].electrons -= bond_strength;
-                    m.elements[k].electrons -= bond_strength;                        
+                    m.elements[k].electrons -= bond_strength;
                 } else if let Some(bond_index) = m.bonds.iter().position(|b| b.i == k && b.j == j) {
                     m.bonds[bond_index].strength += bond_strength;
                     m.elements[j].electrons -= bond_strength;
-                    m.elements[k].electrons -= bond_strength;                        
+                    m.elements[k].electrons -= bond_strength;
                 } else {
                     // Didn't have one, Create a new bond!
                     m.bonds.push(BondData {
@@ -551,10 +565,7 @@ impl State<Global, Step> for Local {
         self.molecules.len() == 1
             && self.head == global.exit.0
             && m0.available_bonds() == 0
-            && m0
-                .elements
-                .iter()
-                .all(|e| global.is_walkable(&(m0.pt + e.offset)))
+            && m0.elements.iter().all(|e| global.is_exitable(&(m0.pt + e.offset)))
     }
 
     fn next_states(&self, global: &Global) -> Option<Vec<(i64, Step, Local)>> {
@@ -589,7 +600,7 @@ impl State<Global, Step> for Local {
 
     fn heuristic(&self, _g: &Global) -> i64 {
         let mut score = 0;
-        
+
         // Calculate the distance between each molecule and the nearest other
         // Because molecules expand, this will over estimate
         // Filter i < j avoids double counting, it at least needs to be !-
@@ -598,14 +609,11 @@ impl State<Global, Step> for Local {
             .iter()
             .enumerate()
             .map(|(i, m)| {
-                self
-                    .molecules
+                self.molecules
                     .iter()
                     .enumerate()
                     .filter(|(j, _)| i < *j)
-                    .map(|(_, m2)| {
-                        m.pt.manhattan_distance(m2.pt)
-                    })
+                    .map(|(_, m2)| m.pt.manhattan_distance(m2.pt))
                     .min()
                     .unwrap_or_default()
             })
@@ -636,6 +644,12 @@ impl State<Global, Step> for Local {
 
                 chars.insert(Point { x, y }, '.');
             }
+        }
+
+        // Add spawns
+        for p in g.spawns.iter() {
+            // chars.insert(*p, '⚬'); // Removed for backwards compatibility with testit
+            chars.insert(*p, ' ');
         }
 
         // Add walls
@@ -755,6 +769,7 @@ fn load(input: &str) -> Result<(Global, Local)> {
         width: 0,
         height: 0,
 
+        spawns: Vec::new(),
         cuts: Vec::new(),
         walls: Vec::new(),
         crosses: Vec::new(),
@@ -865,16 +880,16 @@ fn load(input: &str) -> Result<(Global, Local)> {
         }
     }
 
-    // Add a cut where each molecule/atom is since the track can't go there
-    // TODO: This seems hacky, fix it?
+    // Add a spawn where each molecule/atom is since the track can't go there
+    // This has to be different from cuts, because atoms *can* end there
     for m in local.molecules.iter() {
         for el in m.elements.iter() {
-            global.cuts.push(m.pt + el.offset);
+            global.spawns.push(m.pt + el.offset);
         }
     }
 
     for pt in local.electrons.iter() {
-        global.cuts.push(*pt);
+        global.spawns.push(*pt);
     }
 
     // TODO: Validity checks
@@ -937,7 +952,7 @@ fn main() -> Result<()> {
     if let Some(solution) = solution {
         println!("{}", solver.stringify(&solution));
     } else {
-        println!("No solution found");
+        println!("{solver}\nNo solution found");
         exit(1);
     }
 
