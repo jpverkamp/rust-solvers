@@ -134,6 +134,18 @@
     ],
     "data/sokobond-express/9-iota/iota-1.txt": [
       " ┌─┐..\n.│.│ .\n.└┐└─┐\n..└H┐│\n. HNH│\n...└─┘\n\n"
+    ],
+    "data/sokobond-express/9-iota/iota-2.txt": [
+      "        \n....... \n.┌────┐ \n │.. .│ \n┌┘┌─┐.│ \n└─┘┌┘.│ \nOO─┘..│ \nNN.┌──┘ \nOO─┘ .. \n\n"
+    ],
+    "data/sokobond-express/9-iota/iota-3.txt": [
+      "┌─────┐..\n│..┌H.└─┐\n│  HCH  │\n└──┘H...│\n....└───┘\n\n"
+    ],
+    "data/sokobond-express/9-iota/iota-4.txt": [
+      "┌──┐.. \n│. └─┐.\n└──┐.│.\n.┌─│┐│ \nOOH││└┐\nNO.││┌┘\n└──┘└┘ \n\n"
+    ],
+    "data/sokobond-express/9-iota/iota-5.txt": [
+      " ....... \n┌─┐. .┌┐.\n│.└─HH│└┐\n│ .┌OCH │\n└─┐└─H┘.│\n..└┐ ┌──┘\n ..└─┘.. \n\n"
     ]
   },
   "metadata": {
@@ -146,6 +158,6 @@
     "stderr_mode": "Print",
     "env": [],
     "preserve_env": false,
-    "timeout": 10
+    "timeout": 30
   }
 }

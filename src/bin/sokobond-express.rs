@@ -173,10 +173,10 @@ struct Global {
 
     is_loop: bool,
 
-    spawns: Vec<Point>,     // Where atoms/electrons start
-    cuts: Vec<Point>,       // Where there are holes in the map
-    walls: Vec<Point>,      // Solid parts of the map things can't go through
-    crosses: Vec<Point>,    // Points where the track can cross
+    spawns: Vec<Point>,  // Where atoms/electrons start
+    cuts: Vec<Point>,    // Where there are holes in the map
+    walls: Vec<Point>,   // Solid parts of the map things can't go through
+    crosses: Vec<Point>, // Points where the track can cross
 
     exit: (Point, Direction),
 }
@@ -191,15 +191,14 @@ impl Global {
     // Points that the track can be extended onto
     // Iota special case: the exit is always walkable
     fn is_walkable(&self, pt: &Point) -> bool {
-        self.exit.0 == *pt 
+        self.exit.0 == *pt
             || pt.x >= 0
-            && pt.x < self.width as isize
-            && pt.y >= 0
-            && pt.y < self.height as isize
-            && !self.walls.contains(&pt)
-            && !self.cuts.contains(&pt)
-            && !self.crosses.contains(&pt)
-            && !self.spawns.contains(pt)
+                && pt.x < self.width as isize
+                && pt.y >= 0
+                && pt.y < self.height as isize
+                && !self.walls.contains(&pt)
+                && !self.cuts.contains(&pt)
+                && !self.spawns.contains(pt)
     }
 
     // Points that can contains a final molecule
@@ -235,7 +234,7 @@ impl Local {
             } else if global.is_loop && new_head == global.exit.0 {
                 // Another special case is Iota levels where the start and exit are the same
             } else {
-                return false
+                return false;
             }
         }
 
@@ -264,7 +263,7 @@ impl Local {
             }
         }
 
-        // We can't move off of the exit 
+        // We can't move off of the exit
         // Unless it's also the starting point (Iota)
         if self.head == global.exit.0 && !self.track.is_empty() {
             return false;
@@ -507,7 +506,10 @@ impl State<Global, Step> for Local {
                     }
 
                     // TODO: Is this just disabling this check for iota levels?
-                    if self.track.contains(&new_pt) && !global.crosses.contains(&new_pt) && !global.is_loop {
+                    if self.track.contains(&new_pt)
+                        && !global.crosses.contains(&new_pt)
+                        && !global.is_loop
+                    {
                         continue;
                     }
 
@@ -576,7 +578,10 @@ impl State<Global, Step> for Local {
         self.molecules.len() == 1
             && self.head == global.exit.0
             && m0.available_bonds() == 0
-            && m0.elements.iter().all(|e| global.is_exitable(&(m0.pt + e.offset)))
+            && m0
+                .elements
+                .iter()
+                .all(|e| global.is_exitable(&(m0.pt + e.offset)))
     }
 
     fn next_states(&self, global: &Global) -> Option<Vec<(i64, Step, Local)>> {
@@ -809,30 +814,30 @@ fn load(input: &str) -> Result<(Global, Local)> {
         let parts = line.split_whitespace().collect::<Vec<_>>();
         match parts[0] {
             "map" => {
-                assert!(parts.len() == 3);
+                assert!(parts.len() == 3, "map <width> <height>");
                 global.width = parts[1].parse()?;
                 global.height = parts[2].parse()?;
             }
             "cut" => {
-                assert!(parts.len() == 3);
+                assert!(parts.len() == 3, "cut <x> <y>");
                 let x: isize = parts[1].parse()?;
                 let y: isize = parts[2].parse()?;
                 global.cuts.push(Point { x: x - 1, y: y - 1 });
             }
             "cross" => {
-                assert!(parts.len() == 3);
+                assert!(parts.len() == 3, "cross <x> <y>");
                 let x: isize = parts[1].parse()?;
                 let y: isize = parts[2].parse()?;
                 global.crosses.push(Point { x: x - 1, y: y - 1 });
             }
             "wall" => {
-                assert!(parts.len() == 3);
+                assert!(parts.len() == 3, "wall <x> <y>");
                 let x: isize = parts[1].parse()?;
                 let y: isize = parts[2].parse()?;
                 global.walls.push(Point { x: x - 1, y: y - 1 });
             }
             "track" => {
-                assert!(parts.len() == 4);
+                assert!(parts.len() == 4, "track <x> <y> <direction>");
                 let x: isize = parts[1].parse()?;
                 let y: isize = parts[2].parse()?;
 
@@ -840,7 +845,7 @@ fn load(input: &str) -> Result<(Global, Local)> {
                 first_move = parts[3].try_into()?;
             }
             "exit" => {
-                assert!(parts.len() == 4);
+                assert!(parts.len() == 4, "exit <x> <y> <direction>");
                 let x: isize = parts[1].parse()?;
                 let y: isize = parts[2].parse()?;
                 let d = parts[3].try_into()?;
@@ -848,7 +853,7 @@ fn load(input: &str) -> Result<(Global, Local)> {
                 global.exit = (Point { x: x - 1, y: y - 1 }, d);
             }
             "atom" => {
-                assert!(parts.len() == 4);
+                assert!(parts.len() == 4, "atom <x> <y> <element>");
                 let x: isize = parts[1].parse()?;
                 let y: isize = parts[2].parse()?;
                 let element = ElementData::atom(parts[3].try_into()?);
@@ -861,7 +866,7 @@ fn load(input: &str) -> Result<(Global, Local)> {
                 });
             }
             "anion" => {
-                assert!(parts.len() == 5);
+                assert!(parts.len() == 5, "anion <x> <y> <element> <holes>");
                 let x: isize = parts[1].parse()?;
                 let y: isize = parts[2].parse()?;
                 let mut element = ElementData::atom(parts[3].try_into()?);
@@ -883,7 +888,7 @@ fn load(input: &str) -> Result<(Global, Local)> {
                 });
             }
             "electron" => {
-                assert!(parts.len() == 3);
+                assert!(parts.len() == 3, "electron <x> <y>");
                 let x: isize = parts[1].parse()?;
                 let y: isize = parts[2].parse()?;
 
@@ -969,6 +974,28 @@ fn main() -> Result<()> {
 
     if let Some(solution) = solution {
         println!("{}", solver.stringify(&solution));
+
+        let mut track = solution.track.clone();
+        track.push(solution.head);
+
+        let output = track
+            .iter()
+            .skip(1)
+            .zip(track.iter().skip(2))
+            .map(|(a, b)| {
+                let delta = *b - *a;
+                let d: Direction = delta.try_into().unwrap();
+
+                match d {
+                    Direction::Up => 'U',
+                    Direction::Down => 'D',
+                    Direction::Left => 'L',
+                    Direction::Right => 'R',
+                }
+            })
+            .collect::<String>();
+        eprintln!("{}", output);
+
     } else {
         println!("{solver}\nNo solution found");
         exit(1);
