@@ -3,7 +3,7 @@ track 1 6 right
 exit 11 1 right
 
 atom 1 6 oxygen
-anion 3 3 carbon 1
+atom 3 3 carbon 1
 atom 7 3 nitrogen
 electron 5 7
 atom 9 7 nitrogen

@@ -2,6 +2,6 @@ map 5 5
 track 2 2 right
 exit 2 4 left
 
-anion 2 2 hydrogen 1
+atom 2 2 hydrogen 1
 atom 4 3 hydrogen
 electron 5 3

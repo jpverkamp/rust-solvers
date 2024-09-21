@@ -3,7 +3,7 @@ track 4 3 down
 exit 4 6 down
 
 atom 2 2 hydrogen
-anion 6 2 oxygen 1
+atom 6 2 oxygen 1
 atom 4 3 oxygen
 atom 2 6 hydrogen
 electron 6 6

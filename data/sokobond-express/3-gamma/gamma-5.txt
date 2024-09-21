@@ -6,7 +6,7 @@ atom 8 1 oxygen
 atom 3 2 oxygen
 atom 3 6 oxygen
 
-anion 2 4 oxygen 2
+atom 2 4 oxygen 2
 
 electron 6 2
 electron 6 6

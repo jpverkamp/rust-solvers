@@ -218,7 +218,7 @@ struct Local {
     head: Point,
     track: Vec<Point>,
     molecules: Vec<Molecule>,
-    electrons: Vec<Point>,
+    electrons: Vec<(Point, usize)>,
 }
 
 impl Local {
@@ -326,7 +326,7 @@ impl Local {
                 }
 
                 // Hit an electron
-                if self.electrons.contains(&map_pt) {
+                if self.electrons.iter().any(|(pt, _)| *pt == map_pt) {
                     return true;
                 }
             }
@@ -435,7 +435,7 @@ impl Local {
                         continue;
                     }
 
-                    for (k, pt) in self.electrons.iter().enumerate() {
+                    for (k, (pt, _)) in self.electrons.iter().enumerate() {
                         if pt.manhattan_distance(m.pt + el.offset) == 1 {
                             to_electron = Some((i, j, k));
                             break 'find_electron;
@@ -445,9 +445,15 @@ impl Local {
             }
 
             if let Some((i, j, k)) = to_electron {
-                self.molecules[i].elements[j].electrons += 1;
-                self.molecules[i].elements[j].holes -= 1;
-                self.electrons.remove(k);
+                let to_move = self.electrons[k].1.min(self.molecules[i].elements[j].holes);
+
+                self.molecules[i].elements[j].electrons += to_move;
+                self.molecules[i].elements[j].holes -= to_move;
+                self.electrons[k].1 -= to_move;
+
+                if self.electrons[k].1 == 0 {
+                    self.electrons.remove(k);
+                }
             } else {
                 break 'electroning;
             }
@@ -550,7 +556,7 @@ impl State<Global, Step> for Local {
             }
 
             // All electrons must also be within radius + 1
-            for pt in self.electrons.iter() {
+            for (pt, _) in self.electrons.iter() {
                 if !reachable
                     .iter()
                     .any(|pt2| pt.manhattan_distance(*pt2) <= radius + 1)
@@ -750,8 +756,13 @@ impl State<Global, Step> for Local {
         }
 
         // Add any electrons
-        for p in self.electrons.iter() {
-            chars.insert(*p, '+');
+        for (p, c) in self.electrons.iter() {
+            chars.insert(*p, match c {
+                1 => '+',
+                2 => '⧺',
+                3 => '⧻',
+                _ => unimplemented!("can only print 1-3 electrons")
+            });
         }
 
         // Add all molecules to the map
@@ -853,10 +864,21 @@ fn load(input: &str) -> Result<(Global, Local)> {
                 global.exit = (Point { x: x - 1, y: y - 1 }, d);
             }
             "atom" => {
-                assert!(parts.len() == 4, "atom <x> <y> <element>");
+                assert!(parts.len() == 4 || parts.len() == 5, "atom <x> <y> <element> <holes>?");
                 let x: isize = parts[1].parse()?;
                 let y: isize = parts[2].parse()?;
-                let element = ElementData::atom(parts[3].try_into()?);
+                let mut element = ElementData::atom(parts[3].try_into()?);
+
+                if parts.len() == 5 {
+                    let holes: usize = parts[4].parse()?;
+                    assert!(
+                        holes <= element.electrons,
+                        "atom: cannot have holes > valence"
+                    );
+
+                    element.electrons -= holes;
+                    element.holes = holes;
+                }
 
                 local.molecules.push(Molecule {
                     pt: Point { x: x - 1, y: y - 1 },
@@ -866,33 +888,19 @@ fn load(input: &str) -> Result<(Global, Local)> {
                 });
             }
             "anion" => {
-                assert!(parts.len() == 5, "anion <x> <y> <element> <holes>");
-                let x: isize = parts[1].parse()?;
-                let y: isize = parts[2].parse()?;
-                let mut element = ElementData::atom(parts[3].try_into()?);
-
-                let holes: usize = parts[4].parse()?;
-                assert!(
-                    holes <= element.electrons,
-                    "anion: cannot have holes > valence"
-                );
-
-                element.electrons -= holes;
-                element.holes = holes;
-
-                local.molecules.push(Molecule {
-                    pt: Point { x: x - 1, y: y - 1 },
-                    elements: vec![element],
-                    bonds: Vec::new(),
-                    active: false,
-                });
+                panic!("anion has been removed; use atom");
             }
             "electron" => {
-                assert!(parts.len() == 3, "electron <x> <y>");
+                assert!(parts.len() == 3 || parts.len() == 4, "electron <x> <y> <count>?");
                 let x: isize = parts[1].parse()?;
                 let y: isize = parts[2].parse()?;
+                let count = if parts.len() == 4 {
+                    parts[3].parse()?
+                } else {
+                    1
+                };
 
-                local.electrons.push(Point { x: x - 1, y: y - 1 });
+                local.electrons.push((Point { x: x - 1, y: y - 1 }, count));
             }
             _ => return Err(anyhow!("unknown command: {}", parts[0])),
         }
@@ -906,7 +914,7 @@ fn load(input: &str) -> Result<(Global, Local)> {
         }
     }
 
-    for pt in local.electrons.iter() {
+    for (pt, _) in local.electrons.iter() {
         global.spawns.push(*pt);
     }
 
