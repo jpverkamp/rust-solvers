@@ -578,11 +578,6 @@ impl State<Global, Step> for Local {
                 }
             }
 
-            // // The exit must be outright reachable
-            // if !reachable.contains(&global.exit.0) {
-            //     return false;
-            // }
-
             // The entrypoint to the exit must be reachable
             if !reachable.contains(&(global.exit.0 - global.exit.1.into())) {
                 return false;
