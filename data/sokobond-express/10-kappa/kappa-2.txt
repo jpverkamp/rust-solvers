@@ -1,0 +1,10 @@
+map 9 8
+track 3 4 right
+exit 7 5 right
+
+atom 3 2 hydrogen
+atom 3 3 hydrogen
+atom 3 4 oxygen 2
+atom 7 6 oxygen
+
+electron 7 7 2

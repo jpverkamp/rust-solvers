@@ -1,5 +1,6 @@
 use std::{collections::HashMap, io::Read, process::exit};
 
+use fxhash::FxHashSet;
 use solver::{Direction, Point, Solver, State};
 
 use anyhow::{anyhow, Result};
@@ -425,6 +426,9 @@ impl Local {
 
     // Any atoms that are missing electrons can grab them
     fn apply_electrons(&mut self) {
+        // Each electron can only be grabbed once per tick
+        let mut grabbed = FxHashSet::default();
+        
         // Keep looping until we settle
         'electroning: loop {
             // Find the atom j of molecule i with a hole adjacent to electron k
@@ -436,6 +440,10 @@ impl Local {
                     }
 
                     for (k, (pt, _)) in self.electrons.iter().enumerate() {
+                        if grabbed.contains(&((i, j, k))) {
+                            continue;
+                        }
+
                         if pt.manhattan_distance(m.pt + el.offset) == 1 {
                             to_electron = Some((i, j, k));
                             break 'find_electron;
@@ -444,16 +452,17 @@ impl Local {
                 }
             }
 
+            // Only move one electron at a time
             if let Some((i, j, k)) = to_electron {
-                let to_move = self.electrons[k].1.min(self.molecules[i].elements[j].holes);
-
-                self.molecules[i].elements[j].electrons += to_move;
-                self.molecules[i].elements[j].holes -= to_move;
-                self.electrons[k].1 -= to_move;
+                self.molecules[i].elements[j].electrons += 1;
+                self.molecules[i].elements[j].holes -= 1;
+                self.electrons[k].1 -= 1;
 
                 if self.electrons[k].1 == 0 {
                     self.electrons.remove(k);
                 }
+
+                grabbed.insert((i, j, k));
             } else {
                 break 'electroning;
             }
@@ -466,6 +475,10 @@ struct Step;
 
 impl State<Global, Step> for Local {
     fn is_valid(&self, global: &Global) -> bool {
+        if self.is_solved(global) {
+            return true;
+        }
+
         // If the molecule on the track has no more free electrons and we need to connect to more, fail
         // This improved beta 5 from 340s to 145s
         // TODO: This might not be valid for all levels
@@ -565,8 +578,13 @@ impl State<Global, Step> for Local {
                 }
             }
 
-            // The exit must be outright reachable
-            if !reachable.contains(&global.exit.0) {
+            // // The exit must be outright reachable
+            // if !reachable.contains(&global.exit.0) {
+            //     return false;
+            // }
+
+            // The entrypoint to the exit must be reachable
+            if !reachable.contains(&(global.exit.0 - global.exit.1.into())) {
                 return false;
             }
         }
@@ -890,7 +908,7 @@ fn load(input: &str) -> Result<(Global, Local)> {
             "anion" => {
                 panic!("anion has been removed; use atom");
             }
-            "electron" => {
+            "electron" | "electrons" => {
                 assert!(parts.len() == 3 || parts.len() == 4, "electron <x> <y> <count>?");
                 let x: isize = parts[1].parse()?;
                 let y: isize = parts[2].parse()?;
