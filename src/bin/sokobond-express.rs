@@ -643,6 +643,26 @@ impl State<Global, Step> for Local {
     fn heuristic(&self, _g: &Global) -> i64 {
         let mut score = 0;
 
+        // Add the distance to the nearest non-track molecule
+        if self.molecules.len() > 1 {
+            let track_molecule_index = self
+                .molecules
+                .iter()
+                .position(|m| m.contains(&self.head))
+                .unwrap();
+
+            score += self
+                .molecules
+                .iter()
+                .enumerate()
+                .filter(|(i, _)| *i != track_molecule_index)
+                .map(|(_, m)| {
+                    self.head.manhattan_distance(m.pt)
+                })
+                .min()
+                .unwrap();
+        }
+
         // Calculate the distance between each molecule and the nearest other
         // Because molecules expand, this will over estimate
         // Filter i < j avoids double counting, it at least needs to be !-
