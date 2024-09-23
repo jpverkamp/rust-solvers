@@ -30,6 +30,9 @@
     "data/sokobond-express/11-lambda/lambda-2.txt": [
       "    .┌──┐\n.....└┐ │\n.→┐. .└┐│\n  └───┐││\n.HO┐ .└┘│\nHNN└──┐ │\n    ..└─┘\n\n"
     ],
+    "data/sokobond-express/11-lambda/lambda-3.txt": [
+      "HOOOH  ↓..\n┌─┘..  │..\n│┌┐ ...└─┐\n││└─────┐│\n││. ....││\n│└──┐   └┘\n└───┘   ..\n\n"
+    ],
     "data/sokobond-express/2-beta/beta-1.txt": [
       ".┌OH...\n │H│ .↓\n┌┘└┘..│\n└─────┘\n\n",
       ".┌OH...\n │H│ .↓\n┌┘└┘.┌┘\n└────┘.\n\n",

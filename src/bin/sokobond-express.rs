@@ -355,20 +355,22 @@ impl Local {
                 }
             }
 
-            // Lambda: If we have multiple bonds and:
-            // - One would use up all available electrons (like an H-H)
-            // - Another would not (like an H-O+)
-            // Don't allow it
-            if to_bond.len() > 1 
-                && to_bond.iter().any(|(_, _, m)| m.available_bonds() == 0) 
-                && to_bond.iter().any(|(_, _, m)| m.available_bonds() > 0)
-            {
-                break 'bonding;
-            }
+            // Lambda
+            // If we choose bond [0], all other molecules must be be able to bond with the result
+            // This fixes the H [ ] O case
+            if to_bond.len() > 1 {
+                for (i, j, m) in to_bond.iter().skip(1) {
+                    let k = if *i == to_bond[0].0 || *i == to_bond[0].1 {
+                        j
+                    } else {
+                        i
+                    };
 
-            // if to_bond.len() > 1 && to_bond.iter().all(|(_, _, m)| m.) {
-            //     break 'bonding;
-            // }
+                    if to_bond[0].2.maybe_bond(&self.molecules[*k]).is_none() {
+                        break 'bonding;
+                    }
+                }
+            }
 
             // If we have some, remove the old molecules, add the new one, and continue
             // The i,j removal is intentionally ordered to avoid invalidating the indexes

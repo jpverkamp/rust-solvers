@@ -1,0 +1,12 @@
+map 10 7
+track 8 1 down
+exit 2 1 left
+
+cut-rect 6 1 2 2
+cut-rect 6 6 2 2
+
+atom 4 3 oxygen
+atom 4 5 oxygen
+atom 8 1 oxygen
+atom 8 6 hydrogen
+atom 8 7 hydrogen
