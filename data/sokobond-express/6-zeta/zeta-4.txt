@@ -2,6 +2,9 @@ map 11 6
 track 1 6 right
 exit 11 1 right
 
+cut-rect 1 1 1 5
+cut-rect 11 2 1 5
+
 atom 1 6 oxygen
 atom 3 3 carbon 1
 atom 7 3 nitrogen
