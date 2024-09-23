@@ -498,8 +498,12 @@ impl State<Global, Step> for Local {
         // TODO: Add a flag for this
         if true {
             // Determine all points the track can still reach
-            let mut reachable = vec![];
-            let mut to_check = vec![self.head];
+            let capacity = global.width * global.height;
+            let mut reachable = Vec::with_capacity(capacity);
+            let mut to_check = Vec::with_capacity(capacity);
+            to_check.push(self.head);
+            
+            let mut queued = vec![false; global.width * global.height];
 
             while let Some(pt) = to_check.pop() {
                 reachable.push(pt);
@@ -511,16 +515,19 @@ impl State<Global, Step> for Local {
                     Direction::Left,
                 ] {
                     let new_pt = pt + d.into();
+                    if new_pt.x < 0 || new_pt.x >= global.width as isize || new_pt.y < 0 || new_pt.y >= global.height as isize {
+                        continue;
+                    }
+
+                    let index = new_pt.y as usize * global.width + new_pt.x as usize;
+
+                    if queued[index] {
+                        continue;
+                    } else {
+                        queued[index] = true;
+                    }
 
                     if !global.is_walkable(&new_pt) {
-                        continue;
-                    }
-
-                    if reachable.contains(&new_pt) {
-                        continue;
-                    }
-
-                    if to_check.contains(&new_pt) {
                         continue;
                     }
 
