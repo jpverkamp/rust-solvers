@@ -24,6 +24,12 @@
       "..┌─┐...\n..│ └┐ .\n..│┌─┘..\n.→┘│OH..\n..┌HO──┐\n..│ .. │\n..└────┘\n\n",
       "..┌──┐..\n..│ ┌┘ .\n..│┌┘...\n.→┘│OH..\n..┌HO──┐\n..│ .. │\n..└────┘\n\n"
     ],
+    "data/sokobond-express/11-lambda/lambda-1.txt": [
+      ".. ┌──┐\n→──HOH│\n.. .└─┘\n\n"
+    ],
+    "data/sokobond-express/11-lambda/lambda-2.txt": [
+      "    .┌──┐\n.....└┐ │\n.→┐. .└┐│\n  └───┐││\n.HO┐ .└┘│\nHNN└──┐ │\n    ..└─┘\n\n"
+    ],
     "data/sokobond-express/2-beta/beta-1.txt": [
       ".┌OH...\n │H│ .↓\n┌┘└┘..│\n└─────┘\n\n",
       ".┌OH...\n │H│ .↓\n┌┘└┘.┌┘\n└────┘.\n\n",
@@ -163,7 +169,8 @@
       ".........\n. ..... .\n.┌──┐┌┐ .\n┌┘.→┘││ .\n│ ..┌┘│ .\n│ ..│ │..\n│ ..│H│..\n│ ┌─NCC .\n└─┘.H┘N..\n\n"
     ],
     "data/sokobond-express/8-theta/theta-5.txt": [
-      " ..........\n ┌──┐.. . .\n │. │┌───┐.\n→┘..││┌──┘ \n .. └┘│.ONO\n .. ..│ ON.\n .....└─┘O.\n\n"
+      " ..........\n ┌──┐.. . .\n │. │┌───┐.\n→┘..││┌──┘ \n .. └┘│.ONO\n .. ..│ ON.\n .....└─┘O.\n\n",
+      " .....┌─┐..\n .....│ │ .\n .. ┌─┘┌┘..\n→───┘.┌┘.. \n .. ..└─┐OO\n .. ... └NN\n ........OO\n\n"
     ],
     "data/sokobond-express/9-iota/iota-1.txt": [
       " ┌─┐..\n.│.│ .\n.└┐└─┐\n..└H┐│\n. HNH│\n...└─┘\n\n",
@@ -197,6 +204,6 @@
     "stderr_mode": "Print",
     "env": [],
     "preserve_env": false,
-    "timeout": 120
+    "timeout": 10
   }
 }

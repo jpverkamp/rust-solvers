@@ -341,24 +341,39 @@ impl Local {
         // Keep looping until the simulation 'settles' (finds no new bonds)
         'bonding: loop {
             // Find the first indexes i,j that bond and the molecule they'd create
-            let mut to_bond = None;
+            let mut to_bond = vec![];
             'find_bond: for (i, m1) in self.molecules.iter().enumerate() {
                 for (j, m2) in self.molecules.iter().enumerate() {
-                    if i == j {
+                    if i >= j {
                         continue;
                     }
 
                     if let Some(new_m) = m1.maybe_bond(m2) {
-                        to_bond = Some((i, j, new_m));
-                        break 'find_bond;
+                        to_bond.push((i, j, new_m));
+                        // break 'find_bond;
                     }
                 }
             }
 
+            // Lambda: If we have multiple bonds and:
+            // - One would use up all available electrons (like an H-H)
+            // - Another would not (like an H-O+)
+            // Don't allow it
+            if to_bond.len() > 1 
+                && to_bond.iter().any(|(_, _, m)| m.available_bonds() == 0) 
+                && to_bond.iter().any(|(_, _, m)| m.available_bonds() > 0)
+            {
+                break 'bonding;
+            }
+
+            // if to_bond.len() > 1 && to_bond.iter().all(|(_, _, m)| m.) {
+            //     break 'bonding;
+            // }
+
             // If we have some, remove the old molecules, add the new one, and continue
             // The i,j removal is intentionally ordered to avoid invalidating the indexes
             // If to_remove is none, that means we've settled
-            if let Some((i, j, new_m)) = to_bond {
+            if let Some((i, j, new_m)) = to_bond.pop() {
                 self.molecules.remove(i.max(j));
                 self.molecules.remove(i.min(j));
                 self.molecules.push(new_m);
