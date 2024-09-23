@@ -855,6 +855,19 @@ fn load(input: &str) -> Result<(Global, Local)> {
                 let y: isize = parts[2].parse()?;
                 global.cuts.push(Point { x: x - 1, y: y - 1 });
             }
+            "cut-rect" => {
+                assert!(parts.len() == 5, "cut-rect <x> <y> <w> <h>");
+                let x: isize = parts[1].parse()?;
+                let y: isize = parts[2].parse()?;
+                let w: isize = parts[3].parse()?;
+                let h: isize = parts[4].parse()?;
+
+                for i in x..(x + w) {
+                    for j in y..(y + h) {
+                        global.cuts.push(Point { x: i - 1, y: j - 1 });
+                    }
+                }
+            }
             "cross" => {
                 assert!(parts.len() == 3, "cross <x> <y>");
                 let x: isize = parts[1].parse()?;
