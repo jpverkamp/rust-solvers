@@ -5,7 +5,7 @@ use solver::{Direction, Point, Solver, State};
 
 use anyhow::{anyhow, Result};
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 enum Element {
     Hydrogen,
     Oxygen,
@@ -47,13 +47,14 @@ impl Element {
     }
 }
 
-#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord, Hash)]
 struct ElementData {
     element: Element,
     offset: Point,
     electrons: usize,
     holes: usize,
 }
+
 impl ElementData {
     fn atom(el: Element) -> ElementData {
         ElementData {
@@ -153,17 +154,32 @@ impl Molecule {
                     strength: bond_strength,
                 });
 
-                return Some(Molecule {
+                // Sort and recenter
+                // This will guarantee that molecule Eq works correctly
+                // TODO: This... is a bad invariant, really we should use BTreeMaps or something    
+                let mut new_molecule = Molecule {
                     pt: self.pt,
                     elements,
                     bonds,
                     active: true,
-                });
+                };
+                new_molecule.normalize();
+                return Some(new_molecule);
             }
         }
 
         // If we made it this far, no matches
         None
+    }
+    
+    fn normalize(&mut self) {
+        self.elements.sort();
+
+        let first_offset = self.elements[0].offset;
+        self.elements.iter_mut().for_each(|el| {
+            el.offset = el.offset - first_offset;
+        });
+        self.pt = self.pt + first_offset;
     }
 }
 
@@ -338,51 +354,54 @@ impl Local {
 
     // Try to bond any molecules that are adjacent
     fn apply_bonds(&mut self) {
+        // Generate all possible orderings of applying bonds
+        let mut in_progress = vec![self.molecules.clone()];
+        let mut complete = vec![];
+
         // Keep looping until the simulation 'settles' (finds no new bonds)
-        'bonding: loop {
-            // Find the first indexes i,j that bond and the molecule they'd create
-            let mut to_bond = vec![];
-            'find_bond: for (i, m1) in self.molecules.iter().enumerate() {
-                for (j, m2) in self.molecules.iter().enumerate() {
-                    if i >= j {
-                        continue;
-                    }
+        while !in_progress.is_empty() {
+            // For all in progress molecules, try to add one more bond
+            let mut next_in_progress = vec![];
+            for molecules in in_progress.iter() {
+                let mut found_one = false;
 
-                    if let Some(new_m) = m1.maybe_bond(m2) {
-                        to_bond.push((i, j, new_m));
-                        // break 'find_bond;
-                    }
-                }
-            }
+                for (i, m1) in molecules.iter().enumerate() {
+                    for (j, m2) in molecules.iter().enumerate() {
+                        if i >= j {
+                            continue;
+                        }
 
-            // Lambda
-            // If we choose bond [0], all other molecules must be be able to bond with the result
-            // This fixes the H [ ] O case
-            if to_bond.len() > 1 {
-                for (i, j, m) in to_bond.iter().skip(1) {
-                    let k = if *i == to_bond[0].0 || *i == to_bond[0].1 {
-                        j
-                    } else {
-                        i
-                    };
-
-                    if to_bond[0].2.maybe_bond(&self.molecules[*k]).is_none() {
-                        break 'bonding;
+                        if let Some(new_m) = m1.maybe_bond(m2) {
+                            found_one = true;
+                            next_in_progress.push({
+                                let mut new_molecules = molecules.clone();
+                                new_molecules.remove(i.max(j));
+                                new_molecules.remove(i.min(j));
+                                new_molecules.push(new_m);
+                                new_molecules
+                            });
+                        }
                     }
                 }
-            }
 
-            // If we have some, remove the old molecules, add the new one, and continue
-            // The i,j removal is intentionally ordered to avoid invalidating the indexes
-            // If to_remove is none, that means we've settled
-            if let Some((i, j, new_m)) = to_bond.pop() {
-                self.molecules.remove(i.max(j));
-                self.molecules.remove(i.min(j));
-                self.molecules.push(new_m);
-            } else {
-                break 'bonding;
+                if !found_one {
+                    complete.push(molecules.clone());
+                }
             }
+            in_progress = next_in_progress;
         }
+
+        // Lambda: If we have possibilities that result in different numbers of molecules, don't bond
+        if complete
+            .iter()
+            .any(|m1| complete.iter().any(|m2| m1 != m2))
+        {
+            return;
+        }
+
+        // Debug: Return the first one
+        assert!(complete.len() >= 1);
+        self.molecules = complete[0].clone();
     }
 
     // Apply additional bonds within active molecules
@@ -445,7 +464,7 @@ impl Local {
     fn apply_electrons(&mut self) {
         // Each electron can only be grabbed once per tick
         let mut grabbed = FxHashSet::default();
-        
+
         // Keep looping until we settle
         'electroning: loop {
             // Find the atom j of molecule i with a hole adjacent to electron k
@@ -519,7 +538,7 @@ impl State<Global, Step> for Local {
             let mut reachable = Vec::with_capacity(capacity);
             let mut to_check = Vec::with_capacity(capacity);
             to_check.push(self.head);
-            
+
             let mut queued = vec![false; global.width * global.height];
 
             while let Some(pt) = to_check.pop() {
@@ -532,7 +551,11 @@ impl State<Global, Step> for Local {
                     Direction::Left,
                 ] {
                     let new_pt = pt + d.into();
-                    if new_pt.x < 0 || new_pt.x >= global.width as isize || new_pt.y < 0 || new_pt.y >= global.height as isize {
+                    if new_pt.x < 0
+                        || new_pt.x >= global.width as isize
+                        || new_pt.y < 0
+                        || new_pt.y >= global.height as isize
+                    {
                         continue;
                     }
 
@@ -673,9 +696,7 @@ impl State<Global, Step> for Local {
                 .iter()
                 .enumerate()
                 .filter(|(i, _)| *i != track_molecule_index)
-                .map(|(_, m)| {
-                    self.head.manhattan_distance(m.pt)
-                })
+                .map(|(_, m)| self.head.manhattan_distance(m.pt))
                 .min()
                 .unwrap();
         }
@@ -814,12 +835,15 @@ impl State<Global, Step> for Local {
 
         // Add any electrons
         for (p, c) in self.electrons.iter() {
-            chars.insert(*p, match c {
-                1 => '+',
-                2 => '⧺',
-                3 => '⧻',
-                _ => unimplemented!("can only print 1-3 electrons")
-            });
+            chars.insert(
+                *p,
+                match c {
+                    1 => '+',
+                    2 => '⧺',
+                    3 => '⧻',
+                    _ => unimplemented!("can only print 1-3 electrons"),
+                },
+            );
         }
 
         // Add all molecules to the map
@@ -934,7 +958,10 @@ fn load(input: &str) -> Result<(Global, Local)> {
                 global.exit = (Point { x: x - 1, y: y - 1 }, d);
             }
             "atom" => {
-                assert!(parts.len() == 4 || parts.len() == 5, "atom <x> <y> <element> <holes>?");
+                assert!(
+                    parts.len() == 4 || parts.len() == 5,
+                    "atom <x> <y> <element> <holes>?"
+                );
                 let x: isize = parts[1].parse()?;
                 let y: isize = parts[2].parse()?;
                 let mut element = ElementData::atom(parts[3].try_into()?);
@@ -961,7 +988,10 @@ fn load(input: &str) -> Result<(Global, Local)> {
                 panic!("anion has been removed; use atom");
             }
             "electron" | "electrons" => {
-                assert!(parts.len() == 3 || parts.len() == 4, "electron <x> <y> <count>?");
+                assert!(
+                    parts.len() == 3 || parts.len() == 4,
+                    "electron <x> <y> <count>?"
+                );
                 let x: isize = parts[1].parse()?;
                 let y: isize = parts[2].parse()?;
                 let count = if parts.len() == 4 {
@@ -1073,7 +1103,6 @@ fn main() -> Result<()> {
             })
             .collect::<String>();
         eprintln!("{}", output);
-
     } else {
         println!("{solver}\nNo solution found");
         exit(1);
