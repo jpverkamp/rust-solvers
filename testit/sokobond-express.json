@@ -36,6 +36,12 @@
       "HOOOH  ↓..\n┌─┘..  │..\n│┌┐ ...└─┐\n││└─────┐│\n││. ....││\n│└──┐   └┘\n└───┘   ..\n\n",
       "HOOOH  ↓..\n┌─┘..  └┐.\n│┌┐ ....└┐\n││└─────┐│\n│└┐ ....││\n└┐└─┐   └┘\n.└──┘   ..\n\n"
     ],
+    "data/sokobond-express/11-lambda/lambda-5.txt": [
+      "     .....\n ..  ... .\n┌────┐ ┌┐.\n└┐...└─┘└┐\n→┘   OO. │\n     OO──┘\n\n"
+    ],
+    "data/sokobond-express/11-lambda/lambda-6.txt": [
+      "....┌─←     \n....│..     \n . ┌┘. .┌─OH\n.┌─┘┌─┐ │ NO\n.└──┘ └─┘.HH\n\n"
+    ],
     "data/sokobond-express/2-beta/beta-1.txt": [
       ".┌OH...\n │H│ .↓\n┌┘└┘..│\n└─────┘\n\n",
       ".┌OH...\n │H│ .↓\n┌┘└┘.┌┘\n└────┘.\n\n",

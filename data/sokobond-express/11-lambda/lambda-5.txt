@@ -1,0 +1,16 @@
+map 10 6
+track 1 5 right
+exit 6 6 left
+
+cut-rect 1 1 3 1
+cut-rect 4 1 2 2
+cut-rect 1 6 3 1
+cut-rect 4 5 2 2
+
+atom 1 2 oxygen 1
+atom 1 5 oxygen
+atom 3 5 oxygen 1
+atom 9 2 oxygen
+
+electron 7 3
+electron 9 5
