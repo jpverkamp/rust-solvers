@@ -1,4 +1,4 @@
-use std::{collections::HashMap, io::Read, process::exit};
+use std::{collections::HashMap, hash::{DefaultHasher, Hash, Hasher}, io::Read, process::exit};
 
 use fxhash::FxHashSet;
 use solver::{Direction, Point, Solver, State};
@@ -230,12 +230,25 @@ impl Global {
     }
 }
 
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 struct Local {
     head: Point,
     track: Vec<Point>,
     molecules: Vec<Molecule>,
     electrons: Vec<(Point, usize)>,
+
+    hash: u64,
+    hash_dirty: bool,
+}
+
+impl Hash for Local {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        if self.hash_dirty {
+            panic!("hash_dirty should be false when hashing");
+        }
+
+        self.hash.hash(state);
+    }
 }
 
 impl Local {
@@ -504,6 +517,18 @@ impl Local {
             }
         }
     }
+    
+    fn calculate_hash(&mut self) {
+        let mut hasher = DefaultHasher::new();
+        self.hash_dirty = false;
+
+        self.head.hash(&mut hasher);
+        self.track.hash(&mut hasher);
+        self.molecules.hash(&mut hasher);
+        self.electrons.hash(&mut hasher);
+
+        self.hash = hasher.finish();
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -668,7 +693,10 @@ impl State<Global, Step> for Local {
             }
 
             let mut new_state = self.clone();
+            new_state.hash_dirty = true;
+
             if new_state.maybe_move(*d, global) {
+                new_state.calculate_hash();
                 next_states.push((1, Step, new_state));
             }
         }
@@ -887,12 +915,8 @@ fn load(input: &str) -> Result<(Global, Local)> {
         exit: (Point { x: 0, y: 0 }, Direction::Up),
     };
 
-    let mut local = Local {
-        head: Point { x: 0, y: 0 },
-        track: Vec::new(),
-        molecules: Vec::new(),
-        electrons: Vec::new(),
-    };
+    let mut local = Local::default();
+    local.calculate_hash();
 
     let mut first_move = Direction::Down;
 
