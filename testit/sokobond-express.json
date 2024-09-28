@@ -142,7 +142,8 @@
     "data/sokobond-express/5-epislon/epsilon-3.txt": [
       " ....┌─┐. \n┌┐ .┌┘┌│┐.\n│└──┘.│││.\n└─────┘││.\n...┌OOH┘│.\n...└H→──┘.\n\n",
       " ..┌───┐. \n┌┐ │.┌─│┐.\n│└─┘┌┘┌┘│.\n└───┘┌┘┌┘.\n...┌OOH┘..\n...└H→┘...\n\n",
-      " ....┌─┐. \n┌┐ ┌─┘┌│┐.\n│└─┘.┌┘││.\n└────┘.││.\n...┌OOH┘│.\n...└H→──┘.\n\n"
+      " ....┌─┐. \n┌┐ ┌─┘┌│┐.\n│└─┘.┌┘││.\n└────┘.││.\n...┌OOH┘│.\n...└H→──┘.\n\n",
+      " ..┌───┐. \n┌┐ │┌──│┐.\n│└─┘│..││.\n└───┘.┌┘│.\n...┌OOH┌┘.\n...└H→─┘..\n\n"
     ],
     "data/sokobond-express/5-epislon/epsilon-4.txt": [
       " ┌HH┌─┐\n.│OCO┌┘\n.└─┐││ \n.┌─│┘│.\n→┘.└┐│.\n....└┘.\n... .. \n\n",
@@ -240,147 +241,151 @@
   "timing": {
     "data/sokobond-express/1-alpha/alpha-1.txt": {
       "fastest": 195,
-      "most_recent": 195
+      "most_recent": 328
     },
     "data/sokobond-express/1-alpha/alpha-2.txt": {
       "fastest": 8,
-      "most_recent": 8
+      "most_recent": 13
     },
     "data/sokobond-express/1-alpha/alpha-3.txt": {
-      "fastest": 15,
-      "most_recent": 15
+      "fastest": 13,
+      "most_recent": 14
     },
     "data/sokobond-express/1-alpha/alpha-4.txt": {
-      "fastest": 43,
-      "most_recent": 43
+      "fastest": 29,
+      "most_recent": 29
     },
     "data/sokobond-express/10-kappa/kappa-1.txt": {
-      "fastest": 73,
-      "most_recent": 73
+      "fastest": 57,
+      "most_recent": 57
     },
     "data/sokobond-express/11-lambda/lambda-1.txt": {
       "fastest": 5,
-      "most_recent": 5
+      "most_recent": 8
     },
     "data/sokobond-express/11-lambda/lambda-2.txt": {
       "fastest": 5,
-      "most_recent": 5
+      "most_recent": 12
     },
     "data/sokobond-express/11-lambda/lambda-5.txt": {
       "fastest": 21,
-      "most_recent": 21
+      "most_recent": 48
     },
     "data/sokobond-express/2-beta/beta-1.txt": {
       "fastest": 197,
-      "most_recent": 197
+      "most_recent": 328
     },
     "data/sokobond-express/2-beta/beta-2.txt": {
-      "fastest": 10,
-      "most_recent": 12
+      "fastest": 7,
+      "most_recent": 13
     },
     "data/sokobond-express/2-beta/beta-3.txt": {
       "fastest": 7,
-      "most_recent": 10
+      "most_recent": 9
     },
     "data/sokobond-express/2-beta/beta-4.txt": {
       "fastest": 6,
-      "most_recent": 19
+      "most_recent": 8
     },
     "data/sokobond-express/2-beta/beta-5.txt": {
       "fastest": 2702,
-      "most_recent": 2702
+      "most_recent": 2819
     },
     "data/sokobond-express/3-gamma/gamma-1.txt": {
       "fastest": 7,
-      "most_recent": 7
+      "most_recent": 22
     },
     "data/sokobond-express/3-gamma/gamma-2.txt": {
       "fastest": 4,
-      "most_recent": 4
+      "most_recent": 328
     },
     "data/sokobond-express/3-gamma/gamma-3.txt": {
-      "fastest": 7,
-      "most_recent": 7
+      "fastest": 6,
+      "most_recent": 15
     },
     "data/sokobond-express/3-gamma/gamma-4.txt": {
-      "fastest": 18,
-      "most_recent": 18
+      "fastest": 14,
+      "most_recent": 28
     },
     "data/sokobond-express/3-gamma/gamma-5.txt": {
-      "fastest": 47,
-      "most_recent": 47
+      "fastest": 45,
+      "most_recent": 45
     },
     "data/sokobond-express/4-delta/delta-1.txt": {
-      "fastest": 9,
-      "most_recent": 9
+      "fastest": 8,
+      "most_recent": 8
     },
     "data/sokobond-express/4-delta/delta-2.txt": {
-      "fastest": 33,
-      "most_recent": 33
+      "fastest": 30,
+      "most_recent": 30
     },
     "data/sokobond-express/4-delta/delta-3.txt": {
       "fastest": 923,
-      "most_recent": 923
+      "most_recent": 971
     },
     "data/sokobond-express/4-delta/delta-4.txt": {
-      "fastest": 812,
-      "most_recent": 991
+      "fastest": 763,
+      "most_recent": 763
     },
     "data/sokobond-express/4-delta/delta-5.txt": {
-      "fastest": 208,
-      "most_recent": 208
+      "fastest": 200,
+      "most_recent": 200
     },
     "data/sokobond-express/4-delta/delta-6.txt": {
-      "fastest": 3669,
-      "most_recent": 3669
+      "fastest": 3367,
+      "most_recent": 3367
     },
     "data/sokobond-express/5-epislon/epsilon-1.txt": {
       "fastest": 8,
-      "most_recent": 14
+      "most_recent": 13
     },
     "data/sokobond-express/5-epislon/epsilon-2.txt": {
-      "fastest": 9575,
-      "most_recent": 9575
+      "fastest": 9078,
+      "most_recent": 9544
+    },
+    "data/sokobond-express/5-epislon/epsilon-3.txt": {
+      "fastest": 42106,
+      "most_recent": 42106
     },
     "data/sokobond-express/5-epislon/epsilon-4.txt": {
-      "fastest": 1375,
-      "most_recent": 1375
+      "fastest": 1337,
+      "most_recent": 1337
     },
     "data/sokobond-express/6-zeta/zeta-1.txt": {
-      "fastest": 11,
-      "most_recent": 11
+      "fastest": 8,
+      "most_recent": 8
     },
     "data/sokobond-express/6-zeta/zeta-2.txt": {
       "fastest": 98,
-      "most_recent": 98
+      "most_recent": 99
     },
     "data/sokobond-express/8-theta/theta-1.txt": {
-      "fastest": 13,
-      "most_recent": 194
+      "fastest": 10,
+      "most_recent": 331
     },
     "data/sokobond-express/8-theta/theta-2.txt": {
       "fastest": 12,
-      "most_recent": 192
+      "most_recent": 20
     },
     "data/sokobond-express/8-theta/theta-4.txt": {
       "fastest": 3515,
-      "most_recent": 3515
+      "most_recent": 3519
     },
     "data/sokobond-express/9-iota/iota-1.txt": {
       "fastest": 4,
-      "most_recent": 4
+      "most_recent": 7
     },
     "data/sokobond-express/9-iota/iota-3.txt": {
-      "fastest": 101,
-      "most_recent": 127
+      "fastest": 41,
+      "most_recent": 41
     },
     "data/sokobond-express/9-iota/iota-4.txt": {
       "fastest": 3365,
-      "most_recent": 3365
+      "most_recent": 4070
     },
     "data/sokobond-express/9-iota/iota-5.txt": {
       "fastest": 4165,
-      "most_recent": 4165
+      "most_recent": 4189
     }
   }
 }

@@ -114,6 +114,7 @@ impl Molecule {
                 if bond_strength == 0 {
                     continue;
                 }
+                let bond_strength = 1; // Also apply single bonds first
 
                 // If we made it here, create a new molecule that merges the two
 
@@ -173,7 +174,37 @@ impl Molecule {
     }
     
     fn normalize(&mut self) {
-        self.elements.sort();
+        // Sort the elements while preserving bond indexes
+        // This is ugly, but necessary without some sort of 'sort both at the same time' method
+        for i in 0..self.elements.len() {
+            for j in (i+1)..self.elements.len() {
+                if self.elements[i].offset > self.elements[j].offset {
+                    self.elements.swap(i, j);
+
+                    // Update the bonds
+                    for bond in self.bonds.iter_mut() {
+                        if bond.i == i {
+                            bond.i = j;
+                        } else if bond.i == j {
+                            bond.i = i;
+                        }
+
+                        if bond.j == i {
+                            bond.j = j;
+                        } else if bond.j == j {
+                            bond.j = i;
+                        }
+                    }
+                }
+            }
+        }
+
+        // Bonds should also be i < j
+        self.bonds.iter_mut().for_each(|bond| {
+            if bond.i > bond.j {
+                std::mem::swap(&mut bond.i, &mut bond.j);
+            }
+        });
 
         let first_offset = self.elements[0].offset;
         self.elements.iter_mut().for_each(|el| {
@@ -378,9 +409,46 @@ impl Local {
             for molecules in in_progress.iter() {
                 let mut found_one = false;
 
-                for (i, m1) in molecules.iter().enumerate() {
-                    for (j, m2) in molecules.iter().enumerate() {
-                        if i >= j {
+                for (m1_i, m1) in molecules.iter().enumerate() {
+                    // Apply any possible self bonds as well
+                    for (el1_i, el1) in m1.elements.iter().enumerate() {
+                        for (el2_i, el2) in m1.elements.iter().enumerate() {
+                            if el1_i >= el2_i {
+                                continue;
+                            }
+
+                            if el1.electrons == 0 || el2.electrons == 0 {
+                                continue;
+                            }
+
+                            let mut new_m = m1.clone();
+
+                            new_m.elements[el1_i].electrons -= 1;
+                            new_m.elements[el2_i].electrons -= 1;
+
+                            if let Some(bond_index) = new_m.bonds.iter().position(|b| b.i == el1_i && b.j == el2_i) {
+                                new_m.bonds[bond_index].strength += 1;
+                            } else if let Some(bond_index) = new_m.bonds.iter().position(|b| b.i == el2_i && b.j == el1_i) {
+                                new_m.bonds[bond_index].strength += 1;
+                            } else {
+                                new_m.bonds.push(BondData {
+                                    i: el1_i,
+                                    j: el2_i,
+                                    strength: 1,
+                                });
+                            }
+
+                            found_one = true;
+
+                            let mut new_molecules = molecules.clone();
+                            new_molecules[m1_i] = new_m;
+                            next_in_progress.push(new_molecules);
+                        }
+                    }
+
+                    // And then match against each other molecule
+                    for (m2_i, m2) in molecules.iter().enumerate() {
+                        if m1_i >= m2_i {
                             continue;
                         }
 
@@ -388,8 +456,8 @@ impl Local {
                             found_one = true;
                             next_in_progress.push({
                                 let mut new_molecules = molecules.clone();
-                                new_molecules.remove(i.max(j));
-                                new_molecules.remove(i.min(j));
+                                new_molecules.remove(m1_i.max(m2_i));
+                                new_molecules.remove(m1_i.min(m2_i));
                                 new_molecules.push(new_m);
                                 new_molecules
                             });
@@ -409,6 +477,7 @@ impl Local {
             .iter()
             .any(|m1| complete.iter().any(|m2| m1 != m2))
         {
+            dbg!(&complete);
             return;
         }
 
@@ -520,14 +589,20 @@ impl Local {
     
     fn calculate_hash(&mut self) {
         let mut hasher = DefaultHasher::new();
-        self.hash_dirty = false;
 
         self.head.hash(&mut hasher);
-        self.track.hash(&mut hasher);
+
+        // It doesn't matter which we we get to a point, so sort the track to possibly eliminate duplicates
+        let mut track = self.track.clone();
+        track.sort();
+        track.hash(&mut hasher);
+        
+        // These should already have been normalized
         self.molecules.hash(&mut hasher);
         self.electrons.hash(&mut hasher);
 
         self.hash = hasher.finish();
+        self.hash_dirty = false;
     }
 }
 
