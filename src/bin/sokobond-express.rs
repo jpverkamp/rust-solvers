@@ -944,6 +944,7 @@ impl State<Global, Step> for Local {
                     1 => '+',
                     2 => '⧺',
                     3 => '⧻',
+                    4 => '*',
                     _ => unimplemented!("can only print 1-3 electrons"),
                 },
             );

@@ -1,0 +1,13 @@
+map 11 9
+cut-rect 6 1 1 3
+cut-rect 6 7 1 3
+track 2 2 down
+exit 2 5 up
+
+atom 2 2 carbon 4
+atom 3 2 hydrogen
+atom 10 2 hydrogen
+atom 10 5 hydrogen
+atom 10 8 hydrogen
+
+electrons 6 5 4
