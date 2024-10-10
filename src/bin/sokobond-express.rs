@@ -1,4 +1,9 @@
-use std::{collections::HashMap, hash::{DefaultHasher, Hash, Hasher}, io::Read, process::exit};
+use std::{
+    collections::HashMap,
+    hash::{DefaultHasher, Hash, Hasher},
+    io::Read,
+    process::exit,
+};
 
 use fxhash::FxHashSet;
 use solver::{Direction, Point, Solver, State};
@@ -157,7 +162,7 @@ impl Molecule {
 
                 // Sort and recenter
                 // This will guarantee that molecule Eq works correctly
-                // TODO: This... is a bad invariant, really we should use BTreeMaps or something    
+                // TODO: This... is a bad invariant, really we should use BTreeMaps or something
                 let mut new_molecule = Molecule {
                     pt: self.pt,
                     elements,
@@ -172,12 +177,12 @@ impl Molecule {
         // If we made it this far, no matches
         None
     }
-    
+
     fn normalize(&mut self) {
         // Sort the elements while preserving bond indexes
         // This is ugly, but necessary without some sort of 'sort both at the same time' method
         for i in 0..self.elements.len() {
-            for j in (i+1)..self.elements.len() {
+            for j in (i + 1)..self.elements.len() {
                 if self.elements[i].offset > self.elements[j].offset {
                     self.elements.swap(i, j);
 
@@ -261,7 +266,7 @@ impl Global {
     }
 }
 
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Debug, Default, Clone)]
 struct Local {
     head: Point,
     track: Vec<Point>,
@@ -271,6 +276,18 @@ struct Local {
     hash: u64,
     hash_dirty: bool,
 }
+
+impl PartialEq for Local {
+    fn eq(&self, other: &Self) -> bool {
+        if self.hash_dirty || other.hash_dirty {
+            panic!("hash_dirty should be false when comparing");
+        }
+
+        self.hash == other.hash
+    }
+}
+
+impl Eq for Local {}
 
 impl Hash for Local {
     fn hash<H: Hasher>(&self, state: &mut H) {
@@ -426,9 +443,17 @@ impl Local {
                             new_m.elements[el1_i].electrons -= 1;
                             new_m.elements[el2_i].electrons -= 1;
 
-                            if let Some(bond_index) = new_m.bonds.iter().position(|b| b.i == el1_i && b.j == el2_i) {
+                            if let Some(bond_index) = new_m
+                                .bonds
+                                .iter()
+                                .position(|b| b.i == el1_i && b.j == el2_i)
+                            {
                                 new_m.bonds[bond_index].strength += 1;
-                            } else if let Some(bond_index) = new_m.bonds.iter().position(|b| b.i == el2_i && b.j == el1_i) {
+                            } else if let Some(bond_index) = new_m
+                                .bonds
+                                .iter()
+                                .position(|b| b.i == el2_i && b.j == el1_i)
+                            {
                                 new_m.bonds[bond_index].strength += 1;
                             } else {
                                 new_m.bonds.push(BondData {
@@ -473,10 +498,7 @@ impl Local {
         }
 
         // Lambda: If we have possibilities that result in different numbers of molecules, don't bond
-        if complete
-            .iter()
-            .any(|m1| complete.iter().any(|m2| m1 != m2))
-        {
+        if complete.iter().any(|m1| complete.iter().any(|m2| m1 != m2)) {
             dbg!(&complete);
             return;
         }
@@ -586,7 +608,7 @@ impl Local {
             }
         }
     }
-    
+
     fn calculate_hash(&mut self) {
         let mut hasher = DefaultHasher::new();
 
@@ -596,10 +618,10 @@ impl Local {
         let mut track = self.track.clone();
         track.sort();
         track.hash(&mut hasher);
-        
+
         // These should already have been normalized
-        self.molecules.hash(&mut hasher);
-        self.electrons.hash(&mut hasher);
+        // self.molecules.hash(&mut hasher);
+        // self.electrons.hash(&mut hasher);
 
         self.hash = hasher.finish();
         self.hash_dirty = false;

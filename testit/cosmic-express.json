@@ -155,5 +155,107 @@
     ],
     "preserve_env": false,
     "timeout": 10
+  },
+  "timing": {
+    "data/cosmic-express/Andromeda/Andromeda 1.json": {
+      "fastest": 14,
+      "most_recent": 14
+    },
+    "data/cosmic-express/Andromeda/Andromeda 2.json": {
+      "fastest": 83,
+      "most_recent": 83
+    },
+    "data/cosmic-express/Andromeda/Andromeda 3.json": {
+      "fastest": 47,
+      "most_recent": 47
+    },
+    "data/cosmic-express/Andromeda/Andromeda 4.json": {
+      "fastest": 22,
+      "most_recent": 22
+    },
+    "data/cosmic-express/Andromeda/Andromeda 5.json": {
+      "fastest": 1398,
+      "most_recent": 1398
+    },
+    "data/cosmic-express/Andromeda/Andromeda 7.json": {
+      "fastest": 1078,
+      "most_recent": 1078
+    },
+    "data/cosmic-express/Andromeda/Andromeda 8.json": {
+      "fastest": 1036,
+      "most_recent": 1036
+    },
+    "data/cosmic-express/Andromeda/Andromeda 8b.json": {
+      "fastest": 21,
+      "most_recent": 21
+    },
+    "data/cosmic-express/Andromeda/Andromeda 9.json": {
+      "fastest": 4963,
+      "most_recent": 4963
+    },
+    "data/cosmic-express/Cassiopeia/Cassiopeia 1.json": {
+      "fastest": 2456,
+      "most_recent": 2456
+    },
+    "data/cosmic-express/Delphinus/Delphinus 4.json": {
+      "fastest": 214,
+      "most_recent": 214
+    },
+    "data/cosmic-express/Delphinus/Delphinus 6.json": {
+      "fastest": 828,
+      "most_recent": 828
+    },
+    "data/cosmic-express/Delphinus/Delphinus 9.json": {
+      "fastest": 576,
+      "most_recent": 576
+    },
+    "data/cosmic-express/Ursa Minor/Ursa Minor 1.json": {
+      "fastest": 15,
+      "most_recent": 15
+    },
+    "data/cosmic-express/Ursa Minor/Ursa Minor 2.json": {
+      "fastest": 80,
+      "most_recent": 80
+    },
+    "data/cosmic-express/Ursa Minor/Ursa Minor 4.json": {
+      "fastest": 80,
+      "most_recent": 80
+    },
+    "data/cosmic-express/Ursa Minor/Ursa Minor 5.json": {
+      "fastest": 95,
+      "most_recent": 95
+    },
+    "data/cosmic-express/Ursa Minor/Ursa Minor 6.json": {
+      "fastest": 159,
+      "most_recent": 159
+    },
+    "data/cosmic-express/Ursa Minor/Ursa Minor 7.json": {
+      "fastest": 219,
+      "most_recent": 219
+    },
+    "data/cosmic-express/Ursa Minor/Ursa Minor 7b.json": {
+      "fastest": 243,
+      "most_recent": 243
+    },
+    "data/cosmic-express/Ursa Minor/Ursa Minor 8.json": {
+      "fastest": 155,
+      "most_recent": 155
+    },
+    "data/cosmic-express/Ursa Minor/Ursa Minor 9.json": {
+      "fastest": 86,
+      "most_recent": 86
+    },
+    "data/cosmic-express/Vela/Vela 2.json": {
+      "fastest": 305,
+      "most_recent": 305
+    },
+    "data/cosmic-express/Vela/Vela 4.json": {
+      "fastest": 952,
+      "most_recent": 952
+    },
+    "data/cosmic-express/Vela/Vela 5.json": {
+      "fastest": 1228,
+      "most_recent": 1228
+    }
   }
 }

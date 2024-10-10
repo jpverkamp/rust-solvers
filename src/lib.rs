@@ -48,7 +48,7 @@ pub struct Solver<GlobalState, LocalState: State<GlobalState, Step>, Step> {
 
     // A* parameters
     solution: Option<LocalState>,
-    to_check: PriorityQueue<LocalState, i64>,
+    to_check: PriorityQueue<LocalState, i64, fxhash::FxBuildHasher>,
     steps: FxHashMap<LocalState, (Step, LocalState)>,
     distances: FxHashMap<LocalState, i64>,
 
@@ -71,7 +71,7 @@ impl<GlobalState, LocalState: State<GlobalState, Step>, Step: Copy>
         global_state: GlobalState,
         initial_state: LocalState,
     ) -> Solver<GlobalState, LocalState, Step> {
-        let mut to_check = PriorityQueue::new();
+        let mut to_check = PriorityQueue::with_hasher(fxhash::FxBuildHasher::default());
         to_check.push(initial_state.clone(), 0);
 
         let steps = FxHashMap::default();
@@ -228,7 +228,12 @@ impl<GlobalState, LocalState: State<GlobalState, Step> + Debug, Step> Iterator
                 // 'Biggest' priority will be popped first, so we negate the estimated distance
                 let old_priority = self.to_check.get_priority(&next_state);
                 if old_priority.is_none() || -estimated_distance < *old_priority.unwrap() {
+                    if -estimated_distance < *old_priority.unwrap_or(&i64::MIN) {
+                        println!("priority updated");
+                    }
                     self.to_check.push(next_state, -estimated_distance);
+                } else {
+                    println!("priority skipped");
                 }
             }
         }
