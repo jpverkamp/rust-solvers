@@ -23,11 +23,13 @@
     ],
     "data/cosmic-express/Andromeda/Andromeda 6.json": [
       "           \n ....┌───┐ \n ..##└─┐#│ \n ..┌───┘#│ \n[┐.└───┐.└]\n │...┌─┘#. \n │.##└─┐#. \n └─────┘.. \n           \n\n",
-      "           \n .┌────┐.. \n .│##┌─┘#. \n ┌┘..└─┐#. \n[┘.┌───┘.┌]\n ..└───┐#│ \n ..##┌─┘#│ \n ....└───┘ \n           \n\n"
+      "           \n .┌────┐.. \n .│##┌─┘#. \n ┌┘..└─┐#. \n[┘.┌───┘.┌]\n ..└───┐#│ \n ..##┌─┘#│ \n ....└───┘ \n           \n\n",
+      "           \n ....┌───┐ \n ..##└─┐#│ \n ..┌───┘#│ \n[┐.└───┐.└]\n │...┌─┘#. \n └┐##└─┐#. \n .└────┘.. \n           \n\n"
     ],
     "data/cosmic-express/Andromeda/Andromeda 7.json": [
       "         \n ┌─────┐ \n │#┌─┐#│ \n │.│.│┌┘ \n[┘.│.││┌]\n ..│.└┘│ \n .#└─┐#│ \n ....└─┘ \n         \n\n",
-      "         \n ....┌─┐ \n .#┌─┘#│ \n ┌┐│┌─┐│ \n[┘│││.│└]\n ┌┘││┌┘. \n │#└┘│#. \n └───┘.. \n         \n\n"
+      "         \n ....┌─┐ \n .#┌─┘#│ \n ┌┐│┌─┐│ \n[┘│││.│└]\n ┌┘││┌┘. \n │#└┘│#. \n └───┘.. \n         \n\n",
+      "         \n ..┌───┐ \n .#│┌┐#│ \n ┌┐│││.│ \n[┘││││.└]\n ┌┘│││.. \n │#└┘│#. \n └───┘.. \n         \n\n"
     ],
     "data/cosmic-express/Andromeda/Andromeda 8.json": [
       "          \n .┌┐##┌─┐ \n .││..└┐│ \n .││##.││ \n .│└──┐│└]\n .│.##││. \n[┐└┐..││. \n └─┘##└┘. \n          \n\n",
@@ -46,7 +48,8 @@
     "data/cosmic-express/Delphinus/Delphinus 1.json": [
       "      ]      \n .┌──┐└─┐... \n ┌┘..└─┐└─┐. \n │.#┌┐#│.#└┐ \n[┘..│└─┘┌─┐│ \n ..#│.#┌┘#└┘ \n ...└──┘.... \n ........... \n             \n\n",
       "      ]      \n ┌──┐.└───┐. \n │..└┐....│. \n │.#.│#┌┐#│. \n[┘┌─┐│.│└─┘. \n .│#└┘#│.#.. \n .└────┘.... \n ........... \n             \n\n",
-      "      ]      \n ┌┐.┌─┘.┌┐┌┐ \n │└─┘┌─┐│└┘│ \n └┐#┌┘#└┘#.│ \n[┐└─┘┌─┐┌─┐│ \n │.#┌┘#└┘#└┘ \n │..└──────┐ \n └─────────┘ \n             \n\n"
+      "      ]      \n ┌┐.┌─┘.┌┐┌┐ \n │└─┘┌─┐│└┘│ \n └┐#┌┘#└┘#.│ \n[┐└─┘┌─┐┌─┐│ \n │.#┌┘#└┘#└┘ \n │..└──────┐ \n └─────────┘ \n             \n\n",
+      "      ]      \n .┌─┐.└──┐.. \n ┌┘.└──┐.└┐. \n │.#┌┐#│.#└┐ \n[┘..│└─┘┌─┐│ \n ..#└┐#.│#└┘ \n ....└──┘... \n ........... \n             \n\n"
     ],
     "data/cosmic-express/Delphinus/Delphinus 10.json": [
       "           \n ┌┐┌─────┐ \n │└┘##┌─┐│ \n │┌───┘┌┘└[\n ││####└─┐ \n │└─────┐│ \n │.####.││ \n │┌────┐││ \n ││####│││ \n ││┌──┐││└]\n │││##└┘└┐ \n └┘└─────┘ \n           \n\n"
@@ -58,7 +61,8 @@
     "data/cosmic-express/Delphinus/Delphinus 3.json": [
       "          \n ........ \n ┌──┐...┌]\n │.┌┘#..│ \n │#└┐...│ \n │#┌┘#..│ \n │#└────┘ \n └──┐#... \n ...└────[\n ........ \n          \n\n",
       "          \n ........ \n .┌─┐...┌]\n ┌┘┌┘#..│ \n │#└┐...│ \n │#┌┘#..│ \n │#└────┘ \n └─┐.#... \n ..└─────[\n ........ \n          \n\n",
-      "          \n ┌┐┌───┐. \n │└┘┌─┐│┌]\n │.┌┘#│││ \n │#└┐.└┘│ \n │#┌┘#.┌┘ \n │#└──┐└┐ \n └──┐#│┌┘ \n ┌──┘.└┘┌[\n └──────┘ \n          \n\n"
+      "          \n ┌┐┌───┐. \n │└┘┌─┐│┌]\n │.┌┘#│││ \n │#└┐.└┘│ \n │#┌┘#.┌┘ \n │#└──┐└┐ \n └──┐#│┌┘ \n ┌──┘.└┘┌[\n └──────┘ \n          \n\n",
+      "          \n ........ \n ┌──┐...┌]\n │.┌┘#..│ \n │#└┐...│ \n │#┌┘#..│ \n │#└────┘ \n └┐..#... \n .└──────[\n ........ \n          \n\n"
     ],
     "data/cosmic-express/Delphinus/Delphinus 4.json": [
       "         \n ┌───┐.. \n │#┌┐│#. \n └┐││└┐. \n]┐│││.│┌[\n └┘│└─┘│ \n .#└─┐#│ \n ....└─┘ \n         \n\n",
@@ -71,7 +75,8 @@
     "data/cosmic-express/Delphinus/Delphinus 6.json": [
       "           \n ......... \n #┌────┐.. \n #└┐###└┐# \n ..└┐┌──┘. \n]─┐.│└──┐. \n .│┌┘...│. \n #││###┌┘# \n #└┘.┌─┘.. \n ....│.... \n     [     \n\n",
       "           \n ......... \n #┌────┐.. \n #└┐###└┐# \n ..└┐┌──┘. \n]─┐.│└┐... \n .│┌┘.└─┐. \n #││###┌┘# \n #└┘.┌─┘.. \n ....│.... \n     [     \n\n",
-      "           \n ..┌┐..┌─┐ \n #┌┘└──┘┌┘ \n #│.###┌┘# \n .└─┐┌─┘┌┐ \n]┐┌─┘└──┘│ \n └┘┌─────┘ \n #.│###┌┐# \n #┌┘┌──┘└┐ \n .└─┘┌───┘ \n     [     \n\n"
+      "           \n ..┌┐..┌─┐ \n #┌┘└──┘┌┘ \n #│.###┌┘# \n .└─┐┌─┘┌┐ \n]┐┌─┘└──┘│ \n └┘┌─────┘ \n #.│###┌┐# \n #┌┘┌──┘└┐ \n .└─┘┌───┘ \n     [     \n\n",
+      "           \n ......... \n #┌────┐.. \n #└┐###└┐# \n ..└┐┌──┘. \n]─┐.││.... \n .│┌┘└──┐. \n #││###┌┘# \n #└┘.┌─┘.. \n ....│.... \n     [     \n\n"
     ],
     "data/cosmic-express/Delphinus/Delphinus 6b.json": [
       "           \n .┌─────┐. \n #└┐....│. \n #┌┘###.│# \n .└───┐.└┐ \n .....└─┐└]\n .┌────┐│. \n #└┐###└┘# \n #┌┘┌─┐... \n .└─┘┌┘... \n     [     \n\n",
@@ -79,12 +84,14 @@
       "           \n .┌─┐┌┐┌─┐ \n #└┐└┘└┘┌┘ \n #┌┘###┌┘# \n .└───┐└─┐ \n ┌─┐..└─┐└]\n └┐└───┐│. \n #└┐###└┘# \n #┌┘┌────┐ \n .└─┘┌───┘ \n     [     \n\n"
     ],
     "data/cosmic-express/Delphinus/Delphinus 7.json": [
-      "          \n ..┌───┐. \n .#│┌┐#│. \n ..│││.│┌[\n .#└┘│#││ \n ┌┐┌─┘.││ \n │└┘┌──┘│ \n │#.│.#┌┘ \n │.┌┘┌─┘┌]\n │#└─┘#.│ \n └──────┘ \n          \n\n"
+      "          \n ..┌───┐. \n .#│┌┐#│. \n ..│││.│┌[\n .#└┘│#││ \n ┌┐┌─┘.││ \n │└┘┌──┘│ \n │#.│.#┌┘ \n │.┌┘┌─┘┌]\n │#└─┘#.│ \n └──────┘ \n          \n\n",
+      "          \n ..┌───┐. \n .#│┌┐#│. \n ..│││.│┌[\n .#└┘│#││ \n ┌┐┌─┘┌┘│ \n │└┘┌─┘.│ \n │#.│.#┌┘ \n │.┌┘┌─┘┌]\n │#└─┘#.│ \n └──────┘ \n          \n\n"
     ],
     "data/cosmic-express/Delphinus/Delphinus 8.json": [
       "            \n ...┌───┐.. \n .#┌┘##.│#. \n .#└┐##.│#. \n ...└─┐.└┐. \n]───┐#│..└─[\n ┌─┐│.└─┐.. \n │#││##┌┘#. \n │#└┘##└┐#. \n └──────┘.. \n            \n\n",
       "            \n ..┌───┐... \n .#│.##└┐#. \n .#└┐##.│#. \n ...└─┐.│.. \n]───┐#└┐└──[\n ┌─┐│..└┐.. \n │#││##┌┘#. \n │#└┘##└┐#. \n └──────┘.. \n            \n\n",
-      "            \n ┌──┐...┌─┐ \n │#┌┘##┌┘#│ \n │#└┐##└┐#│ \n │┌┐└─┐┌┘.│ \n]┘│└┐#│└─┐└[\n .└┐└─┘┌─┘. \n .#└┐##│.#. \n .#┌┘##└┐#. \n ..└────┘.. \n            \n\n"
+      "            \n ┌──┐...┌─┐ \n │#┌┘##┌┘#│ \n │#└┐##└┐#│ \n │┌┐└─┐┌┘.│ \n]┘│└┐#│└─┐└[\n .└┐└─┘┌─┘. \n .#└┐##│.#. \n .#┌┘##└┐#. \n ..└────┘.. \n            \n\n",
+      "            \n ..┌───┐... \n .#│.##└┐#. \n .#└┐##.│#. \n ...└──┐└┐. \n]───┐#.└┐└─[\n ┌─┐│...│.. \n │#││##┌┘#. \n │#└┘##└┐#. \n └──────┘.. \n            \n\n"
     ],
     "data/cosmic-express/Delphinus/Delphinus 9.json": [
       "         \n #.....# \n ┌─────┐ \n │┌───┐│ \n └┘#.#││ \n[───┐.│└]\n ..#│#│. \n .┌┐└┐│. \n .│└─┘│. \n #└───┘# \n         \n\n",
@@ -98,7 +105,8 @@
     ],
     "data/cosmic-express/Ursa Minor/Ursa Minor 10.json": [
       "         ]  \n ........│. \n[┐...┌───┘. \n └┐..└─┐... \n .│#.##│#┌┐ \n .│#.##│#││ \n .└──┐.└─┘│ \n ....└────┘ \n            \n\n",
-      "         ]  \n ........│. \n[─┐..┌───┘. \n .│..└─┐... \n .│#.##│#┌┐ \n .│#.##│#││ \n .└───┐└─┘│ \n .....└───┘ \n            \n\n"
+      "         ]  \n ........│. \n[─┐..┌───┘. \n .│..└─┐... \n .│#.##│#┌┐ \n .│#.##│#││ \n .└───┐└─┘│ \n .....└───┘ \n            \n\n",
+      "         ]  \n ........│. \n[┐...┌───┘. \n │...└─┐... \n └┐#.##│#┌┐ \n .│#.##│#││ \n .└───┐└─┘│ \n .....└───┘ \n            \n\n"
     ],
     "data/cosmic-express/Ursa Minor/Ursa Minor 2.json": [
       "           \n ......#.. \n[────┐.... \n ..##│##.. \n ..┌─┘┌┐#. \n .#└──┘└┐. \n ..##.##│. \n .....┌─┘┌]\n .....└──┘ \n           \n\n"
@@ -126,16 +134,19 @@
       "      ]      \n ...#.│.#... \n .┌─┐#│#.... \n .│#│.└─┐#.. \n[┐│.│#.#└─┐. \n ││#└───┐#│. \n │└─┐#.#│┌┘. \n └──┘...└┘.. \n             \n\n"
     ],
     "data/cosmic-express/Ursa Minor/Ursa Minor 8.json": [
-      "           \n #┌─────┐# \n .└──┐##└┐ \n ..##└──┐│ \n[──────┐│└]\n ..##┌─┘│. \n .┌──┘##│. \n #└─────┘# \n           \n\n"
+      "           \n #┌─────┐# \n .└──┐##└┐ \n ..##└──┐│ \n[──────┐│└]\n ..##┌─┘│. \n .┌──┘##│. \n #└─────┘# \n           \n\n",
+      "           \n #┌─────┐# \n .└──┐##│. \n ..##└─┐│. \n[──────┘│┌]\n ..##┌──┘│ \n .┌──┘##┌┘ \n #└─────┘# \n           \n\n"
     ],
     "data/cosmic-express/Ursa Minor/Ursa Minor 9.json": [
-      "           \n #┌──┐.... \n ┌┘#┌┘#... \n └┐.│###.. \n[┐└┐└─────]\n │.└┐###.. \n └┐#└┐#... \n #└──┘.... \n           \n\n"
+      "           \n #┌──┐.... \n ┌┘#┌┘#... \n └┐.│###.. \n[┐└┐└─────]\n │.└┐###.. \n └┐#└┐#... \n #└──┘.... \n           \n\n",
+      "           \n #┌──┐.... \n ┌┘#┌┘#... \n │.┌┘###.. \n[┘┌┘┌─────]\n ┌┘.│###.. \n └┐#└┐#... \n #└──┘.... \n           \n\n"
     ],
     "data/cosmic-express/Vela/Vela 2.json": [
       "         \n .┌───┐# \n ┌┘.┌─┘. \n │##└──┐ \n └┐#┌┐#│ \n]┐│┌┘│.└[\n │└┘.│#. \n │##┌┘.. \n └─┐└─┐. \n ..└──┘# \n         \n\n"
     ],
     "data/cosmic-express/Vela/Vela 4.json": [
-      "      ]     \n .┌──┐└─┐.. \n #└┐.└─┐└┐. \n #┌┘#..│#│. \n #└──┐#└─┘┌[\n #┌┐#│..#┌┘ \n #│└─┘.┌─┘. \n .└────┘... \n            \n\n"
+      "      ]     \n .┌──┐└─┐.. \n #└┐.└─┐└┐. \n #┌┘#..│#│. \n #└──┐#└─┘┌[\n #┌┐#│..#┌┘ \n #│└─┘.┌─┘. \n .└────┘... \n            \n\n",
+      "      ]     \n .┌──┐└┐... \n #└┐.└┐└─┐. \n #┌┘#.└┐#│. \n #└──┐#└─┘┌[\n #┌┐#│..#.│ \n #│└─┘.┌──┘ \n .└────┘... \n            \n\n"
     ],
     "data/cosmic-express/Vela/Vela 5.json": [
       "  ]     [  \n .│┌───┐│. \n .└┘.┌─┘│. \n ..##│##│. \n ..#.└┐#│. \n .┌──┐│┌┘. \n #│#.└┘│.# \n #│##.#│#. \n .│#...└┐. \n .└─────┘. \n           \n\n"
@@ -155,5 +166,143 @@
     ],
     "preserve_env": false,
     "timeout": 10
+  },
+  "timing": {
+    "data/cosmic-express/Andromeda/Andromeda 1.json": {
+      "fastest": 7,
+      "most_recent": 8
+    },
+    "data/cosmic-express/Andromeda/Andromeda 2.json": {
+      "fastest": 96,
+      "most_recent": 106
+    },
+    "data/cosmic-express/Andromeda/Andromeda 3.json": {
+      "fastest": 44,
+      "most_recent": 44
+    },
+    "data/cosmic-express/Andromeda/Andromeda 4.json": {
+      "fastest": 12,
+      "most_recent": 12
+    },
+    "data/cosmic-express/Andromeda/Andromeda 5.json": {
+      "fastest": 1188,
+      "most_recent": 1241
+    },
+    "data/cosmic-express/Andromeda/Andromeda 6.json": {
+      "fastest": 8732,
+      "most_recent": 9475
+    },
+    "data/cosmic-express/Andromeda/Andromeda 7.json": {
+      "fastest": 852,
+      "most_recent": 963
+    },
+    "data/cosmic-express/Andromeda/Andromeda 8.json": {
+      "fastest": 774,
+      "most_recent": 813
+    },
+    "data/cosmic-express/Andromeda/Andromeda 8b.json": {
+      "fastest": 16,
+      "most_recent": 16
+    },
+    "data/cosmic-express/Andromeda/Andromeda 9.json": {
+      "fastest": 5643,
+      "most_recent": 5643
+    },
+    "data/cosmic-express/Cassiopeia/Cassiopeia 1.json": {
+      "fastest": 2406,
+      "most_recent": 2444
+    },
+    "data/cosmic-express/Delphinus/Delphinus 1.json": {
+      "fastest": 23062,
+      "most_recent": 23062
+    },
+    "data/cosmic-express/Delphinus/Delphinus 14.json": {
+      "fastest": 400180,
+      "most_recent": 400180
+    },
+    "data/cosmic-express/Delphinus/Delphinus 3.json": {
+      "fastest": 15783,
+      "most_recent": 15783
+    },
+    "data/cosmic-express/Delphinus/Delphinus 4.json": {
+      "fastest": 194,
+      "most_recent": 209
+    },
+    "data/cosmic-express/Delphinus/Delphinus 6.json": {
+      "fastest": 838,
+      "most_recent": 1037
+    },
+    "data/cosmic-express/Delphinus/Delphinus 6b.json": {
+      "fastest": 15821,
+      "most_recent": 15821
+    },
+    "data/cosmic-express/Delphinus/Delphinus 7.json": {
+      "fastest": 1462886,
+      "most_recent": 1462886
+    },
+    "data/cosmic-express/Delphinus/Delphinus 8.json": {
+      "fastest": 17829,
+      "most_recent": 17829
+    },
+    "data/cosmic-express/Delphinus/Delphinus 9.json": {
+      "fastest": 526,
+      "most_recent": 590
+    },
+    "data/cosmic-express/Ursa Minor/Ursa Minor 1.json": {
+      "fastest": 16,
+      "most_recent": 23
+    },
+    "data/cosmic-express/Ursa Minor/Ursa Minor 10.json": {
+      "fastest": 21790,
+      "most_recent": 21790
+    },
+    "data/cosmic-express/Ursa Minor/Ursa Minor 2.json": {
+      "fastest": 44,
+      "most_recent": 107
+    },
+    "data/cosmic-express/Ursa Minor/Ursa Minor 3.json": {
+      "fastest": 7267,
+      "most_recent": 8487
+    },
+    "data/cosmic-express/Ursa Minor/Ursa Minor 4.json": {
+      "fastest": 58,
+      "most_recent": 162
+    },
+    "data/cosmic-express/Ursa Minor/Ursa Minor 5.json": {
+      "fastest": 57,
+      "most_recent": 60
+    },
+    "data/cosmic-express/Ursa Minor/Ursa Minor 6.json": {
+      "fastest": 135,
+      "most_recent": 147
+    },
+    "data/cosmic-express/Ursa Minor/Ursa Minor 7.json": {
+      "fastest": 181,
+      "most_recent": 197
+    },
+    "data/cosmic-express/Ursa Minor/Ursa Minor 7b.json": {
+      "fastest": 192,
+      "most_recent": 192
+    },
+    "data/cosmic-express/Ursa Minor/Ursa Minor 8.json": {
+      "fastest": 132,
+      "most_recent": 163
+    },
+    "data/cosmic-express/Ursa Minor/Ursa Minor 9.json": {
+      "fastest": 81,
+      "most_recent": 101
+    },
+    "data/cosmic-express/Vela/Vela 2.json": {
+      "fastest": 316,
+      "most_recent": 316
+    },
+    "data/cosmic-express/Vela/Vela 4.json": {
+      "fastest": 822,
+      "most_recent": 1016
+    },
+    "data/cosmic-express/Vela/Vela 5.json": {
+      "fastest": 1138,
+      "most_recent": 1180
+    }
   }
 }
