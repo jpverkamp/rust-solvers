@@ -92,10 +92,6 @@ impl AddAssign<Direction> for Block {
 }
 
 impl Block {
-    fn overlaps(&self, other: &Block) -> bool {
-        self.points.iter().any(|point| other.points.contains(point))
-    }
-
     fn color_matches(&self, other: &Block) -> bool {
         self.color == other.color
     }
@@ -133,12 +129,6 @@ impl Local {
         Local { blocks }
     }
 
-    fn is_empty(&self, point: Point) -> bool {
-        self.blocks
-            .iter()
-            .all(|block| !block.points.contains(&point))
-    }
-
     // Returns None if cannot move
     // Returns a list of block IDs that need to move otherwise
     fn can_move_block(
@@ -146,6 +136,7 @@ impl Local {
         global: &Global,
         block_id: usize,
         direction: Direction,
+        is_first: bool,
     ) -> Option<Vec<usize>> {
         let mut moving_blocks = vec![block_id];
 
@@ -154,6 +145,30 @@ impl Local {
             .points
             .iter()
             .any(|point| global.is_wall(*point + direction.into()))
+        {
+            return None;
+        }
+
+        // From 06, if we're moving left or right and there's a wall that way plus up 1 we bounce into it
+        //
+        // .#..
+        // ..r.
+        // The r cannot move left
+        //
+        // .#..
+        // .rr.
+        // But this one, the r is already under the block and can move
+        if is_first
+            && (direction == Direction::Left || direction == Direction::Right)
+            && self.blocks[block_id]
+                .points
+                .iter()
+                .any(|point| {
+                    let along = *point + direction.into();
+                    let above = along + Direction::Up.into();
+
+                    global.is_wall(above) && !self.blocks[block_id].points.contains(&along)
+                })
         {
             return None;
         }
@@ -167,12 +182,20 @@ impl Local {
             if self.blocks[block_id].pushes(other_block, direction) {
                 // Check if we can move the other block
                 if let Some(recursive_moving_blocks) =
-                    self.can_move_block(global, other_block_id, direction)
+                    self.can_move_block(global, other_block_id, direction, false)
                 {
                     // TODO: This is probably wrong, I think we just don't want the ID twice
                     if recursive_moving_blocks.contains(&block_id) {
                         return None;
                     }
+
+                    // TODO: Currently not handling 'riding' properly
+                    // ..y.
+                    // .bbr
+
+                    // If the r moves to the left, the y should ride the b
+                    // .y..
+                    // bbr.
 
                     moving_blocks.extend(recursive_moving_blocks);
                 } else {
@@ -189,16 +212,14 @@ impl Local {
     fn move_block(&mut self, block_id: usize, direction: Direction) {
         self.blocks[block_id] += direction.into();
     }
-    
+
     fn merge(&mut self) {
         loop {
             let mut to_merge = None;
 
             'find_a_friend: for block_id in 0..self.blocks.len() {
                 for other_block_id in (block_id + 1)..self.blocks.len() {
-                    if self.blocks[block_id]
-                        .can_merge(&self.blocks[other_block_id])
-                    {
+                    if self.blocks[block_id].can_merge(&self.blocks[other_block_id]) {
                         to_merge = Some((block_id, other_block_id));
                         break 'find_a_friend;
                     }
@@ -218,7 +239,6 @@ impl Local {
                 break;
             }
         }
-
     }
 }
 
@@ -251,14 +271,16 @@ impl State<Global, Step> for Local {
 
         for block_id in 0..self.blocks.len() {
             // The 'nth' blue block for example
-            let index_of_that_color = 1 + self.blocks
+            let index_of_that_color = 1 + self
+                .blocks
                 .iter()
                 .filter(|block| block.color == self.blocks[block_id].color)
                 .position(|block| block.points == self.blocks[block_id].points)
                 .unwrap();
 
             for direction in [Direction::Left, Direction::Right] {
-                if let Some(moving_blocks) = self.can_move_block(global, block_id, direction) {
+                if let Some(moving_blocks) = self.can_move_block(global, block_id, direction, true)
+                {
                     // Move first
                     let mut next_local = self.clone();
                     for moving_block in moving_blocks {
@@ -281,7 +303,7 @@ impl State<Global, Step> for Local {
                     'still_falling: loop {
                         for block_id in 0..next_local.blocks.len() {
                             if let Some(falling_blocks) =
-                                next_local.can_move_block(global, block_id, Direction::Down)
+                                next_local.can_move_block(global, block_id, Direction::Down, true)
                             {
                                 // println!("Falling blocks: {:?}", falling_blocks);
                                 for falling_block in falling_blocks {
@@ -426,10 +448,17 @@ fn main() {
         println!("{}", solver.stringify(&solution));
 
         let path = solver.path(&local, &solution).unwrap();
-        for Step { color, index_of_that_color, direction, .. } in path {
+        for Step {
+            color,
+            index_of_that_color,
+            direction,
+            ..
+        } in path
+        {
             println!("{color:?} {index_of_that_color} {direction:?}");
         }
     } else {
         println!("No solution found");
+        std::process::exit(1);
     }
 }

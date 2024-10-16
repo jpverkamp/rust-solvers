@@ -1,0 +1,53 @@
+{
+  "results": {
+    "data/yugo/01.txt": [
+      "               \n               \n               \n           ██  \n               \n         YBB   \n█████RR██Y█████\n\nYellow 2 Left\nYellow 2 Left\nYellow 1 Right\nYellow 2 Left\nYellow 2 Left\nBlue 2 Right\nBlue 2 Right\nBlue 2 Right\nRed 1 Left\nRed 1 Left\nBlue 2 Left\nBlue 2 Left\nBlue 2 Left\nYellow 1 Right\nYellow 1 Right\nYellow 1 Right\nYellow 1 Right\nYellow 1 Right\nYellow 1 Right\n"
+    ],
+    "data/yugo/02.txt": [
+      "               \n               \n               \n               \n               \n     R YYY     \n█████R█ █ █████\n\nRed 1 Left\nYellow 1 Right\nYellow 1 Right\nYellow 1 Right\nYellow 1 Right\nRed 2 Left\nYellow 1 Left\nRed 2 Left\nRed 2 Left\nRed 2 Left\nRed 2 Left\n"
+    ],
+    "data/yugo/03.txt": [
+      "             \n             \n    █        \n             \n           Y \n█       RR█Y \n███████ B████\n███████ █████\n\nRed 1 Right\nRed 1 Right\nRed 1 Right\nYellow 1 Left\nRed 1 Left\nYellow 1 Left\nRed 1 Left\nYellow 1 Left\nYellow 1 Left\nRed 1 Right\nRed 1 Right\nRed 1 Right\nBlue 1 Right\nRed 1 Right\nBlue 1 Right\nRed 1 Right\nBlue 1 Right\nBlue 1 Right\nRed 1 Left\nRed 1 Left\nRed 1 Left\nRed 1 Left\nRed 1 Left\nYellow 1 Right\nYellow 1 Right\nRed 1 Right\nYellow 1 Right\nRed 1 Right\nYellow 1 Right\nRed 1 Right\nYellow 1 Right\nRed 1 Right\nYellow 1 Right\nRed 1 Right\nYellow 1 Right\nRed 1 Right\nYellow 1 Right\nRed 1 Right\nYellow 1 Right\nYellow 1 Right\nYellow 1 Right\n"
+    ],
+    "data/yugo/04.txt": [
+      "               \n               \n    █          \n               \n               \n        BB     \n███ RY███B█████\n████RY█████████\n\nYellow 1 Left\nRed 1 Left\nRed 1 Left\nYellow 1 Left\nYellow 1 Left\nBlue 2 Left\nYellow 1 Left\nBlue 2 Left\nYellow 1 Left\nBlue 2 Left\nYellow 1 Left\nYellow 1 Left\nBlue 2 Left\nBlue 2 Left\nBlue 2 Left\nYellow 1 Right\nBlue 1 Right\nBlue 1 Right\nBlue 1 Right\nBlue 1 Right\nBlue 1 Right\nRed 1 Left\nRed 1 Left\nRed 1 Left\nRed 1 Left\nRed 1 Left\nRed 1 Left\nBlue 2 Right\nBlue 2 Right\nBlue 2 Right\nBlue 2 Right\nBlue 2 Right\nBlue 2 Right\n"
+    ],
+    "data/yugo/06.txt": [
+      "                 \n                 \n             █   \n     █       █   \n     █          █\n█GGRR    ████████\n█ █R█████████████\n\nGreen 1 Left\nRed 2 Right\nRed 2 Right\nGreen 1 Left\nRed 2 Right\nGreen 1 Left\nGreen 1 Left\nGreen 1 Left\nGreen 1 Left\nGreen 1 Left\nGreen 1 Left\nGreen 1 Left\nRed 2 Left\nRed 2 Left\nGreen 1 Left\nGreen 1 Left\nGreen 1 Left\nRed 1 Right\nRed 1 Right\nGreen 1 Right\nRed 1 Right\nRed 1 Right\nGreen 1 Right\nRed 1 Left\nRed 1 Left\n"
+    ]
+  },
+  "metadata": {
+    "command": "./target/release/yugo",
+    "directory": null,
+    "files": "data/yugo/*.txt"
+  },
+  "options": {
+    "stdout_mode": "Both",
+    "stderr_mode": "Print",
+    "env": [],
+    "preserve_env": false,
+    "timeout": 10
+  },
+  "timing": {
+    "data/yugo/01.txt": {
+      "fastest": 294,
+      "most_recent": 294
+    },
+    "data/yugo/02.txt": {
+      "fastest": 226,
+      "most_recent": 226
+    },
+    "data/yugo/03.txt": {
+      "fastest": 232,
+      "most_recent": 232
+    },
+    "data/yugo/04.txt": {
+      "fastest": 235,
+      "most_recent": 235
+    },
+    "data/yugo/06.txt": {
+      "fastest": 194,
+      "most_recent": 194
+    }
+  }
+}
