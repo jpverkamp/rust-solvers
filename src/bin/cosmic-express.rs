@@ -1,24 +1,10 @@
-use std::hash::Hash;
+use std::hash::{Hash, Hasher};
 use std::io;
 
-use fxhash::FxHashSet;
-use lazy_static::lazy_static;
+use fxhash::{FxHashSet, FxHasher};
 use serde::{Deserialize, Serialize};
 
 use solver::{Point, Solver, State};
-
-lazy_static! {
-    static ref DEBUG_PRINT: bool = std::env::var("COSMIC_EXPRESS_DEBUG_PRINT").is_ok();
-    static ref FLOODFILL_VALIDATOR: bool =
-        std::env::var("COSMIC_EXPRESS_FLOODFILL_VALIDATOR").is_ok();
-    static ref HEURISTIC_COUNT_ENTITIES: bool =
-        std::env::var("COSMIC_EXPRESS_HEURISTIC_COUNT_ENTITIES").is_ok();
-    static ref HEURISTIC_NEAREST_HOUSE: bool =
-        std::env::var("COSMIC_EXPRESS_HEURISTIC_NEAREST_HOUSE").is_ok();
-    static ref HEURISTIC_HUG_WALLS: bool =
-        std::env::var("COSMIC_EXPRESS_HEURISTIC_HUG_WALLS").is_ok();
-    static ref USE_CUSTOM_HASH: bool = std::env::var("COSMIC_EXPRESS_CUSTOM_HASH").is_ok();
-}
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash, Ord, PartialOrd)]
 enum Color {
@@ -38,7 +24,7 @@ struct CosmicExpressGlobal {
     walls: Vec<Point>,
 }
 
-#[derive(Clone, PartialEq, Eq, Debug)]
+#[derive(Clone, Debug)]
 struct CosmicExpressLocal {
     // The path the train has taken so far
     path: Vec<Point>,
@@ -52,42 +38,62 @@ struct CosmicExpressLocal {
     // Remaining aliens that haven't been picked up / houses that haven't been delivered to
     aliens: Vec<(Point, Color)>,
     houses: Vec<(Point, Color)>,
+
+    // Cached hash value
+    hash: u64,
+    hash_dirty: bool,
 }
+
+impl PartialEq for CosmicExpressLocal {
+    fn eq(&self, other: &Self) -> bool {
+        if self.hash_dirty || other.hash_dirty {
+            panic!("hash_dirty should be false when comparing");
+        }
+
+        self.hash == other.hash
+    }
+}
+
+impl Eq for CosmicExpressLocal {}
 
 impl Hash for CosmicExpressLocal {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        if *USE_CUSTOM_HASH {
-            // Getting to exactly the same points a different way counts as equal
-            // So long as the last step (where we'll expand from) is the same
-            let mut path = self.path.clone();
-            let last = path.pop().unwrap();
-
-            path.sort();
-            path.push(last);
-            path.hash(state);
-
-            // We don't care about which aliens since they don't move, just the list of remaining points
-            // Sort so order is preserved
-            let mut entities = Vec::with_capacity(self.aliens.len() + self.houses.len());
-            for (p, _) in self.aliens.iter() {
-                entities.push(p);
-            }
-            for (p, _) in self.houses.iter() {
-                entities.push(p);
-            }
-            entities.sort();
-            entities.hash(state);
-
-            self.seats.hash(state);
-            self.seat_goop.hash(state);
-        } else {
-            // Default hashing
-            self.path.hash(state);
-            self.seats.hash(state);
-            self.seat_goop.hash(state);
-            self.aliens.hash(state);
-            self.houses.hash(state);
+        if self.hash_dirty {
+            panic!("hash called with dirty hash");
         }
+
+        self.hash.hash(state);
+    }
+}
+
+impl CosmicExpressLocal {
+    fn calculate_hash(&mut self) {
+        let mut hasher = FxHasher::default();
+
+        let mut path = self.path.clone();
+        let last = path.pop().unwrap();
+
+        path.sort();
+        path.push(last);
+        path.hash(&mut hasher);
+
+        // We don't care about which aliens since they don't move, just the list of remaining points
+        // Sort so order is preserved
+        let mut entities = Vec::with_capacity(self.aliens.len() + self.houses.len());
+        for (p, _) in self.aliens.iter() {
+            entities.push(p);
+        }
+        for (p, _) in self.houses.iter() {
+            entities.push(p);
+        }
+        entities.sort();
+        entities.hash(&mut hasher);
+
+        self.seats.hash(&mut hasher);
+        self.seat_goop.hash(&mut hasher);
+
+        self.hash = hasher.finish();
+        self.hash_dirty = false;
     }
 }
 
@@ -107,79 +113,77 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
 
         // Flood fill from the current head, stopping at all walls and current path
         // If we can't reach all remaining aliens, houses, and the exit
-        if *FLOODFILL_VALIDATOR {
-            let max_size = (g.width * g.height) as usize;
+        let max_size = (g.width * g.height) as usize;
 
-            let mut reachable = FxHashSet::default();
-            reachable.reserve(max_size);
+        let mut reachable = FxHashSet::default();
+        reachable.reserve(max_size);
 
-            let mut to_check = Vec::with_capacity(max_size);
-            to_check.push(*self.path.last().unwrap());
+        let mut to_check = Vec::with_capacity(max_size);
+        to_check.push(*self.path.last().unwrap());
 
-            // All points current under a seat are reachable
-            // This took a while to track down
-            self.path
-                .iter()
-                .rev()
-                .take(1 + self.seats.len())
-                .for_each(|p| {
-                    reachable.insert(*p);
-                });
+        // All points current under a seat are reachable
+        // This took a while to track down
+        self.path
+            .iter()
+            .rev()
+            .take(1 + self.seats.len())
+            .for_each(|p| {
+                reachable.insert(*p);
+            });
 
-            // Flood fill from the head of the current path
-            while let Some(p) = to_check.pop() {
-                reachable.insert(p);
+        // Flood fill from the head of the current path
+        while let Some(p) = to_check.pop() {
+            reachable.insert(p);
 
-                // Flood fill all empty points
-                for neighbor in p.neighbors().into_iter() {
-                    // Only check each point once
-                    if reachable.contains(&neighbor) || to_check.contains(&neighbor) {
-                        continue;
-                    }
-
-                    // Don't add points out of bounds (remember there's a border)
-                    if neighbor.x < 1
-                        || neighbor.y < 1
-                        || neighbor.x > g.width
-                        || neighbor.y > g.height
-                    {
-                        continue;
-                    }
-
-                    // Keep expanding empty points
-                    if !(g.walls.contains(&neighbor) || self.path.contains(&neighbor)) {
-                        to_check.push(neighbor);
-                    }
+            // Flood fill all empty points
+            for neighbor in p.neighbors().into_iter() {
+                // Only check each point once
+                if reachable.contains(&neighbor) || to_check.contains(&neighbor) {
+                    continue;
                 }
-            }
 
-            // Expand all points by one: any alien or house *adjacent* to a reachable point is also reachable
-            let mut expanded = FxHashSet::default();
-            expanded.reserve(max_size);
-
-            for p in reachable.iter() {
-                expanded.insert(*p);
-                for neighbor in p.neighbors().into_iter() {
-                    expanded.insert(neighbor);
+                // Don't add points out of bounds (remember there's a border)
+                if neighbor.x < 1
+                    || neighbor.y < 1
+                    || neighbor.x > g.width
+                    || neighbor.y > g.height
+                {
+                    continue;
                 }
-            }
-            let reachable = expanded;
 
-            // All aliens and houses must be reachable
-            if self.aliens.iter().any(|(p, _)| !reachable.contains(p)) {
-                return false;
-            }
-            if self.houses.iter().any(|(p, _)| !reachable.contains(p)) {
-                return false;
-            }
-
-            // At least one exit must be reachable
-            if !reachable.contains(&g.exit) {
-                return false;
+                // Keep expanding empty points
+                if !(g.walls.contains(&neighbor) || self.path.contains(&neighbor)) {
+                    to_check.push(neighbor);
+                }
             }
         }
 
-        // All validators passed
+        // Expand all points by one: any alien or house *adjacent* to a reachable point is also reachable
+        let mut expanded = FxHashSet::default();
+        expanded.reserve(max_size);
+
+        for p in reachable.iter() {
+            expanded.insert(*p);
+            for neighbor in p.neighbors().into_iter() {
+                expanded.insert(neighbor);
+            }
+        }
+        let reachable = expanded;
+
+        // All aliens and houses must be reachable
+        if self.aliens.iter().any(|(p, _)| !reachable.contains(p)) {
+            return false;
+        }
+        if self.houses.iter().any(|(p, _)| !reachable.contains(p)) {
+            return false;
+        }
+
+        // At least one exit must be reachable
+        if !reachable.contains(&g.exit) {
+            return false;
+        }
+
+        // Validator(s) passed!
         true
     }
 
@@ -213,6 +217,7 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
 
             // Assume we can move, create the new state
             let mut new_local = self.clone();
+            new_local.hash_dirty = true;
             new_local.path.push(p);
 
             // Update each seat
@@ -273,6 +278,7 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
                 }
             }
 
+            new_local.calculate_hash();
             result.push((1, (), new_local));
         }
 
@@ -364,66 +370,33 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
     fn heuristic(&self, global: &CosmicExpressGlobal) -> i64 {
         let mut heuristic = 0;
 
-        // Very basic heuristic; just how many entities are left
-        if *HEURISTIC_COUNT_ENTITIES {
-            heuristic += ((self.aliens.len() + self.houses.len()) as isize
-                * global.width.max(global.height)) as i64;
+        // Distance from the path to the nearest remaining alien
+        let current_point = self.path.last().unwrap();
+        if let Some(distance) = self
+            .aliens
+            .iter()
+            .map(|(alien_point, _)| alien_point.manhattan_distance(*current_point))
+            .min()
+        {
+            heuristic += distance as i64;
         }
 
-        // Custom heuristic to hug walls (hopefully cuts down on path segments)
-        if *HEURISTIC_HUG_WALLS {
-            if self
-                .path
-                .last()
-                .unwrap()
-                .neighbors()
+        // Distance from each alien to the closest matching house
+        for (alien_point, alien_color) in self.aliens.iter() {
+            let nearest_house = self
+                .houses
                 .iter()
-                .filter(|n| 
-                    global.walls.contains(n) 
-                    || self.path.contains(n)
-                    || n.x <= 1
-                    || n.y <= 1
-                    || n.x >= global.width
-                    || n.y >= global.height
-                )
-                .count()
-                <= 1
-            {
-                heuristic += 1000;
-            }
-        }
+                .filter(|(_, house_color)| house_color == alien_color)
+                .map(|(house_point, _)| alien_point.manhattan_distance(*house_point))
+                .min();
 
-        // Custom heuristic to actually guess the possible path
-        if *HEURISTIC_NEAREST_HOUSE {
-            let current_point = self.path.last().unwrap();
-
-            // Distance from the path to the nearest remaining alien
-            if let Some(distance) = self
-                .aliens
-                .iter()
-                .map(|(alien_point, _)| alien_point.manhattan_distance(*current_point))
-                .min()
-            {
+            if let Some(distance) = nearest_house {
                 heuristic += distance as i64;
             }
-
-            // Distance from each alien to the closest matching house
-            for (alien_point, alien_color) in self.aliens.iter() {
-                let nearest_house = self
-                    .houses
-                    .iter()
-                    .filter(|(_, house_color)| house_color == alien_color)
-                    .map(|(house_point, _)| alien_point.manhattan_distance(*house_point))
-                    .min();
-
-                if let Some(distance) = nearest_house {
-                    heuristic += distance as i64;
-                }
-            }
-
-            // Also, distance to the exit if we're out of aliens
-            heuristic += current_point.manhattan_distance(global.exit) as i64;
         }
+
+        // Also, distance to the exit if we're out of aliens
+        heuristic += current_point.manhattan_distance(global.exit) as i64;
 
         heuristic
     }
@@ -527,24 +500,25 @@ fn main() {
         }
     }
 
-    let local = CosmicExpressLocal {
+    let mut local = CosmicExpressLocal {
         path: vec![global.entrance],
         seats,
         seat_goop,
         aliens,
         houses,
+        hash: 0,
+        hash_dirty: true,
     };
+    local.calculate_hash();
 
     let mut solver = Solver::new(global.clone(), local.clone());
 
-    if *DEBUG_PRINT {
-        println!("{}", solver.stringify(&local));
-    }
-
+    log::debug!("{}", solver.stringify(&local));
+    
     while let Some(state) = solver.next() {
-        if *DEBUG_PRINT && solver.states_checked() % 100000 == 0 {
-            println!("{}", state.stringify(&global));
-            println!("{solver}");
+        if solver.states_checked() % 100000 == 0 {
+            log::debug!("{}", state.stringify(&global));
+            log::debug!("{solver}");
         }
     }
     let solution = solver.get_solution();
@@ -555,7 +529,5 @@ fn main() {
         println!("No solution found");
     }
 
-    if *DEBUG_PRINT {
-        println!("{solver}");
-    }
+    log::debug!("{solver}");
 }
