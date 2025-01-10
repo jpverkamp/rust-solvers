@@ -26,10 +26,24 @@ impl TryFrom<&str> for Direction {
 
     fn try_from(value: &str) -> Result<Self> {
         match value {
-            "up" => Ok(Direction::Up),
-            "down" => Ok(Direction::Down),
-            "left" => Ok(Direction::Left),
-            "right" => Ok(Direction::Right),
+            "up" | "^" => Ok(Direction::Up),
+            "down" | "v" | "V" => Ok(Direction::Down),
+            "left" | "<" => Ok(Direction::Left),
+            "right" | ">" => Ok(Direction::Right),
+            _ => Err(anyhow!("Invalid direction: {value}")),
+        }
+    }
+}
+
+impl TryFrom<char> for Direction {
+    type Error = anyhow::Error;
+
+    fn try_from(value: char) -> Result<Self> {
+        match value {
+            '^' => Ok(Direction::Up),
+            'v' | 'V' => Ok(Direction::Down),
+            '<' => Ok(Direction::Left),
+            '>' => Ok(Direction::Right),
             _ => Err(anyhow!("Invalid direction: {value}")),
         }
     }

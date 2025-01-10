@@ -8,6 +8,7 @@ debug = true
 
 [dependencies]
 anyhow = "1.0.86"
+bitmask-enum = "2.2.5"
 derive_builder = "0.12.0"
 env_logger = "0.9.1"
 fxhash = "0.2.1"
@@ -23,3 +24,4 @@ serde = { version = "1.0.147", features = ["derive"] }
 serde-lexpr = "0.1.2"
 serde_json = "1.0.87"
 tracing = "0.1.37"
+tracing-subscriber = "0.3.19"
