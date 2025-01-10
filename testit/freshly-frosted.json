@@ -1,0 +1,88 @@
+{
+  "results": {
+    "data/freshly-frosted/01-spring/01.txt": [
+      ".....\n+→→→-\n.....\n\n"
+    ],
+    "data/freshly-frosted/01-spring/02.txt": [
+      "+..\n→→↓\n.╠↓\n↓←←\n-..\n\n"
+    ],
+    "data/freshly-frosted/01-spring/03.txt": [
+      ".→↓╣..\n+↑→↓→-\n..╠→↑.\n\n"
+    ],
+    "data/freshly-frosted/01-spring/04.txt": [
+      "→↓→→→↓\n+↓↑←←↓\n.↓╩╦↑-\n.→→→↑.\n\n"
+    ],
+    "data/freshly-frosted/01-spring/05.txt": [
+      ".→→→↓.\n.↑+╠→↓\n→↓╣-←↓\n↑→→→↑↓\n↑←←←←←\n\n"
+    ],
+    "data/freshly-frosted/01-spring/06.txt": [
+      ".→→→↓.\n.↑+╠→↓\n→↓╣-←↓\n↑→→→↑↓\n↑←←←←←\n\n"
+    ],
+    "data/freshly-frosted/01-spring/07.txt": [
+      ".╦.╦.\n.→→↓.\n+↑←↓-\n→→↑→↑\n..╩..\n\n"
+    ],
+    "data/freshly-frosted/01-spring/08.txt": [
+      "→→→→↓.\n↑+╦╩→↓\n↑←→→↓↓\n..↑╩-↓\n..↑←←←\n\n"
+    ],
+    "data/freshly-frosted/01-spring/09.txt": [
+      ".↓←←←╣\n↓←→→↑.\n↓→↑╣↓←\n↓↑←+-↑\n↓╩↑←╦↑\n→→→→→↑\n\n"
+    ],
+    "data/freshly-frosted/01-spring/10.txt": [
+      "↓←←←←...\n↓+↓╠↑╠↓←\n→↓→↓↑←↓↑\n-←╠↓╠↑←↑\n...→→→→↑\n\n"
+    ]
+  },
+  "metadata": {
+    "command": "./target/release/freshly-frosted",
+    "directory": null,
+    "files": "data/freshly-frosted/**/*.txt"
+  },
+  "options": {
+    "stdout_mode": "Both",
+    "stderr_mode": "Print",
+    "env": [],
+    "preserve_env": false,
+    "timeout": 10
+  },
+  "timing": {
+    "data/freshly-frosted/01-spring/01.txt": {
+      "fastest": 180,
+      "most_recent": 180
+    },
+    "data/freshly-frosted/01-spring/02.txt": {
+      "fastest": 180,
+      "most_recent": 180
+    },
+    "data/freshly-frosted/01-spring/03.txt": {
+      "fastest": 180,
+      "most_recent": 180
+    },
+    "data/freshly-frosted/01-spring/04.txt": {
+      "fastest": 179,
+      "most_recent": 179
+    },
+    "data/freshly-frosted/01-spring/05.txt": {
+      "fastest": 225,
+      "most_recent": 225
+    },
+    "data/freshly-frosted/01-spring/06.txt": {
+      "fastest": 224,
+      "most_recent": 224
+    },
+    "data/freshly-frosted/01-spring/07.txt": {
+      "fastest": 180,
+      "most_recent": 180
+    },
+    "data/freshly-frosted/01-spring/08.txt": {
+      "fastest": 183,
+      "most_recent": 183
+    },
+    "data/freshly-frosted/01-spring/09.txt": {
+      "fastest": 241,
+      "most_recent": 241
+    },
+    "data/freshly-frosted/01-spring/10.txt": {
+      "fastest": 228,
+      "most_recent": 228
+    }
+  }
+}
