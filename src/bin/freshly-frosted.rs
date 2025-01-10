@@ -44,46 +44,35 @@ impl TryFrom<&str> for Entity {
 
         match value.chars().collect::<Vec<_>>().as_slice() {
             // A wall (doesn't actually have facing :smile:)
-            &['#'] => {
-                Ok(Entity {
-                    kind: EntityKind::Block,
-                    facing: Direction::Up,
-                })
-            }
+            &['#'] => Ok(Entity {
+                kind: EntityKind::Block,
+                facing: Direction::Up,
+            }),
 
             // A source of new donuts
-            &['+', facing] => {
-                Ok(Entity {
-                    kind: EntityKind::Source,
-                    facing: dir(facing)?,
-                })
-            }
+            &['+', facing] => Ok(Entity {
+                kind: EntityKind::Source,
+                facing: dir(facing)?,
+            }),
             // A target for donuts, first without any toppings
-            &['-', facing] => {
-                Ok(Entity {
-                    kind: EntityKind::Target(Toppings::none()),
-                    facing: dir(facing)?,
-                })
-            }
-            &['-', facing, topping] => {
-                Ok(Entity {
-                    kind: EntityKind::Target(top(topping)?),
-                    facing: dir(facing)?,
-                })
-            }
+            &['-', facing] => Ok(Entity {
+                kind: EntityKind::Target(Toppings::none()),
+                facing: dir(facing)?,
+            }),
+            &['-', facing, topping] => Ok(Entity {
+                kind: EntityKind::Target(top(topping)?),
+                facing: dir(facing)?,
+            }),
 
             // A topping machine
-            &[topping, facing] if topping.is_ascii_digit() => {
-                Ok(Entity {
-                    kind: EntityKind::Topper(top(topping)?),                    
-                    facing: dir(facing)?,
-                })
-            }
+            &[topping, facing] if topping.is_ascii_digit() => Ok(Entity {
+                kind: EntityKind::Topper(top(topping)?),
+                facing: dir(facing)?,
+            }),
 
             // Something we don't know how to parse
             _ => Err(format!("Invalid entity: {value}")),
         }
-        
     }
 }
 
@@ -129,7 +118,7 @@ impl From<&str> for Global {
             width = width.max(line_width);
             height += 1;
         }
-        
+
         Global {
             width,
             height,
@@ -147,12 +136,16 @@ impl std::fmt::Display for Local {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         for belt in self.belts.iter() {
             if let Some(belt) = belt {
-                write!(f, "{}", match belt {
-                    Direction::Up => "↑",
-                    Direction::Down => "↓",
-                    Direction::Left => "←",
-                    Direction::Right => "→",
-                })?;
+                write!(
+                    f,
+                    "{}",
+                    match belt {
+                        Direction::Up => "↑",
+                        Direction::Down => "↓",
+                        Direction::Left => "←",
+                        Direction::Right => "→",
+                    }
+                )?;
             } else {
                 write!(f, ".")?;
             }
@@ -181,13 +174,23 @@ impl Local {
                 let mut toppings = Toppings::none();
 
                 // Start a source here
-                if let Some(Entity { kind: EntityKind::Source, facing }) = global.entities[index] {
+                if let Some(Entity {
+                    kind: EntityKind::Source,
+                    facing,
+                }) = global.entities[index]
+                {
                     let span = tracing::debug_span!("Source", p = ?p);
                     let _enter = span.enter();
 
                     p = p + facing.into();
 
-                    while !matches!(global.entities[p.index(global.width)], Some(Entity { kind: EntityKind::Target(_), .. })) {
+                    while !matches!(
+                        global.entities[p.index(global.width)],
+                        Some(Entity {
+                            kind: EntityKind::Target(_),
+                            ..
+                        })
+                    ) {
                         tracing::debug!("Moving at {p:?} with toppings {toppings:?}");
                         if !global.in_bounds(p) {
                             return Err(format!("Attempted to move out of bounds at {p:?}"));
@@ -200,7 +203,11 @@ impl Local {
                                 continue;
                             }
 
-                            if let Some(Entity { kind: EntityKind::Topper(new_toppings), facing }) = global.entities[p2.index(global.width)] {
+                            if let Some(Entity {
+                                kind: EntityKind::Topper(new_toppings),
+                                facing,
+                            }) = global.entities[p2.index(global.width)]
+                            {
                                 if top_d == facing {
                                     // The toppings cannot overlap what we already have
                                     if toppings & new_toppings != Toppings::none() {
@@ -233,10 +240,119 @@ impl Local {
 
         Ok(donuts)
     }
+
+    // Is it at all possible to get from src to dst with the current belt configuration?
+    // Use only empty points, but dst is allowed to be a target
+    #[tracing::instrument(skip(self, global), ret)]
+    fn is_empty_reachable(&self, global: &Global, src: Point, dst: Point) -> bool {
+        if src == dst {
+            return true;
+        }
+
+        pathfinding::prelude::bfs(
+            &src,
+            |p| {
+                tracing::debug!("bfs checking {p:?}");
+
+                let mut neighbors = vec![];
+                for d in Direction::all() {
+                    let p2 = *p + d.into();
+
+                    if !global.in_bounds(p2) {
+                        continue;
+                    }
+
+                    let is_belt = self.belts[p2.index(global.width)].is_some();
+                    let is_target = matches!(
+                        global.entities[p2.index(global.width)],
+                        Some(Entity {
+                            kind: EntityKind::Target(_),
+                            ..
+                        })
+                    );
+
+                    if !is_belt || (p2 == dst && is_target) {
+                        neighbors.push(p2);
+                    }
+                }
+                neighbors
+            },
+            |p| *p == dst,
+        )
+        .is_some()
+    }
 }
 
 impl State<Global, ()> for Local {
-    fn is_valid(&self, _global: &Global) -> bool {
+    fn is_valid(&self, global: &Global) -> bool {
+        // This is expensive to run on each state, but it also means that we can prune a *lot* of invalid states
+        let donuts = match self.simulate(global) {
+            Ok(donuts) => donuts,
+            Err(e) => {
+                tracing::debug!("Simulation failed: {e}");
+                return false;
+            }
+        };
+        tracing::debug!("Simulation result: {donuts:?}");
+
+        let target_points = global
+            .entities
+            .iter()
+            .enumerate()
+            .filter_map(|(index, entity)| {
+                if let Some(Entity {
+                    kind: EntityKind::Target(_),
+                    ..
+                }) = entity
+                {
+                    Some(Point {
+                        x: index as isize % global.width,
+                        y: index as isize / global.width,
+                    })
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+
+        // Each current donut must be either on a target or be able to reach one
+        for (donut_p, toppings) in donuts.iter() {
+            tracing::debug!("Checking donut at {donut_p:?} with toppings {toppings:?}");
+            if !target_points
+                .iter()
+                .any(|target_p| self.is_empty_reachable(global, *donut_p, *target_p))
+            {
+                return false;
+            }
+        }
+
+        // We cannot have an over filled simulation
+        // For example, if we need 1 plain donut, we cannot have frosting on all the donuts
+        let mut donut_types = donuts
+            .into_iter()
+            .map(|(_, toppings)| toppings)
+            .collect::<Vec<_>>();
+        donut_types.sort();
+
+        let mut target_donuts = global
+            .entities
+            .iter()
+            .filter_map(|e| match e {
+                Some(Entity {
+                    kind: EntityKind::Target(toppings),
+                    ..
+                }) => Some(*toppings),
+                _ => None,
+            })
+            .collect::<Vec<_>>();
+        target_donuts.sort();
+
+        // Because they're sorted, this means have at least one donut with too many toppings
+        if donut_types > target_donuts {
+            tracing::debug!("Donuts are too many. lol.");
+            return false;
+        }
+
         true
     }
 
@@ -247,7 +363,11 @@ impl State<Global, ()> for Local {
             for y in 0..global.height {
                 let p = Point { x, y };
 
-                if let Some(Entity { kind: EntityKind::Target(_), facing }) = global.entities[p.index(global.width)] {
+                if let Some(Entity {
+                    kind: EntityKind::Target(_),
+                    facing,
+                }) = global.entities[p.index(global.width)]
+                {
                     let p2 = p - facing.into();
                     if let Some(facing2) = self.belts[p2.index(global.width)] {
                         if facing != facing2 {
@@ -277,11 +397,14 @@ impl State<Global, ()> for Local {
         for (donuts_p, toppings) in donuts {
             tracing::debug!("Checking donut at {donuts_p:?} with toppings {toppings:?}");
             match global.entities[donuts_p.index(global.width)] {
-                Some(Entity { kind: EntityKind::Target(target_toppings), .. }) if toppings == target_toppings => {},
+                Some(Entity {
+                    kind: EntityKind::Target(target_toppings),
+                    ..
+                }) if toppings == target_toppings => {}
                 _ => return false,
             }
         }
-        
+
         true
     }
 
@@ -301,27 +424,37 @@ impl State<Global, ()> for Local {
 
                 // If this is not a head, skip it
                 let is_belt = self.belts[p.index(global.width)].is_some();
-                
-                if !(is_belt || matches!(global.entities[p.index(global.width)], Some(Entity { kind: EntityKind::Source, .. }))) {
-                    tracing::debug!("Skipping, this is not a head");
+
+                if !(is_belt
+                    || matches!(
+                        global.entities[p.index(global.width)],
+                        Some(Entity {
+                            kind: EntityKind::Source,
+                            ..
+                        })
+                    ))
+                {
                     continue;
                 }
 
                 // p2 is the new belt, so this point must be currently empty
-                let facing = if is_belt { 
+                let facing = if is_belt {
                     self.belts[p.index(global.width)].unwrap()
                 } else {
-                    global.entities[p.index(global.width)].unwrap().facing 
+                    global.entities[p.index(global.width)].unwrap().facing
                 };
                 let p2 = p + facing.into();
 
-                if self.belts[p2.index(global.width)].is_some() || global.entities[p2.index(global.width)].is_some() {
+                if self.belts[p2.index(global.width)].is_some()
+                    || global.entities[p2.index(global.width)].is_some()
+                {
                     tracing::debug!("Skipping, contains a belt or entity");
                     continue;
                 }
 
                 // Now, for each direction from *that* point, we can potentially add a belt
-                for d2 in Direction::all() { 
+                for d2 in Direction::all() {
+                // for d2 in [Direction::Right] {
                     let p3 = p2 + d2.into();
 
                     let span = tracing::debug_span!("Checking direction", d = ?d2);
@@ -339,8 +472,11 @@ impl State<Global, ()> for Local {
                         continue;
                     }
                     match global.entities[p3.index(global.width)] {
-                        None => {},
-                        Some(Entity { kind: EntityKind::Target(_), facing }) if facing == d2 => {},
+                        None => {}
+                        Some(Entity {
+                            kind: EntityKind::Target(_),
+                            facing,
+                        }) if facing == d2 => {}
                         _ => {
                             tracing::debug!("Skipping, contains a non-target");
                             continue;
@@ -352,7 +488,12 @@ impl State<Global, ()> for Local {
                     new_state.belts[p2.index(global.width)] = Some(d2);
                     tracing::debug!("Valid new state: {}", &new_state);
 
-                    next_states.push((1, (), new_state));                    
+                    next_states.push((1, (), new_state));
+                }
+
+                // DEBUG: If we are here, we've expanded one head in x/y order
+                if !next_states.is_empty() {
+                    return Some(next_states);
                 }
             }
         }
@@ -382,14 +523,12 @@ impl State<Global, ()> for Local {
                         EntityKind::Block => '#',
                         EntityKind::Source => '+',
                         EntityKind::Target(_) => '-',
-                        EntityKind::Topper(_) => {
-                            match entity.facing {
-                                Direction::Up => '╩',
-                                Direction::Down => '╦',
-                                Direction::Left => '╣',
-                                Direction::Right => '╠',
-                            }
-                        }
+                        EntityKind::Topper(_) => match entity.facing {
+                            Direction::Up => '╩',
+                            Direction::Down => '╦',
+                            Direction::Left => '╣',
+                            Direction::Right => '╠',
+                        },
                     };
                 }
 
@@ -424,7 +563,10 @@ fn main() {
     let global = Global::from(input.as_str());
     let local = global.make_local();
 
-    // tracing_subscriber::fmt().without_time().with_max_level(tracing::Level::DEBUG).init();
+    // tracing_subscriber::fmt()
+    //     .without_time()
+    //     .with_max_level(tracing::Level::DEBUG)
+    //     .init();
     env_logger::init();
 
     log::info!("Initial state:\n{}", local.stringify(&global));
@@ -443,7 +585,6 @@ fn main() {
         println!("{}", solver.stringify(&solution));
 
         let _path = solver.path(&local, &solution).unwrap();
-
     } else {
         println!("No solution found");
         std::process::exit(1);
