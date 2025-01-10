@@ -15,7 +15,7 @@ enum Toppings {
 enum EntityKind {
     Block,
     Source,
-    Target(Toppings),
+    Target(Option<Toppings>),
     Topper(Toppings),
 }
 
@@ -54,13 +54,20 @@ impl TryFrom<&str> for Entity {
                 kind: EntityKind::Source,
                 facing: dir(facing)?,
             }),
+
             // A target for donuts, first without any toppings
             &['-', facing] => Ok(Entity {
-                kind: EntityKind::Target(Toppings::none()),
+                kind: EntityKind::Target(Some(Toppings::none())),
                 facing: dir(facing)?,
             }),
+            // Doesn't matter what toppings
+            &['-', facing, '?'] => Ok(Entity {
+                kind: EntityKind::Target(None),
+                facing: dir(facing)?,
+            }),
+            // Now with specific requested toppings
             &['-', facing, topping] => Ok(Entity {
-                kind: EntityKind::Target(top(topping)?),
+                kind: EntityKind::Target(Some(top(topping)?)),
                 facing: dir(facing)?,
             }),
 
@@ -81,6 +88,7 @@ struct Global {
     width: isize,
     height: isize,
     entities: Vec<Option<Entity>>,
+    targets: Option<Vec<Option<Toppings>>>,
 }
 
 impl Global {
@@ -91,12 +99,28 @@ impl Global {
 
 impl From<&str> for Global {
     fn from(input: &str) -> Self {
-        let mut entities = vec![];
-
         let mut width = 0;
         let mut height = 0;
 
-        for line in input.lines() {
+        let mut entities = vec![];
+        let mut targets = None;
+        
+        let mut lines = input.lines().peekable();
+        while lines.peek().is_some_and(|line| line.starts_with('#')) {
+            let flag = lines.next().unwrap();
+
+            if flag.starts_with("#target") {
+                targets = Some(flag
+                    .split_whitespace()
+                    .skip(1)
+                    .map(|t| Some(t.parse::<usize>().expect("Invalid target, must be numeric").into()))
+                    .collect::<Vec<_>>());
+            } else {
+                panic!("Invalid/unknown flag: {flag}");
+            }
+        }
+
+        for line in lines {
             let mut line_width = 0;
 
             for part in line.split_whitespace() {
@@ -123,6 +147,7 @@ impl From<&str> for Global {
             width,
             height,
             entities,
+            targets,
         }
     }
 }
@@ -330,7 +355,7 @@ impl State<Global, ()> for Local {
         // For example, if we need 1 plain donut, we cannot have frosting on all the donuts
         let mut donut_types = donuts
             .into_iter()
-            .map(|(_, toppings)| toppings)
+            .map(|(_, toppings)| Some(toppings))
             .collect::<Vec<_>>();
         donut_types.sort();
 
@@ -347,10 +372,21 @@ impl State<Global, ()> for Local {
             .collect::<Vec<_>>();
         target_donuts.sort();
 
-        // Because they're sorted, this means have at least one donut with too many toppings
-        if donut_types > target_donuts {
-            tracing::debug!("Donuts are too many. lol.");
-            return false;
+        // We can't do this comparison if we have any 'any' targets
+        if target_donuts.iter().all(|t| t.is_some()) {
+            // Because they're sorted, this means have at least one donut with too many toppings
+            if donut_types > target_donuts {
+                tracing::debug!("Not possible. Got {donut_types:?} but needed {target_donuts:?}");
+                return false;
+            }
+        }
+
+        // But if we have a target in the globals, we must (also?) match that
+        if let Some(target_donuts) = &global.targets {
+            if &donut_types > target_donuts {
+                tracing::debug!("Not possible against global types. Got {donut_types:?} but needed {target_donuts:?}");
+                return false;
+            }
         }
 
         true
@@ -394,16 +430,33 @@ impl State<Global, ()> for Local {
         tracing::debug!("Simulation result: {donuts:?}");
 
         // Each donut must end at a matching target
-        for (donuts_p, toppings) in donuts {
+        // A non-target accepts any donut
+        for (donuts_p, toppings) in donuts.iter() {
             tracing::debug!("Checking donut at {donuts_p:?} with toppings {toppings:?}");
             match global.entities[donuts_p.index(global.width)] {
                 Some(Entity {
                     kind: EntityKind::Target(target_toppings),
                     ..
-                }) if toppings == target_toppings => {}
+                }) if target_toppings.is_none() || *toppings == target_toppings.unwrap() => {}
                 _ => return false,
             }
         }
+
+        // If we have a toppings array, match that as well/instead
+        // The check above already checks that they're all at targets, this just checks types
+        if let Some(target_donuts) = &global.targets {
+            let mut donut_types = donuts
+                .iter()
+                .map(|(_, t)| Some(*t))
+                .collect::<Vec<_>>();
+            donut_types.sort();
+
+            if &donut_types != target_donuts {
+                tracing::debug!("Invalid solution, types don't match. Got {donut_types:?} but needed {target_donuts:?}");
+                return false;
+            }
+        }
+
 
         true
     }
