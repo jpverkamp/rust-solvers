@@ -169,6 +169,72 @@ impl Global {
     }
 }
 
+impl Local {
+    fn simulate(&self, global: &Global) -> Result<Vec<(Point, Toppings)>, String> {
+        let mut donuts = vec![];
+
+        // Now we actually have to simulate each source
+        for x in 0..global.width {
+            for y in 0..global.height {
+                let index = (y * global.width + x) as usize;
+                let mut p = Point { x, y };
+                let mut toppings = Toppings::none();
+
+                // Start a source here
+                if let Some(Entity { kind: EntityKind::Source, facing }) = global.entities[index] {
+                    let span = tracing::debug_span!("Source", p = ?p);
+                    let _enter = span.enter();
+
+                    p = p + facing.into();
+
+                    while !matches!(global.entities[p.index(global.width)], Some(Entity { kind: EntityKind::Target(_), .. })) {
+                        tracing::debug!("Moving at {p:?} with toppings {toppings:?}");
+                        if !global.in_bounds(p) {
+                            return Err(format!("Attempted to move out of bounds at {p:?}"));
+                        }
+
+                        // If there is a topper adjacent to us, apply it's topping
+                        for top_d in Direction::all() {
+                            let p2 = p - top_d.into();
+                            if !global.in_bounds(p2) {
+                                continue;
+                            }
+
+                            if let Some(Entity { kind: EntityKind::Topper(new_toppings), facing }) = global.entities[p2.index(global.width)] {
+                                if top_d == facing {
+                                    // The toppings cannot overlap what we already have
+                                    if toppings & new_toppings != Toppings::none() {
+                                        return Err(format!("Attempted to add overlapping toppings {toppings:?} and {new_toppings:?} at {p:?}"));
+                                    }
+
+                                    // The toppings have to be added in order
+                                    if toppings > new_toppings {
+                                        return Err(format!("Attempted to add toppings out of order {toppings:?} and {new_toppings:?} at {p:?}"));
+                                    }
+
+                                    // Add the new toppings!
+                                    toppings |= new_toppings;
+                                }
+                            }
+                        }
+
+                        // Move move along the belt
+                        if let Some(belt) = self.belts[p.index(global.width)] {
+                            p = p + belt.into();
+                        } else {
+                            break; // Ran off the end of a belt
+                        }
+                    }
+
+                    donuts.push((p, toppings));
+                }
+            }
+        }
+
+        Ok(donuts)
+    }
+}
+
 impl State<Global, ()> for Local {
     fn is_valid(&self, _global: &Global) -> bool {
         true
@@ -196,72 +262,26 @@ impl State<Global, ()> for Local {
             }
         }
 
-        // Now we actually have to simulate each source
-        for x in 0..global.width {
-            for y in 0..global.height {
-                let index = (y * global.width + x) as usize;
-                let mut p = Point { x, y };
-                let mut toppings = Toppings::none();
+        // Simulate the current state
+        tracing::debug!("Running simulation");
+        let donuts = match self.simulate(global) {
+            Ok(donuts) => donuts,
+            Err(e) => {
+                tracing::debug!("Simulation failed: {e}");
+                return false;
+            }
+        };
+        tracing::debug!("Simulation result: {donuts:?}");
 
-                // Start a source here
-                if let Some(Entity { kind: EntityKind::Source, facing }) = global.entities[index] {
-                    let span = tracing::debug_span!("Source", p = ?p);
-                    let _enter = span.enter();
-
-                    p = p + facing.into();
-
-                    while !matches!(global.entities[p.index(global.width)], Some(Entity { kind: EntityKind::Target(_), .. })) {
-                        tracing::debug!("Moving at {p:?} with toppings {toppings:?}");
-                        if !global.in_bounds(p) {
-                            tracing::warn!("Out of bounds, this state shouldn't have been generated");
-                            return false;
-                        }
-
-                        // If there is a topper adjacent to us, apply it's topping
-                        for top_d in Direction::all() {
-                            let p2 = p - top_d.into();
-                            if !global.in_bounds(p2) {
-                                continue;
-                            }
-
-                            if let Some(Entity { kind: EntityKind::Topper(new_toppings), facing }) = global.entities[p2.index(global.width)] {
-                                if top_d == facing {
-                                    // The toppings cannot overlap what we already have
-                                    if toppings & new_toppings != Toppings::none() {
-                                        return false;
-                                    }
-
-                                    // The toppings have to be added in order
-                                    if toppings > new_toppings {
-                                        return false;
-                                    }
-
-                                    // Add the new toppings!
-                                    toppings |= new_toppings;
-                                }
-                            }
-                        }
-
-                        // Move move along the belt
-                        if let Some(belt) = self.belts[p.index(global.width)] {
-                            p = p + belt.into();
-                        } else {
-                            return false;
-                        }
-                    }
-
-                    // We must exactly match the target toppings
-                    if let Some(Entity { kind: EntityKind::Target(target_toppings), .. }) = global.entities[p.index(global.width)] {
-                        if toppings != target_toppings {
-                            return false;
-                        }
-                    } else {
-                        return false;
-                    }
-                }
+        // Each donut must end at a matching target
+        for (donuts_p, toppings) in donuts {
+            tracing::debug!("Checking donut at {donuts_p:?} with toppings {toppings:?}");
+            match global.entities[donuts_p.index(global.width)] {
+                Some(Entity { kind: EntityKind::Target(target_toppings), .. }) if toppings == target_toppings => {},
+                _ => return false,
             }
         }
-
+        
         true
     }
 
@@ -301,7 +321,7 @@ impl State<Global, ()> for Local {
                 }
 
                 // Now, for each direction from *that* point, we can potentially add a belt
-                for d2 in Direction::all() {
+                for d2 in Direction::all() { 
                     let p3 = p2 + d2.into();
 
                     let span = tracing::debug_span!("Checking direction", d = ?d2);
@@ -364,10 +384,10 @@ impl State<Global, ()> for Local {
                         EntityKind::Target(_) => '-',
                         EntityKind::Topper(_) => {
                             match entity.facing {
-                                Direction::Up => '╿',
-                                Direction::Down => '╽',
-                                Direction::Left => '╾',
-                                Direction::Right => '╼',
+                                Direction::Up => '╩',
+                                Direction::Down => '╦',
+                                Direction::Left => '╣',
+                                Direction::Right => '╠',
                             }
                         }
                     };
