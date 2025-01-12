@@ -106,10 +106,10 @@ impl From<&str> for Global {
         let mut targets = None;
         
         let mut lines = input.lines().peekable();
-        while lines.peek().is_some_and(|line| line.starts_with('#')) {
+        while lines.peek().is_some_and(|line| line.starts_with(':')) {
             let flag = lines.next().unwrap();
 
-            if flag.starts_with("#target") {
+            if flag.starts_with(":target") {
                 targets = Some(flag
                     .split_whitespace()
                     .skip(1)
@@ -219,7 +219,6 @@ impl Local {
                             ..
                         })
                     ) {
-                        tracing::debug!("Moving at {p:?} with toppings {toppings:?}");
                         if !global.in_bounds(p) {
                             return Err(format!("Attempted to move out of bounds at {p:?}"));
                         }
@@ -237,17 +236,15 @@ impl Local {
                             }) = global.entities[p2.index(global.width)]
                             {
                                 if top_d == facing {
-                                    // The toppings cannot overlap what we already have
-                                    if toppings & new_toppings != Toppings::none() {
-                                        return Err(format!("Attempted to add overlapping toppings {toppings:?} and {new_toppings:?} at {p:?}"));
+                                    // Only add the toppings if we have all previous stoppings, otherwise ignore it
+                                    // I feel like this was frowned upon before 4/6, but so it goess bits set to add a new one
+                                    assert!(new_toppings.bits().count_ones() == 1);
+                                    let must_have = Toppings::from(new_toppings.bits() - 1);
+                                    if toppings & must_have != must_have {
+                                        continue;
                                     }
-
-                                    // The toppings have to be added in order
-                                    if toppings > new_toppings {
-                                        return Err(format!("Attempted to add toppings out of order {toppings:?} and {new_toppings:?} at {p:?}"));
-                                    }
-
-                                    // Add the new toppings!
+                                    
+                                    // Add the new topping!
                                     toppings |= new_toppings;
                                 }
                             }
@@ -353,6 +350,7 @@ impl State<Global, ()> for Local {
         // Each current donut must be either on a target or be able to reach one
         // With more than 2 possibly merging, this check won't work (since we'll need to merge 2 and then is_valid=false for the 3rd)
         if donuts.len() <= target_points.len() + 1 {
+            tracing::debug!("Checking reachability");
             for (donut_p, toppings) in donuts.iter() {
                 tracing::debug!("Checking donut at {donut_p:?} with toppings {toppings:?}");
                 if !target_points
@@ -423,11 +421,11 @@ impl State<Global, ()> for Local {
                     let p2 = p - facing.into();
                     if let Some(facing2) = self.belts[p2.index(global.width)] {
                         if facing != facing2 {
-                            tracing::debug!("- At a target but facing the wrong way");
+                            tracing::debug!("At a target but facing the wrong way");
                             return false;
                         }
                     } else {
-                        tracing::debug!("- Not at a target");
+                        tracing::debug!("Not at a target");
                         return false;
                     }
                 }
@@ -519,7 +517,6 @@ impl State<Global, ()> for Local {
                 if self.belts[p2.index(global.width)].is_some()
                     || global.entities[p2.index(global.width)].is_some()
                 {
-                    tracing::debug!("Skipping, contains a belt or entity");
                     continue;
                 }
 
@@ -641,7 +638,9 @@ fn main() {
     let global = Global::from(input.as_str());
     let local = global.make_local();
 
-    if let Ok(_level) = std::env::var("FRESHLY_FROSTED_TRACE") {
+    let tracing_enabled = std::env::var("FRESHLY_FROSTED_TRACE").is_ok();
+
+    if tracing_enabled{
         tracing_subscriber::fmt()
         .without_time()
         .with_max_level(tracing::Level::DEBUG)
