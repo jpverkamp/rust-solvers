@@ -207,7 +207,10 @@ impl Local {
                     let span = tracing::debug_span!("Source", p = ?p);
                     let _enter = span.enter();
 
+                    let mut visited = vec![false; global.width as usize * global.height as usize];
+
                     p = p + facing.into();
+                    visited[p.index(global.width)] = true;
 
                     while !matches!(
                         global.entities[p.index(global.width)],
@@ -255,6 +258,13 @@ impl Local {
                             p = p + belt.into();
                         } else {
                             break; // Ran off the end of a belt
+                        }
+
+                        // Error on loops
+                        if visited[p.index(global.width)] {
+                            return Err(format!("Loop detected at {p:?}"));
+                        } else {
+                            visited[p.index(global.width)] = true;
                         }
                     }
 
@@ -374,10 +384,13 @@ impl State<Global, ()> for Local {
 
         // We can't do this comparison if we have any 'any' targets
         if target_donuts.iter().all(|t| t.is_some()) {
-            // Because they're sorted, this means have at least one donut with too many toppings
-            if donut_types > target_donuts {
-                tracing::debug!("Not possible. Got {donut_types:?} but needed {target_donuts:?}");
-                return false;
+            // This comparison also doesn't work if we have fewer targets than dummies (world 4: merge)
+            if donut_types.len() == target_donuts.len() {
+                // Because they're sorted, this means have at least one donut with too many toppings
+                if donut_types > target_donuts {
+                    tracing::debug!("Not possible. Got {donut_types:?} but needed {target_donuts:?}");
+                    return false;
+                }
             }
         }
 
@@ -438,7 +451,10 @@ impl State<Global, ()> for Local {
                     kind: EntityKind::Target(target_toppings),
                     ..
                 }) if target_toppings.is_none() || *toppings == target_toppings.unwrap() => {}
-                _ => return false,
+                _ => {
+                    tracing::debug!("Invalid solution, donut at {donuts_p:?} with toppings {toppings:?} isn't at a matching target");
+                    return false
+                },
             }
         }
 
@@ -456,7 +472,6 @@ impl State<Global, ()> for Local {
                 return false;
             }
         }
-
 
         true
     }
@@ -508,6 +523,12 @@ impl State<Global, ()> for Local {
                 // Now, for each direction from *that* point, we can potentially add a belt
                 for d2 in Direction::all() {
                 // for d2 in [Direction::Right] {
+                    // We cannot go back the way we came
+                    // This wasn't a problem until world 4 allowed merging
+                    if d2 == facing.flip() {
+                        continue;
+                    }
+
                     let p3 = p2 + d2.into();
 
                     let span = tracing::debug_span!("Checking direction", d = ?d2);
@@ -519,11 +540,12 @@ impl State<Global, ()> for Local {
                         continue;
                     }
 
-                    // This belt can only point at non-belt, non-target
-                    if self.belts[p3.index(global.width)].is_some() {
-                        tracing::debug!("Skipping, contains a belt");
-                        continue;
-                    }
+                    // This belt can only point at non-target
+                    // Before world 4, this was also non-belt; now we can merge
+                    // if self.belts[p3.index(global.width)].is_some() {
+                    //     tracing::debug!("Skipping, contains a belt");
+                    //     continue;
+                    // }
                     match global.entities[p3.index(global.width)] {
                         None => {}
                         Some(Entity {
@@ -616,11 +638,14 @@ fn main() {
     let global = Global::from(input.as_str());
     let local = global.make_local();
 
-    // tracing_subscriber::fmt()
-    //     .without_time()
-    //     .with_max_level(tracing::Level::DEBUG)
-    //     .init();
-    env_logger::init();
+    if let Ok(_level) = std::env::var("FRESHLY_FROSTED_TRACE") {
+        tracing_subscriber::fmt()
+        .without_time()
+        .with_max_level(tracing::Level::DEBUG)
+        .init();
+    } else {
+        env_logger::init();
+    }
 
     log::info!("Initial state:\n{}", local.stringify(&global));
 
