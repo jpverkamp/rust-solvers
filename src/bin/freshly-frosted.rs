@@ -351,16 +351,18 @@ impl State<Global, ()> for Local {
             .collect::<Vec<_>>();
 
         // Each current donut must be either on a target or be able to reach one
-        // Disabled for 4/2 since mergers mean we can no longer guarantee this
-        // for (donut_p, toppings) in donuts.iter() {
-        //     tracing::debug!("Checking donut at {donut_p:?} with toppings {toppings:?}");
-        //     if !target_points
-        //         .iter()
-        //         .any(|target_p| self.is_empty_reachable(global, *donut_p, *target_p))
-        //     {
-        //         return false;
-        //     }
-        // }
+        // With more than 2 possibly merging, this check won't work (since we'll need to merge 2 and then is_valid=false for the 3rd)
+        if donuts.len() <= target_points.len() + 1 {
+            for (donut_p, toppings) in donuts.iter() {
+                tracing::debug!("Checking donut at {donut_p:?} with toppings {toppings:?}");
+                if !target_points
+                    .iter()
+                    .any(|target_p| self.is_empty_reachable(global, *donut_p, *target_p))
+                {
+                    return false;
+                }
+            }
+        }
 
         // We cannot have an over filled simulation
         // For example, if we need 1 plain donut, we cannot have frosting on all the donuts
