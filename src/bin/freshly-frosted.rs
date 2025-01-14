@@ -249,8 +249,9 @@ impl Local {
 
         // Now, until we've simulated all of the donuts, simulate each
         while let Some((mut p, mut toppings, facing)) = donuts.pop() {
-            let span = tracing::debug_span!("Simulating donut", p = ?p);
+            let span = tracing::debug_span!("Simulating donut", p = ?p, toppings = ?toppings, facing = ?facing);
             let _enter = span.enter();
+            tracing::debug!("Starting");
 
             let mut visited = vec![false; global.width as usize * global.height as usize];
 
@@ -302,6 +303,28 @@ impl Local {
                     break; // Ran off the end of a belt
                 }
 
+                // If we are now in a splitter, continue one way and queue the other
+                if let Some(Entity {
+                    kind: EntityKind::Splitter,
+                    facing: splitter_facing,
+                }) = global.entities[p.index(global.width)]
+                {
+                    // If we're coming into a splitter the wrong way
+                    if facing != splitter_facing {
+                        return Err(format!("Attempted to enter the splitter at {p:?} the wrong way"));
+                    }
+                    
+                    // This is the donut we'll queue up to do later
+                    tracing::debug!("Splitting donut at {p:?} with toppings {toppings:?}, queuing {:?}", facing.turn_left());
+                    donuts.push((p, toppings, facing.turn_left()));
+
+                    // This is the donut that we're continuing with now
+                    // TODO: We should probably validity check this?
+                    tracing::debug!("Splitting donut at {p:?} with toppings {toppings:?}, continuing {:?}", facing.turn_right());
+                    let facing = facing.turn_right();
+                    p = p + facing.into();
+               }
+
                 // Error on loops
                 if visited[p.index(global.width)] {
                     return Err(format!("Loop detected at {p:?}"));
@@ -333,8 +356,6 @@ impl Local {
         pathfinding::prelude::bfs(
             &src,
             |p| {
-                tracing::debug!("bfs checking {p:?}");
-
                 let mut neighbors = vec![];
                 for d in Direction::all() {
                     let p2 = *p + d.into();
@@ -461,6 +482,7 @@ impl State<Global, ()> for Local {
     #[tracing::instrument(skip(self, global), fields(belts = %self), ret)]
     fn is_solved(&self, global: &Global) -> bool {
         // Each target must have a belt pointing at it
+        // TODO: Can a splitter directly point at an exit? 
         for x in 0..global.width {
             for y in 0..global.height {
                 let p = Point { x, y };
@@ -541,25 +563,48 @@ impl State<Global, ()> for Local {
                 let _enter = span.enter();
 
                 // If this is not a head, skip it
+                // A head is a belt, source, or splitter
                 let is_belt = self.belts[p.index(global.width)].is_some();
+                let is_source = matches!(
+                    global.entities[p.index(global.width)],
+                    Some(Entity {
+                        kind: EntityKind::Source,
+                        ..
+                    })
+                );
+                let is_splitter = matches!(
+                    global.entities[p.index(global.width)],
+                    Some(Entity {
+                        kind: EntityKind::Splitter,
+                        ..
+                    })
+                );
 
-                if !(is_belt
-                    || matches!(
-                        global.entities[p.index(global.width)],
-                        Some(Entity {
-                            kind: EntityKind::Source,
-                            ..
-                        })
-                    ))
-                {
+                if !(is_belt || is_source || is_splitter) {
                     continue;
                 }
 
                 // p2 is the new belt, so this point must be currently empty
                 let facing = if is_belt {
                     self.belts[p.index(global.width)].unwrap()
-                } else {
+                } else if is_source {
                     global.entities[p.index(global.width)].unwrap().facing
+                } else if is_splitter {
+                    let splitter_facing = global.entities[p.index(global.width)].unwrap().facing;
+                    
+                    // Try one way here and the other below, this is hacky to add on, but so it goes
+                    let p2 = p + splitter_facing.turn_left().into();
+
+                    // If we would continue with turn left, return turn right as facing and check it below
+                    // If we wouldn't, return turn left and we'll pass that check below too
+                    if self.belts[p2.index(global.width)].is_some() || global.entities[p2.index(global.width)].is_some() {
+                        splitter_facing.turn_right()
+                    } else {
+                        splitter_facing.turn_left()
+                    }
+
+                } else {
+                    unreachable!()
                 };
                 let p2 = p + facing.into();
 
