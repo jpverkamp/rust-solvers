@@ -1,4 +1,4 @@
-use std::io::Read;
+use std::{collections::HashMap, io::Read, sync::{LazyLock, Mutex}};
 
 use bitmask_enum::bitmask;
 use solver::{Direction, Point, Solver, State};
@@ -187,8 +187,15 @@ impl Global {
     }
 }
 
+static SIMULATE_CACHE: LazyLock<Mutex<HashMap<Local, Vec<(Point, Toppings)>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
+
 impl Local {
     fn simulate(&self, global: &Global) -> Result<Vec<(Point, Toppings)>, String> {
+        // Check the cache first
+        if let Some(cached) = SIMULATE_CACHE.lock().unwrap().get(self) {
+            return Ok(cached.clone());
+        }
+
         let mut donuts = vec![];
 
         // Now we actually have to simulate each source
@@ -269,6 +276,9 @@ impl Local {
                 }
             }
         }
+
+        // Cache the result
+        SIMULATE_CACHE.lock().unwrap().insert(self.clone(), donuts.clone());
 
         Ok(donuts)
     }
