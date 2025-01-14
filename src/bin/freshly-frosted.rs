@@ -1,4 +1,8 @@
-use std::{collections::HashMap, io::Read, sync::{LazyLock, Mutex}};
+use std::{
+    collections::HashMap,
+    io::Read,
+    sync::{LazyLock, Mutex},
+};
 
 use bitmask_enum::bitmask;
 use solver::{Direction, Point, Solver, State};
@@ -17,6 +21,7 @@ enum EntityKind {
     Source,
     Target(Option<Toppings>),
     Topper(Toppings),
+    Splitter,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -77,6 +82,12 @@ impl TryFrom<&str> for Entity {
                 facing: dir(facing)?,
             }),
 
+            // A splitter
+            &['X', facing] | &['x', facing] => Ok(Entity {
+                kind: EntityKind::Splitter,
+                facing: dir(facing)?,
+            }),
+
             // Something we don't know how to parse
             _ => Err(format!("Invalid entity: {value}")),
         }
@@ -106,17 +117,24 @@ impl From<&str> for Global {
         let mut entities = vec![];
         let mut initial_belts = vec![];
         let mut targets = None;
-        
+
         let mut lines = input.lines().peekable();
         while lines.peek().is_some_and(|line| line.starts_with(':')) {
             let flag = lines.next().unwrap();
 
             if flag.starts_with(":target") {
-                targets = Some(flag
-                    .split_whitespace()
-                    .skip(1)
-                    .map(|t| Some(t.parse::<usize>().expect("Invalid target, must be numeric").into()))
-                    .collect::<Vec<_>>());
+                targets = Some(
+                    flag.split_whitespace()
+                        .skip(1)
+                        .map(|t| {
+                            Some(
+                                t.parse::<usize>()
+                                    .expect("Invalid target, must be numeric")
+                                    .into(),
+                            )
+                        })
+                        .collect::<Vec<_>>(),
+                );
             } else {
                 panic!("Invalid/unknown flag: {flag}");
             }
@@ -196,7 +214,8 @@ impl Global {
     }
 }
 
-static SIMULATE_CACHE: LazyLock<Mutex<HashMap<Local, Vec<(Point, Toppings)>>>> = LazyLock::new(|| Mutex::new(HashMap::new()));
+static SIMULATE_CACHE: LazyLock<Mutex<HashMap<Local, Vec<(Point, Toppings)>>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
 
 impl Local {
     fn simulate(&self, global: &Global) -> Result<Vec<(Point, Toppings)>, String> {
@@ -206,13 +225,16 @@ impl Local {
         }
 
         let mut donuts = vec![];
+        let mut complete_donuts = vec![];
 
         // Now we actually have to simulate each source
+
+        // First, find the sources:
         for x in 0..global.width {
             for y in 0..global.height {
                 let index = (y * global.width + x) as usize;
-                let mut p = Point { x, y };
-                let mut toppings = Toppings::none();
+                let p = Point { x, y };
+                let toppings = Toppings::none();
 
                 // Start a source here
                 if let Some(Entity {
@@ -220,76 +242,84 @@ impl Local {
                     facing,
                 }) = global.entities[index]
                 {
-                    let span = tracing::debug_span!("Source", p = ?p);
-                    let _enter = span.enter();
-
-                    let mut visited = vec![false; global.width as usize * global.height as usize];
-
-                    p = p + facing.into();
-                    visited[p.index(global.width)] = true;
-
-                    while !matches!(
-                        global.entities[p.index(global.width)],
-                        Some(Entity {
-                            kind: EntityKind::Target(_),
-                            ..
-                        })
-                    ) {
-                        if !global.in_bounds(p) {
-                            return Err(format!("Attempted to move out of bounds at {p:?}"));
-                        }
-
-                        // If there is a topper adjacent to us, apply it's topping
-                        for top_d in Direction::all() {
-                            let p2 = p - top_d.into();
-                            if !global.in_bounds(p2) {
-                                continue;
-                            }
-
-                            if let Some(Entity {
-                                kind: EntityKind::Topper(new_toppings),
-                                facing,
-                            }) = global.entities[p2.index(global.width)]
-                            {
-                                if top_d == facing {
-                                    // Only add the toppings if we have all previous stoppings, otherwise ignore it
-                                    // I feel like this was frowned upon before 4/6, but so it goess bits set to add a new one
-                                    assert!(new_toppings.bits().count_ones() == 1);
-                                    let must_have = Toppings::from(new_toppings.bits() - 1);
-                                    if toppings & must_have != must_have {
-                                        continue;
-                                    }
-                                    
-                                    // Add the new topping!
-                                    toppings |= new_toppings;
-                                }
-                            }
-                        }
-
-                        // Move move along the belt
-                        if let Some(belt) = self.belts[p.index(global.width)] {
-                            p = p + belt.into();
-                        } else {
-                            break; // Ran off the end of a belt
-                        }
-
-                        // Error on loops
-                        if visited[p.index(global.width)] {
-                            return Err(format!("Loop detected at {p:?}"));
-                        } else {
-                            visited[p.index(global.width)] = true;
-                        }
-                    }
-
-                    donuts.push((p, toppings));
+                    donuts.push((p, toppings, facing));
                 }
             }
         }
 
-        // Cache the result
-        SIMULATE_CACHE.lock().unwrap().insert(self.clone(), donuts.clone());
+        // Now, until we've simulated all of the donuts, simulate each
+        while let Some((mut p, mut toppings, facing)) = donuts.pop() {
+            let span = tracing::debug_span!("Simulating donut", p = ?p);
+            let _enter = span.enter();
 
-        Ok(donuts)
+            let mut visited = vec![false; global.width as usize * global.height as usize];
+
+            p = p + facing.into();
+            visited[p.index(global.width)] = true;
+
+            while !matches!(
+                global.entities[p.index(global.width)],
+                Some(Entity {
+                    kind: EntityKind::Target(_),
+                    ..
+                })
+            ) {
+                if !global.in_bounds(p) {
+                    return Err(format!("Attempted to move out of bounds at {p:?}"));
+                }
+
+                // If there is a topper adjacent to us, apply it's topping
+                for top_d in Direction::all() {
+                    let p2 = p - top_d.into();
+                    if !global.in_bounds(p2) {
+                        continue;
+                    }
+
+                    if let Some(Entity {
+                        kind: EntityKind::Topper(new_toppings),
+                        facing,
+                    }) = global.entities[p2.index(global.width)]
+                    {
+                        if top_d == facing {
+                            // Only add the toppings if we have all previous stoppings, otherwise ignore it
+                            // I feel like this was frowned upon before 4/6, but so it goess bits set to add a new one
+                            assert!(new_toppings.bits().count_ones() == 1);
+                            let must_have = Toppings::from(new_toppings.bits() - 1);
+                            if toppings & must_have != must_have {
+                                continue;
+                            }
+
+                            // Add the new topping!
+                            toppings |= new_toppings;
+                        }
+                    }
+                }
+
+                // Move move along the belt
+                if let Some(belt) = self.belts[p.index(global.width)] {
+                    p = p + belt.into();
+                } else {
+                    break; // Ran off the end of a belt
+                }
+
+                // Error on loops
+                if visited[p.index(global.width)] {
+                    return Err(format!("Loop detected at {p:?}"));
+                } else {
+                    visited[p.index(global.width)] = true;
+                }
+            }
+
+            complete_donuts.push((p, toppings));
+        }
+
+        // Cache the result
+        SIMULATE_CACHE
+            .lock()
+            .unwrap()
+            .insert(self.clone(), complete_donuts.clone());
+
+        Ok(complete_donuts)
     }
 
     // Is it at all possible to get from src to dst with the current belt configuration?
@@ -409,7 +439,9 @@ impl State<Global, ()> for Local {
             if donut_types.len() == target_donuts.len() {
                 // Because they're sorted, this means have at least one donut with too many toppings
                 if donut_types > target_donuts {
-                    tracing::debug!("Not possible. Got {donut_types:?} but needed {target_donuts:?}");
+                    tracing::debug!(
+                        "Not possible. Got {donut_types:?} but needed {target_donuts:?}"
+                    );
                     return false;
                 }
             }
@@ -474,18 +506,15 @@ impl State<Global, ()> for Local {
                 }) if target_toppings.is_none() || *toppings == target_toppings.unwrap() => {}
                 _ => {
                     tracing::debug!("Invalid solution, donut at {donuts_p:?} with toppings {toppings:?} isn't at a matching target");
-                    return false
-                },
+                    return false;
+                }
             }
         }
 
         // If we have a toppings array, match that as well/instead
         // The check above already checks that they're all at targets, this just checks types
         if let Some(target_donuts) = &global.targets {
-            let mut donut_types = donuts
-                .iter()
-                .map(|(_, t)| Some(*t))
-                .collect::<Vec<_>>();
+            let mut donut_types = donuts.iter().map(|(_, t)| Some(*t)).collect::<Vec<_>>();
             donut_types.sort();
 
             if &donut_types != target_donuts {
@@ -542,7 +571,7 @@ impl State<Global, ()> for Local {
 
                 // Now, for each direction from *that* point, we can potentially add a belt
                 for d2 in Direction::all() {
-                // for d2 in [Direction::Right] {
+                    // for d2 in [Direction::Right] {
                     // We cannot go back the way we came
                     // This wasn't a problem until world 4 allowed merging
                     if d2 == facing.flip() {
@@ -560,20 +589,19 @@ impl State<Global, ()> for Local {
                         continue;
                     }
 
-                    // This belt can only point at non-target
-                    // Before world 4, this was also non-belt; now we can merge
-                    // if self.belts[p3.index(global.width)].is_some() {
-                    //     tracing::debug!("Skipping, contains a belt");
-                    //     continue;
-                    // }
+                    // This belt can point to:
+                    // - Empty space
+                    // - Other belts (as of world 4: merging)
+                    // - Targets
+                    // - Splitters (as of world 6)
                     match global.entities[p3.index(global.width)] {
                         None => {}
                         Some(Entity {
-                            kind: EntityKind::Target(_),
+                            kind: EntityKind::Target(_) | EntityKind::Splitter,
                             facing,
                         }) if facing == d2 => {}
                         _ => {
-                            tracing::debug!("Skipping, contains a non-target");
+                            tracing::debug!("Skipping, directed to a non-valid space/entity");
                             continue;
                         }
                     }
@@ -660,6 +688,7 @@ impl State<Global, ()> for Local {
                             Direction::Left => '╣',
                             Direction::Right => '╠',
                         },
+                        EntityKind::Splitter => 'X',
                     };
                 }
 
@@ -696,11 +725,11 @@ fn main() {
 
     let tracing_enabled = std::env::var("FRESHLY_FROSTED_TRACE").is_ok();
 
-    if tracing_enabled{
+    if tracing_enabled {
         tracing_subscriber::fmt()
-        .without_time()
-        .with_max_level(tracing::Level::DEBUG)
-        .init();
+            .without_time()
+            .with_max_level(tracing::Level::DEBUG)
+            .init();
     } else {
         env_logger::init();
     }
