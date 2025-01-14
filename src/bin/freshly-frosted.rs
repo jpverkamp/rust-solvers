@@ -362,14 +362,14 @@ impl State<Global, ()> for Local {
             .collect::<Vec<_>>();
 
         // Each current donut must be either on a target or be able to reach one
-            tracing::debug!("Checking reachability");
-            for (donut_p, toppings) in donuts.iter() {
-                tracing::debug!("Checking donut at {donut_p:?} with toppings {toppings:?}");
-                if !target_points
-                    .iter()
+        tracing::debug!("Checking reachability");
+        for (donut_p, toppings) in donuts.iter() {
+            tracing::debug!("Checking donut at {donut_p:?} with toppings {toppings:?}");
+            if !target_points
+                .iter()
                 .any(|target_p| self.is_reachable(global, *donut_p, *target_p))
-                {
-                    return false;
+            {
+                return false;
             }
         }
 
@@ -590,8 +590,44 @@ impl State<Global, ()> for Local {
         Some(next_states)
     }
 
-    fn heuristic(&self, _global: &Global) -> i64 {
-        0
+    fn heuristic(&self, global: &Global) -> i64 {
+        // For each donut, the distance to the nearest reachable target
+        let donuts = match self.simulate(global) {
+            Ok(donuts) => donuts,
+            Err(_) => return 0,
+        };
+
+        let target_points = global
+            .entities
+            .iter()
+            .enumerate()
+            .filter_map(|(index, entity)| {
+                if let Some(Entity {
+                    kind: EntityKind::Target(_),
+                    ..
+                }) = entity
+                {
+                    Some(Point {
+                        x: index as isize % global.width,
+                        y: index as isize / global.width,
+                    })
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+
+        donuts
+            .iter()
+            .map(|(donut_p, _)| {
+                target_points
+                    .iter()
+                    .filter(|target_p| self.is_reachable(global, *donut_p, **target_p))
+                    .map(|target_p| donut_p.manhattan_distance(*target_p))
+                    .min()
+                    .unwrap_or(0) as i64
+            })
+            .sum()
     }
 
     fn stringify(&self, global: &Global) -> String {
