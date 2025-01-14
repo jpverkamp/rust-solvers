@@ -89,6 +89,7 @@ struct Global {
     height: isize,
     entities: Vec<Option<Entity>>,
     targets: Option<Vec<Option<Toppings>>>,
+    initial_belts: Vec<Option<Direction>>,
 }
 
 impl Global {
@@ -103,6 +104,7 @@ impl From<&str> for Global {
         let mut height = 0;
 
         let mut entities = vec![];
+        let mut initial_belts = vec![];
         let mut targets = None;
         
         let mut lines = input.lines().peekable();
@@ -124,19 +126,25 @@ impl From<&str> for Global {
             let mut line_width = 0;
 
             for part in line.split_whitespace() {
+                let mut belt = None;
+                let mut entity = None;
                 line_width += 1;
 
                 if part == "." {
-                    entities.push(None);
-                    continue;
+                    // Do nothing
+                } else if let Ok(found_belt) = Direction::try_from(part) {
+                    belt = Some(found_belt);
+                } else {
+                    entity = match Entity::try_from(part) {
+                        Ok(entity) => Some(entity),
+                        Err(e) => panic!("Invalid entity: {e}"),
+                    };
                 }
 
-                let entity = match Entity::try_from(part) {
-                    Ok(entity) => entity,
-                    Err(e) => panic!("Invalid entity: {e}"),
-                };
+                assert!(!(entity.is_some() && belt.is_some()));
 
-                entities.push(Some(entity));
+                initial_belts.push(belt);
+                entities.push(entity);
             }
 
             width = width.max(line_width);
@@ -147,6 +155,7 @@ impl From<&str> for Global {
             width,
             height,
             entities,
+            initial_belts,
             targets,
         }
     }
@@ -182,7 +191,7 @@ impl std::fmt::Display for Local {
 impl Global {
     fn make_local(&self) -> Local {
         Local {
-            belts: vec![None; self.width as usize * self.height as usize],
+            belts: self.initial_belts.clone(),
         }
     }
 }
