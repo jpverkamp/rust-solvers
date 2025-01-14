@@ -284,9 +284,9 @@ impl Local {
     }
 
     // Is it at all possible to get from src to dst with the current belt configuration?
-    // Use only empty points, but dst is allowed to be a target
+    // Use empty points, allowed to step on targets, and can follow belts
     #[tracing::instrument(skip(self, global), ret)]
-    fn is_empty_reachable(&self, global: &Global, src: Point, dst: Point) -> bool {
+    fn is_reachable(&self, global: &Global, src: Point, dst: Point) -> bool {
         if src == dst {
             return true;
         }
@@ -305,6 +305,10 @@ impl Local {
                     }
 
                     let is_belt = self.belts[p2.index(global.width)].is_some();
+                    let is_belt_in_proper_direction = self.belts[p2.index(global.width)]
+                        .map(|belt_d| belt_d == d)
+                        .unwrap_or(false);
+
                     let is_target = matches!(
                         global.entities[p2.index(global.width)],
                         Some(Entity {
@@ -313,7 +317,7 @@ impl Local {
                         })
                     );
 
-                    if !is_belt || (p2 == dst && is_target) {
+                    if !is_belt || is_belt_in_proper_direction || (p2 == dst && is_target) {
                         neighbors.push(p2);
                     }
                 }
@@ -358,17 +362,14 @@ impl State<Global, ()> for Local {
             .collect::<Vec<_>>();
 
         // Each current donut must be either on a target or be able to reach one
-        // With more than 2 possibly merging, this check won't work (since we'll need to merge 2 and then is_valid=false for the 3rd)
-        if donuts.len() <= target_points.len() + 1 {
             tracing::debug!("Checking reachability");
             for (donut_p, toppings) in donuts.iter() {
                 tracing::debug!("Checking donut at {donut_p:?} with toppings {toppings:?}");
                 if !target_points
                     .iter()
-                    .any(|target_p| self.is_empty_reachable(global, *donut_p, *target_p))
+                .any(|target_p| self.is_reachable(global, *donut_p, *target_p))
                 {
                     return false;
-                }
             }
         }
 
