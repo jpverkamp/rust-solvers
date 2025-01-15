@@ -218,6 +218,15 @@ static SIMULATE_CACHE: LazyLock<Mutex<HashMap<Local, Vec<(Point, Toppings)>>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
 impl Local {
+    fn is_empty(&self, global: &Global, p: Point) -> bool {
+        if !global.in_bounds(p) {
+            return false;
+        }
+
+        self.belts[p.index(global.width)].is_none()
+            && global.entities[p.index(global.width)].is_none()
+    }
+
     fn simulate(&self, global: &Global) -> Result<Vec<(Point, Toppings)>, String> {
         // Check the cache first
         if let Some(cached) = SIMULATE_CACHE.lock().unwrap().get(self) {
@@ -228,6 +237,7 @@ impl Local {
         let mut complete_donuts = vec![];
 
         // Now we actually have to simulate each source
+        let visited = vec![false; global.width as usize * global.height as usize];
 
         // First, find the sources:
         for x in 0..global.width {
@@ -239,23 +249,23 @@ impl Local {
                 // Start a source here
                 if let Some(Entity {
                     kind: EntityKind::Source,
-                    facing,
+                    facing
                 }) = global.entities[index]
                 {
-                    donuts.push((p, toppings, facing));
+                    donuts.push((p, toppings, facing, visited.clone()));
                 }
             }
         }
 
         // Now, until we've simulated all of the donuts, simulate each
-        while let Some((mut p, mut toppings, facing)) = donuts.pop() {
-            let span = tracing::debug_span!("Simulating donut", p = ?p, toppings = ?toppings, facing = ?facing);
+        'each_donut: while let Some((mut p, mut toppings, initial_facing, mut visited)) = donuts.pop() {
+            let span = tracing::debug_span!("Simulating donut", p = ?p, t = ?toppings, f = ?initial_facing);
             let _enter = span.enter();
-            tracing::debug!("Starting");
 
-            let mut visited = vec![false; global.width as usize * global.height as usize];
-
-            p = p + facing.into();
+            p = p + initial_facing.into();
+            if !global.in_bounds(p) {
+                return Err(format!("Donut started at {p:?} but immediately went out of bounds"));
+            }
             visited[p.index(global.width)] = true;
 
             while !matches!(
@@ -268,6 +278,24 @@ impl Local {
                 if !global.in_bounds(p) {
                     return Err(format!("Attempted to move out of bounds at {p:?}"));
                 }
+
+                // tracing::debug!("Step {p:?}, visited: {}", 
+                //     visited
+                //         .iter()
+                //         .enumerate()
+                //         .flat_map(|(i, v)| 
+                //             if *v {
+                //                 Some(format!("({x}, {y})",
+                //                     x = i as isize % global.width,
+                //                     y = i as isize / global.width,
+                //                 ))
+                //             } else {
+                //                 None
+                //             }
+                //         )
+                //         .collect::<Vec<_>>()
+                //         .join(" ")
+                //     );
 
                 // If there is a topper adjacent to us, apply it's topping
                 for top_d in Direction::all() {
@@ -296,34 +324,28 @@ impl Local {
                     }
                 }
 
+                // If we are at a splitter, split the donut
+                if let Some(Entity {
+                    kind: EntityKind::Splitter,
+                    facing,
+                }) = global.entities[p.index(global.width)]
+                {
+                    // TODO: Check if we came into the splitter the wrong way?
+
+                    // Queue the two new donuts
+                    donuts.push((p, toppings, facing.turn_left(), visited.clone()));
+                    donuts.push((p, toppings, facing.turn_right(), visited.clone()));
+
+                    // Do not simulate this path any more
+                    continue 'each_donut;
+                }
+
                 // Move move along the belt
                 if let Some(belt) = self.belts[p.index(global.width)] {
                     p = p + belt.into();
                 } else {
                     break; // Ran off the end of a belt
                 }
-
-                // If we are now in a splitter, continue one way and queue the other
-                if let Some(Entity {
-                    kind: EntityKind::Splitter,
-                    facing: splitter_facing,
-                }) = global.entities[p.index(global.width)]
-                {
-                    // If we're coming into a splitter the wrong way
-                    if facing != splitter_facing {
-                        return Err(format!("Attempted to enter the splitter at {p:?} the wrong way"));
-                    }
-                    
-                    // This is the donut we'll queue up to do later
-                    tracing::debug!("Splitting donut at {p:?} with toppings {toppings:?}, queuing {:?}", facing.turn_left());
-                    donuts.push((p, toppings, facing.turn_left()));
-
-                    // This is the donut that we're continuing with now
-                    // TODO: We should probably validity check this?
-                    tracing::debug!("Splitting donut at {p:?} with toppings {toppings:?}, continuing {:?}", facing.turn_right());
-                    let facing = facing.turn_right();
-                    p = p + facing.into();
-               }
 
                 // Error on loops
                 if visited[p.index(global.width)] {
@@ -346,7 +368,7 @@ impl Local {
     }
 
     // Is it at all possible to get from src to dst with the current belt configuration?
-    // Use empty points, allowed to step on targets, and can follow belts
+    // Use empty points, allowed to step on targets, and can follow belts + splitters
     #[tracing::instrument(skip(self, global), ret)]
     fn is_reachable(&self, global: &Global, src: Point, dst: Point) -> bool {
         if src == dst {
@@ -358,17 +380,33 @@ impl Local {
             |p| {
                 let mut neighbors = vec![];
                 for d in Direction::all() {
-                    let p2 = *p + d.into();
+                    // If we're expanding along a belt, we have to follow the belt
+                    if let Some(belt_direction) = self.belts[p.index(global.width)] {
+                        if belt_direction != d {
+                            continue;
+                        }
+                    }
 
+                    // Don't expand the bfs out of bounds
+                    let p2 = *p + d.into();
                     if !global.in_bounds(p2) {
                         continue;
                     }
 
+                    // We can always step onto a belt
                     let is_belt = self.belts[p2.index(global.width)].is_some();
-                    let is_belt_in_proper_direction = self.belts[p2.index(global.width)]
-                        .map(|belt_d| belt_d == d)
-                        .unwrap_or(false);
 
+                    // TODO: This ignore direction for splitters for the time being
+                    // This is technically correct, but could be optimized
+                    let is_splitter = matches!(
+                        global.entities[p2.index(global.width)],
+                        Some(Entity {
+                            kind: EntityKind::Splitter,
+                            ..
+                        })
+                    );
+
+                    // We can only step onto a splitter in the proper direction
                     let is_target = matches!(
                         global.entities[p2.index(global.width)],
                         Some(Entity {
@@ -376,8 +414,13 @@ impl Local {
                             ..
                         })
                     );
+                    let is_target_at_dst = p2 == dst && is_target;
 
-                    if !is_belt || is_belt_in_proper_direction || (p2 == dst && is_target) {
+                    if self.is_empty(global, p2)
+                        || is_belt
+                        || is_splitter
+                        || is_target_at_dst
+                    {
                         neighbors.push(p2);
                     }
                 }
@@ -390,6 +433,7 @@ impl Local {
 }
 
 impl State<Global, ()> for Local {
+    #[tracing::instrument(skip(self, global), fields(belts = %self), ret)]
     fn is_valid(&self, global: &Global) -> bool {
         // This is expensive to run on each state, but it also means that we can prune a *lot* of invalid states
         let donuts = match self.simulate(global) {
@@ -482,7 +526,7 @@ impl State<Global, ()> for Local {
     #[tracing::instrument(skip(self, global), fields(belts = %self), ret)]
     fn is_solved(&self, global: &Global) -> bool {
         // Each target must have a belt pointing at it
-        // TODO: Can a splitter directly point at an exit? 
+        // TODO: Can a splitter directly point at an exit?
         for x in 0..global.width {
             for y in 0..global.height {
                 let p = Point { x, y };
@@ -508,6 +552,7 @@ impl State<Global, ()> for Local {
 
         // Simulate the current state
         tracing::debug!("Running simulation");
+        tracing::debug!("\n{}", self.stringify(global));
         let donuts = match self.simulate(global) {
             Ok(donuts) => donuts,
             Err(e) => {
@@ -591,26 +636,23 @@ impl State<Global, ()> for Local {
                     global.entities[p.index(global.width)].unwrap().facing
                 } else if is_splitter {
                     let splitter_facing = global.entities[p.index(global.width)].unwrap().facing;
-                    
-                    // Try one way here and the other below, this is hacky to add on, but so it goes
-                    let p2 = p + splitter_facing.turn_left().into();
 
                     // If we would continue with turn left, return turn right as facing and check it below
                     // If we wouldn't, return turn left and we'll pass that check below too
-                    if self.belts[p2.index(global.width)].is_some() || global.entities[p2.index(global.width)].is_some() {
+                    if self.is_empty(global, p + splitter_facing.turn_left().into()) {
+                        splitter_facing.turn_left()
+                    } else if self.is_empty(global, p + splitter_facing.turn_right().into()) {
                         splitter_facing.turn_right()
                     } else {
-                        splitter_facing.turn_left()
+                        // Both branches of the splitter are already filled in
+                        continue;
                     }
-
                 } else {
                     unreachable!()
                 };
                 let p2 = p + facing.into();
 
-                if self.belts[p2.index(global.width)].is_some()
-                    || global.entities[p2.index(global.width)].is_some()
-                {
+                if !self.is_empty(global, p2) {
                     continue;
                 }
 
