@@ -135,6 +135,8 @@ impl From<&str> for Global {
                         })
                         .collect::<Vec<_>>(),
                 );
+            } else if flag.starts_with(":comment") {
+                // Not stored, just do nothing   
             } else {
                 panic!("Invalid/unknown flag: {flag}");
             }

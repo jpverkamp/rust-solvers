@@ -76,7 +76,8 @@
       "+↓→→↓→↓\n↓←↑←→↑-\n↓╦╩↑╩╦#\n→→→↑→↓-\n+→→→↑→↑\n\n"
     ],
     "data/freshly-frosted/03-autumn/04.txt": [
-      "..→→→→↓.\n..↑.╦.↓.\n+→↑→↓.→-\n+→↓↑→→→-\n+↓→↑→→→-\n.→↓╩↑╩..\n..→→↑...\n\n"
+      "..→→→→↓.\n..↑.╦.↓.\n+→↑→↓.→-\n+→↓↑→→→-\n+↓→↑→→→-\n.→↓╩↑╩..\n..→→↑...\n\n",
+      "...→→↓..\n..→↑╦↓..\n+→↑→↓→→-\n+→↓↑→→→-\n+↓→↑→→→-\n.↓.╩↑╩..\n.→→→↑...\n\n"
     ],
     "data/freshly-frosted/03-autumn/05.txt": [
       "→→→→→→→→↓\n+↓←←↓←+╠↓\n↓←╠↑↓╣-←↓\n↓→→↑→↓→↑↓\n↓↑+↓╠→↑╦↓\n↓↑←→↓╠↓←←\n→↓↑←→↓→→↓\n-←╩↑←←╣╩-\n\n"
@@ -111,7 +112,8 @@
     ],
     "data/freshly-frosted/04-romantic/06.txt": [
       "+↓╣......\n+→↓╣.....\n+↑→↓╣....\n+↑.→↓╣...\n+→→→→↓╣..\n+↑...→↓╣.\n+→→→→→→→-\n\n",
-      "+↓╣......\n+→↓╣.....\n+↓→↓╣....\n+→→→↓╣...\n+→↓.→↓╣..\n+→→→→→↓╣.\n+→→→→→→→-\n\n"
+      "+↓╣......\n+→↓╣.....\n+↓→↓╣....\n+→→→↓╣...\n+→↓.→↓╣..\n+→→→→→↓╣.\n+→→→→→→→-\n\n",
+      "+↓╣......\n+→↓╣.....\n+↓→↓╣....\n+→↓→↓╣...\n+↓→↑→↓╣..\n+→→→→→↓╣.\n+→→→→→→→-\n\n"
     ],
     "data/freshly-frosted/04-romantic/08.txt": [
       "╦→→→↓.╦\n→↑.╩→→↓\n↑←+#+↓←\n.↑╣-╠↓.\n+↑.↑←←╣\n\n",
@@ -120,6 +122,9 @@
     "data/freshly-frosted/04-romantic/09.txt": [
       "+→→→→↓.\n↓←+↑╠↓.\n↓→→↑.↓.\n→↑╣.╠↓.\n+→→→→→-\n\n",
       "+→→↓...\n↓←+↓╠→↓\n↓→→→→↑↓\n→↑╣.╠↓←\n+→→→→→-\n\n"
+    ],
+    "data/freshly-frosted/04-romantic/12-hint.txt": [
+      "→→→→→→→→↓\n↑+→→→↓.╦↓\n↑←↑→↓→↓↓←\n.→↑+↓╩↓→↓\n.↑+╠↓-←←↓\n→↑.+↓╦→↑↓\n↑╩.→→→↑╩↓\n↑←←←←←←←←\n\n"
     ],
     "data/freshly-frosted/05-spring-dreams/01.txt": [
       "+╦╦╦╦\n→→→→↓\n↓←←←←\n-╩╩╩╩\n\n"
@@ -151,6 +156,15 @@
     ],
     "data/freshly-frosted/06-summer-morning/02.txt": [
       ".╠↓←←\n↓←←.↑\n→-+↓↑\n↑.↓←↑\n↑←X→↑\n\n"
+    ],
+    "data/freshly-frosted/06-summer-morning/04.txt": [
+      "↓←←+↓←←\n↓╠↑←→-↑\n↓↓←←←←↑\n↓↓→→→↑↑\n↓-↑X↓╩↑\n→→→↑→→↑\n\n"
+    ],
+    "data/freshly-frosted/06-summer-morning/05.txt": [
+      "+↓→→↓╣\n.↓↑.↓.\n↓X↑↓X↓\n→↓←←↓←\n-←.↑←╣\n\n"
+    ],
+    "data/freshly-frosted/06-summer-morning/06.txt": [
+      "+.╦.╦.╦\n↓→↓→↓→↓\n→X→X→X↓\n-←←←←←←\n\n"
     ]
   },
   "metadata": {
@@ -163,80 +177,80 @@
     "stderr_mode": "Print",
     "env": [],
     "preserve_env": false,
-    "timeout": 10
+    "timeout": 300
   },
   "timing": {
     "data/freshly-frosted/01-spring/01.txt": {
       "fastest": 173,
-      "most_recent": 195
+      "most_recent": 222
     },
     "data/freshly-frosted/01-spring/02.txt": {
       "fastest": 7,
-      "most_recent": 9
+      "most_recent": 7
     },
     "data/freshly-frosted/01-spring/03.txt": {
       "fastest": 7,
-      "most_recent": 7
+      "most_recent": 21
     },
     "data/freshly-frosted/01-spring/04.txt": {
       "fastest": 9,
-      "most_recent": 16
+      "most_recent": 17
     },
     "data/freshly-frosted/01-spring/05.txt": {
       "fastest": 43,
-      "most_recent": 54
+      "most_recent": 48
     },
     "data/freshly-frosted/01-spring/06.txt": {
-      "fastest": 44,
-      "most_recent": 52
+      "fastest": 36,
+      "most_recent": 36
     },
     "data/freshly-frosted/01-spring/07.txt": {
       "fastest": 7,
-      "most_recent": 7
+      "most_recent": 10
     },
     "data/freshly-frosted/01-spring/08.txt": {
       "fastest": 14,
-      "most_recent": 14
+      "most_recent": 19
     },
     "data/freshly-frosted/01-spring/09.txt": {
       "fastest": 59,
-      "most_recent": 270
+      "most_recent": 118
     },
     "data/freshly-frosted/01-spring/10.txt": {
       "fastest": 14,
-      "most_recent": 110
+      "most_recent": 304
     },
     "data/freshly-frosted/01-spring/11.txt": {
       "fastest": 3148,
-      "most_recent": 3148
+      "most_recent": 46349
     },
     "data/freshly-frosted/01-spring/12.txt": {
       "fastest": 9285,
-      "most_recent": 9285
+      "most_recent": 288576
     },
     "data/freshly-frosted/02-summer/01.txt": {
       "fastest": 17,
-      "most_recent": 203
+      "most_recent": 48
     },
     "data/freshly-frosted/02-summer/02.txt": {
       "fastest": 44,
-      "most_recent": 346
+      "most_recent": 377
     },
     "data/freshly-frosted/02-summer/03.txt": {
       "fastest": 5,
-      "most_recent": 200
+      "most_recent": 208
     },
     "data/freshly-frosted/02-summer/04.txt": {
       "fastest": 97,
-      "most_recent": 898
+      "most_recent": 663
     },
     "data/freshly-frosted/02-summer/05.txt": {
       "fastest": 160,
-      "most_recent": 813
+      "most_recent": 906
     },
     "data/freshly-frosted/02-summer/06.txt": {
       "fastest": 4905,
-      "most_recent": 7271
+      "most_recent": 170984
     },
     "data/freshly-frosted/02-summer/08.txt": {
       "fastest": 9690,
@@ -244,19 +258,19 @@
     },
     "data/freshly-frosted/02-summer/11.txt": {
       "fastest": 2779,
-      "most_recent": 2779
+      "most_recent": 226731
     },
     "data/freshly-frosted/03-autumn/01.txt": {
-      "fastest": 12,
-      "most_recent": 195
+      "fastest": 11,
+      "most_recent": 32
     },
     "data/freshly-frosted/03-autumn/02.txt": {
       "fastest": 20,
-      "most_recent": 134
+      "most_recent": 136
     },
     "data/freshly-frosted/03-autumn/04.txt": {
       "fastest": 49691,
-      "most_recent": 65765
+      "most_recent": 275506
     },
     "data/freshly-frosted/03-autumn/05.txt": {
       "fastest": 274952,
@@ -268,7 +282,7 @@
     },
     "data/freshly-frosted/03-autumn/11.txt": {
       "fastest": 3420,
-      "most_recent": 4433
+      "most_recent": 212807
     },
     "data/freshly-frosted/04-romantic/00.txt": {
       "fastest": 18,
@@ -276,79 +290,95 @@
     },
     "data/freshly-frosted/04-romantic/01.txt": {
       "fastest": 12,
-      "most_recent": 19
+      "most_recent": 49
     },
     "data/freshly-frosted/04-romantic/02.txt": {
       "fastest": 9,
-      "most_recent": 37
+      "most_recent": 15
     },
     "data/freshly-frosted/04-romantic/03.txt": {
       "fastest": 49,
-      "most_recent": 67
+      "most_recent": 77
     },
     "data/freshly-frosted/04-romantic/04.txt": {
       "fastest": 12,
-      "most_recent": 49
+      "most_recent": 223
     },
     "data/freshly-frosted/04-romantic/05.txt": {
       "fastest": 6,
-      "most_recent": 65
+      "most_recent": 17
     },
     "data/freshly-frosted/04-romantic/05b.txt": {
       "fastest": 28,
       "most_recent": 28
     },
     "data/freshly-frosted/04-romantic/06.txt": {
-      "fastest": 17383,
-      "most_recent": 18760
+      "fastest": 14220,
+      "most_recent": 14220
     },
     "data/freshly-frosted/04-romantic/08.txt": {
-      "fastest": 47,
-      "most_recent": 47
+      "fastest": 34,
+      "most_recent": 93
     },
     "data/freshly-frosted/04-romantic/09.txt": {
       "fastest": 38,
-      "most_recent": 38
+      "most_recent": 63
+    },
+    "data/freshly-frosted/04-romantic/12-hint.txt": {
+      "fastest": 259797,
+      "most_recent": 259797
     },
     "data/freshly-frosted/05-spring-dreams/01.txt": {
-      "fastest": 28,
-      "most_recent": 196
+      "fastest": 9,
+      "most_recent": 16
     },
     "data/freshly-frosted/05-spring-dreams/02.txt": {
       "fastest": 11,
-      "most_recent": 11
+      "most_recent": 32
     },
     "data/freshly-frosted/05-spring-dreams/03.txt": {
-      "fastest": 219,
-      "most_recent": 219
+      "fastest": 177,
+      "most_recent": 197
     },
     "data/freshly-frosted/05-spring-dreams/04.txt": {
-      "fastest": 85,
-      "most_recent": 85
+      "fastest": 68,
+      "most_recent": 83
     },
     "data/freshly-frosted/05-spring-dreams/05.txt": {
       "fastest": 27,
-      "most_recent": 34
+      "most_recent": 222
     },
     "data/freshly-frosted/05-spring-dreams/06.txt": {
       "fastest": 1312,
-      "most_recent": 1312
+      "most_recent": 1388
     },
     "data/freshly-frosted/05-spring-dreams/08.txt": {
       "fastest": 18,
-      "most_recent": 40
+      "most_recent": 19
     },
     "data/freshly-frosted/05-spring-dreams/12-hint.txt": {
       "fastest": 3346,
-      "most_recent": 3346
+      "most_recent": 3851
     },
     "data/freshly-frosted/06-summer-morning/01.txt": {
       "fastest": 8,
-      "most_recent": 8
+      "most_recent": 70
     },
     "data/freshly-frosted/06-summer-morning/02.txt": {
       "fastest": 21,
-      "most_recent": 21
+      "most_recent": 40
+    },
+    "data/freshly-frosted/06-summer-morning/04.txt": {
+      "fastest": 9231,
+      "most_recent": 9231
+    },
+    "data/freshly-frosted/06-summer-morning/05.txt": {
+      "fastest": 568,
+      "most_recent": 568
+    },
+    "data/freshly-frosted/06-summer-morning/06.txt": {
+      "fastest": 15,
+      "most_recent": 47
     }
   }
 }
