@@ -279,11 +279,11 @@ impl Local {
                     return Err(format!("Attempted to move out of bounds at {p:?}"));
                 }
 
-                // tracing::debug!("Step {p:?}, visited: {}", 
+                // tracing::debug!("Step {p:?}, visited: {}",
                 //     visited
                 //         .iter()
                 //         .enumerate()
-                //         .flat_map(|(i, v)| 
+                //         .flat_map(|(i, v)|
                 //             if *v {
                 //                 Some(format!("({x}, {y})",
                 //                     x = i as isize % global.width,
@@ -416,11 +416,7 @@ impl Local {
                     );
                     let is_target_at_dst = p2 == dst && is_target;
 
-                    if self.is_empty(global, p2)
-                        || is_belt
-                        || is_splitter
-                        || is_target_at_dst
-                    {
+                    if self.is_empty(global, p2) || is_belt || is_splitter || is_target_at_dst {
                         neighbors.push(p2);
                     }
                 }
@@ -525,8 +521,7 @@ impl State<Global, ()> for Local {
 
     #[tracing::instrument(skip(self, global), fields(belts = %self), ret)]
     fn is_solved(&self, global: &Global) -> bool {
-        // Each target must have a belt pointing at it
-        // TODO: Can a splitter directly point at an exit?
+        // Each target must have a belt or splitter pointing at it
         for x in 0..global.width {
             for y in 0..global.height {
                 let p = Point { x, y };
@@ -537,14 +532,31 @@ impl State<Global, ()> for Local {
                 }) = global.entities[p.index(global.width)]
                 {
                     let p2 = p - facing.into();
-                    if let Some(facing2) = self.belts[p2.index(global.width)] {
-                        if facing != facing2 {
+                    if let Some(belt_facing) = self.belts[p2.index(global.width)] {
+                        if facing != belt_facing {
                             tracing::debug!("At a target but facing the wrong way");
                             return false;
                         }
                     } else {
-                        tracing::debug!("Not at a target");
-                        return false;
+                        match global.entities[p2.index(global.width)] {
+                            Some(Entity {
+                                kind: EntityKind::Splitter,
+                                facing: splitter_facing,
+                            }) => {
+                                if facing != splitter_facing.turn_left()
+                                    && facing != splitter_facing.turn_right()
+                                {
+                                    tracing::debug!(
+                                        "At a target but facing a splitter the wrong way"
+                                    );
+                                    return false;
+                                }
+                            }
+                            _ => {
+                                tracing::debug!("At a target but not facing a belt or splitter");
+                                return false;
+                            }
+                        }
                     }
                 }
             }
