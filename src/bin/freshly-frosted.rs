@@ -22,6 +22,7 @@ enum EntityKind {
     Target(Option<Toppings>),
     Topper(Toppings),
     Splitter,
+    Bumper(Toppings),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -85,6 +86,12 @@ impl TryFrom<&str> for Entity {
             // A splitter
             &['X', facing] | &['x', facing] => Ok(Entity {
                 kind: EntityKind::Splitter,
+                facing: dir(facing)?,
+            }),
+
+            // A bumper
+            &['b', facing, topping] => Ok(Entity {
+                kind: EntityKind::Bumper(top(topping)?),
                 facing: dir(facing)?,
             }),
 
@@ -243,7 +250,6 @@ impl Local {
             && global.entities[p.index(global.width)].is_none()
     }
 
-    #[allow(dead_code)]
     fn simulate_tickwise(&self, global: &Global) -> Result<SimulateTickwiseResult, String> {
         // Check the cache first
         if let Some(cached) = SIMULATE_TICKWISE_CACHE.lock().unwrap().get(self) {
@@ -386,7 +392,23 @@ Max waiting time: {max_waiting_time}
                                 continue;
                             }
 
-                            // TODO: Bumpers
+                            // A bumper two spaces away matching a donut on a belt one tile away
+                            let p_bumper = p_from - d.into();
+                            if global.in_bounds(p_bumper) {
+                                if let Some(Entity {
+                                    kind: EntityKind::Bumper(bumper_toppings),
+                                    facing,
+                                }) = global.entities[p_bumper.index(global.width)]
+                                {
+                                    if facing == d {
+                                        if let Some(toppings) = state_at!(p_from).toppings {
+                                            if toppings == bumper_toppings {
+                                                potential_donuts.push((p_from, toppings, d));
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
 
                         // If we have no potential donuts, try the next position
@@ -395,6 +417,12 @@ Max waiting time: {max_waiting_time}
                             state_at!(p).updated = true;
                             continue;
                         }
+
+                        tracing::debug!(
+                            "Found potential donuts at {p:?}: {potential_donuts:?}",
+                            p = p,
+                            potential_donuts = potential_donuts
+                        );
 
                         // If we have at least one donut, make sure we're moving it onto something valid
                         if let Some(entity) = global.entities[p.index(global.width)] {
@@ -524,7 +552,6 @@ Max waiting time: {max_waiting_time}
         Ok(result)
     }
 
-    #[allow(dead_code)]
     fn simulate(&self, global: &Global) -> Result<Vec<(Point, Toppings)>, String> {
         // Check the cache first
         if let Some(cached) = SIMULATE_CACHE.lock().unwrap().get(self) {
@@ -535,7 +562,10 @@ Max waiting time: {max_waiting_time}
         let mut complete_donuts = vec![];
 
         // Now we actually have to simulate each source
-        let visited = vec![false; global.width as usize * global.height as usize];
+        let mut visited = vec![];
+        for _ in 0..(Toppings::all_flags().bits + 1) {
+            visited.push(vec![false; global.width as usize * global.height as usize]);
+        }
 
         // First, find the sources:
         for x in 0..global.width {
@@ -568,7 +598,8 @@ Max waiting time: {max_waiting_time}
                     "Donut started at {p:?} but immediately went out of bounds"
                 ));
             }
-            visited[p.index(global.width)] = true;
+            
+            visited[toppings.bits][p.index(global.width)] = true;
 
             while !matches!(
                 global.entities[p.index(global.width)],
@@ -642,6 +673,29 @@ Max waiting time: {max_waiting_time}
                     continue 'each_donut;
                 }
 
+                // If we're adjacent to a matching bumper, bump
+                // TODO: Assume that the space we move onto is valid
+                for bump_d in Direction::all() {
+                    let p2 = p - bump_d.into();
+                    if !global.in_bounds(p2) {
+                        continue;
+                    }
+
+                    if let Some(Entity {
+                        kind: EntityKind::Bumper(bump_toppings),
+                        facing,
+                    }) = global.entities[p2.index(global.width)]
+                    {
+                        tracing::debug!("Bumper at {p2:?} with facing {bump_d:?} and toppings {bump_toppings:?}");
+                        tracing::debug!("Donut at {p:?} with toppings {toppings:?}");
+
+                        if bump_d == facing && toppings == bump_toppings {
+                            p = p + bump_d.into();
+                            break;
+                        }
+                    }
+                }
+
                 // Move move along the belt
                 if let Some(belt) = self.belts[p.index(global.width)] {
                     p = p + belt.into();
@@ -650,10 +704,10 @@ Max waiting time: {max_waiting_time}
                 }
 
                 // Error on loops
-                if visited[p.index(global.width)] {
+                if visited[toppings.bits][p.index(global.width)] {
                     return Err(format!("Loop detected at {p:?}"));
                 } else {
-                    visited[p.index(global.width)] = true;
+                    visited[toppings.bits][p.index(global.width)] = true;
                 }
             }
 
@@ -736,91 +790,91 @@ impl State<Global, ()> for Local {
         if global.use_tickwise {
             self.simulate_tickwise(global).is_ok()
         } else {
-        let donuts = match self.simulate(global) {
-            Ok(donuts) => donuts,
-            Err(e) => {
-                tracing::debug!("Simulation failed: {e}");
-                return false;
-            }
-        };
-        tracing::debug!("Simulation result: {donuts:?}");
-
-        let target_points = global
-            .entities
-            .iter()
-            .enumerate()
-            .filter_map(|(index, entity)| {
-                if let Some(Entity {
-                    kind: EntityKind::Target(_),
-                    ..
-                }) = entity
-                {
-                    Some(Point {
-                        x: index as isize % global.width,
-                        y: index as isize / global.width,
-                    })
-                } else {
-                    None
+            let donuts = match self.simulate(global) {
+                Ok(donuts) => donuts,
+                Err(e) => {
+                    tracing::debug!("Simulation failed: {e}");
+                    return false;
                 }
-            })
-            .collect::<Vec<_>>();
+            };
+            tracing::debug!("Simulation result: {donuts:?}");
 
-        // Each current donut must be either on a target or be able to reach one
-        tracing::debug!("Checking reachability");
-        for (donut_p, toppings) in donuts.iter() {
-            tracing::debug!("Checking donut at {donut_p:?} with toppings {toppings:?}");
-            if !target_points
+            let target_points = global
+                .entities
                 .iter()
-                .any(|target_p| self.is_reachable(global, *donut_p, *target_p))
-            {
-                return false;
-            }
-        }
+                .enumerate()
+                .filter_map(|(index, entity)| {
+                    if let Some(Entity {
+                        kind: EntityKind::Target(_),
+                        ..
+                    }) = entity
+                    {
+                        Some(Point {
+                            x: index as isize % global.width,
+                            y: index as isize / global.width,
+                        })
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<_>>();
 
-        // We cannot have an over filled simulation
-        // For example, if we need 1 plain donut, we cannot have frosting on all the donuts
-        let mut donut_types = donuts
-            .into_iter()
-            .map(|(_, toppings)| Some(toppings))
-            .collect::<Vec<_>>();
-        donut_types.sort();
-
-        let mut target_donuts = global
-            .entities
-            .iter()
-            .filter_map(|e| match e {
-                Some(Entity {
-                    kind: EntityKind::Target(toppings),
-                    ..
-                }) => Some(*toppings),
-                _ => None,
-            })
-            .collect::<Vec<_>>();
-        target_donuts.sort();
-
-        // We can't do this comparison if we have any 'any' targets
-        if target_donuts.iter().all(|t| t.is_some()) {
-            // This comparison also doesn't work if we have fewer targets than dummies (world 4: merge)
-            if donut_types.len() == target_donuts.len() {
-                // Because they're sorted, this means have at least one donut with too many toppings
-                if donut_types > target_donuts {
-                    tracing::debug!(
-                        "Not possible. Got {donut_types:?} but needed {target_donuts:?}"
-                    );
+            // Each current donut must be either on a target or be able to reach one
+            tracing::debug!("Checking reachability");
+            for (donut_p, toppings) in donuts.iter() {
+                tracing::debug!("Checking donut at {donut_p:?} with toppings {toppings:?}");
+                if !target_points
+                    .iter()
+                    .any(|target_p| self.is_reachable(global, *donut_p, *target_p))
+                {
                     return false;
                 }
             }
-        }
 
-        // But if we have a target in the globals, we must (also?) match that
-        if let Some(target_donuts) = &global.targets {
-            if &donut_types > target_donuts {
-                tracing::debug!("Not possible against global types. Got {donut_types:?} but needed {target_donuts:?}");
-                return false;
+            // We cannot have an over filled simulation
+            // For example, if we need 1 plain donut, we cannot have frosting on all the donuts
+            let mut donut_types = donuts
+                .into_iter()
+                .map(|(_, toppings)| Some(toppings))
+                .collect::<Vec<_>>();
+            donut_types.sort();
+
+            let mut target_donuts = global
+                .entities
+                .iter()
+                .filter_map(|e| match e {
+                    Some(Entity {
+                        kind: EntityKind::Target(toppings),
+                        ..
+                    }) => Some(*toppings),
+                    _ => None,
+                })
+                .collect::<Vec<_>>();
+            target_donuts.sort();
+
+            // We can't do this comparison if we have any 'any' targets
+            if target_donuts.iter().all(|t| t.is_some()) {
+                // This comparison also doesn't work if we have fewer targets than dummies (world 4: merge)
+                if donut_types.len() == target_donuts.len() {
+                    // Because they're sorted, this means have at least one donut with too many toppings
+                    if donut_types > target_donuts {
+                        tracing::debug!(
+                            "Not possible. Got {donut_types:?} but needed {target_donuts:?}"
+                        );
+                        return false;
+                    }
+                }
             }
-        }
 
-        true
+            // But if we have a target in the globals, we must (also?) match that
+            if let Some(target_donuts) = &global.targets {
+                if &donut_types > target_donuts {
+                    tracing::debug!("Not possible against global types. Got {donut_types:?} but needed {target_donuts:?}");
+                    return false;
+                }
+            }
+
+            true
         }
     }
 
@@ -906,88 +960,47 @@ impl State<Global, ()> for Local {
             // We passed all conditions, we're SOLVED!
             true
         } else {
-        // Each target must have a belt or splitter pointing at it
-        for x in 0..global.width {
-            for y in 0..global.height {
-                let p = Point { x, y };
+            // Simulate the current state
+            tracing::debug!("Running simulation");
+            tracing::debug!("\n{}", self.stringify(global));
+            let donuts = match self.simulate(global) {
+                Ok(donuts) => donuts,
+                Err(e) => {
+                    tracing::debug!("Simulation failed: {e}");
+                    return false;
+                }
+            };
+            tracing::debug!("Simulation result: {donuts:?}");
 
-                if let Some(Entity {
-                    kind: EntityKind::Target(_),
-                    facing,
-                }) = global.entities[p.index(global.width)]
-                {
-                    let p2 = p - facing.into();
-                    if let Some(belt_facing) = self.belts[p2.index(global.width)] {
-                        if facing != belt_facing {
-                            tracing::debug!("At a target but facing the wrong way");
-                            return false;
-                        }
-                    } else {
-                        match global.entities[p2.index(global.width)] {
-                            Some(Entity {
-                                kind: EntityKind::Splitter,
-                                facing: splitter_facing,
-                            }) => {
-                                if facing != splitter_facing.turn_left()
-                                    && facing != splitter_facing.turn_right()
-                                {
-                                    tracing::debug!(
-                                        "At a target but facing a splitter the wrong way"
-                                    );
-                                    return false;
-                                }
-                            }
-                            _ => {
-                                tracing::debug!("At a target but not facing a belt or splitter");
-                                return false;
-                            }
-                        }
+            // Each donut must end at a matching target
+            // A non-target accepts any donut
+            for (donuts_p, toppings) in donuts.iter() {
+                tracing::debug!("Checking donut at {donuts_p:?} with toppings {toppings:?}");
+                match global.entities[donuts_p.index(global.width)] {
+                    Some(Entity {
+                        kind: EntityKind::Target(target_toppings),
+                        ..
+                    }) if target_toppings.is_none() || *toppings == target_toppings.unwrap() => {}
+                    _ => {
+                        tracing::debug!("Invalid solution, donut at {donuts_p:?} with toppings {toppings:?} isn't at a matching target");
+                        return false;
                     }
                 }
             }
-        }
 
-        // Simulate the current state
-        tracing::debug!("Running simulation");
-        tracing::debug!("\n{}", self.stringify(global));
-        let donuts = match self.simulate(global) {
-            Ok(donuts) => donuts,
-            Err(e) => {
-                tracing::debug!("Simulation failed: {e}");
-                return false;
-            }
-        };
-        tracing::debug!("Simulation result: {donuts:?}");
+            // If we have a toppings array, match that as well/instead
+            // The check above already checks that they're all at targets, this just checks types
+            if let Some(target_donuts) = &global.targets {
+                let mut donut_types = donuts.iter().map(|(_, t)| Some(*t)).collect::<Vec<_>>();
+                donut_types.sort();
 
-        // Each donut must end at a matching target
-        // A non-target accepts any donut
-        for (donuts_p, toppings) in donuts.iter() {
-            tracing::debug!("Checking donut at {donuts_p:?} with toppings {toppings:?}");
-            match global.entities[donuts_p.index(global.width)] {
-                Some(Entity {
-                    kind: EntityKind::Target(target_toppings),
-                    ..
-                }) if target_toppings.is_none() || *toppings == target_toppings.unwrap() => {}
-                _ => {
-                    tracing::debug!("Invalid solution, donut at {donuts_p:?} with toppings {toppings:?} isn't at a matching target");
+                if &donut_types != target_donuts {
+                    tracing::debug!("Invalid solution, types don't match. Got {donut_types:?} but needed {target_donuts:?}");
                     return false;
                 }
             }
-        }
 
-        // If we have a toppings array, match that as well/instead
-        // The check above already checks that they're all at targets, this just checks types
-        if let Some(target_donuts) = &global.targets {
-            let mut donut_types = donuts.iter().map(|(_, t)| Some(*t)).collect::<Vec<_>>();
-            donut_types.sort();
-
-            if &donut_types != target_donuts {
-                tracing::debug!("Invalid solution, types don't match. Got {donut_types:?} but needed {target_donuts:?}");
-                return false;
-            }
-        }
-
-        true
+            true
         }
     }
 
@@ -1176,6 +1189,12 @@ impl State<Global, ()> for Local {
                             Direction::Right => '╠',
                         },
                         EntityKind::Splitter => 'X',
+                        EntityKind::Bumper(_) => match entity.facing {
+                            Direction::Up => '┴',
+                            Direction::Down => '┬',
+                            Direction::Left => '┤',
+                            Direction::Right => '├',
+                        },
                     };
                 }
 

@@ -1,5 +1,5 @@
-:comment Requires per tick timing simulation
-:comment Basically, that there's a 1 tick offset so the splitter just works
+:tickwise
+:comment There's a 1 tick offset so the splitter just works
 .   .   +>  .   .   .
 .   .   .   +<  -^1 .
 .   .   .   .   x>  .

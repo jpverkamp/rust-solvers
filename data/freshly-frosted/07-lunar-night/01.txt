@@ -1,0 +1,5 @@
+:comment Tickwise doesn't currently work because the loop is full
+1>  .   .   .
++>  .   2<  .
+b>7 .   ->7 .
+4>  .   .   .
