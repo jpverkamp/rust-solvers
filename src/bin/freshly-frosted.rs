@@ -1,5 +1,5 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, HashSet},
     io::Read,
     sync::{LazyLock, Mutex},
 };
@@ -101,6 +101,7 @@ struct Global {
     entities: Vec<Option<Entity>>,
     targets: Option<Vec<Option<Toppings>>>,
     initial_belts: Vec<Option<Direction>>,
+    use_tickwise: bool,
 }
 
 impl Global {
@@ -117,6 +118,7 @@ impl From<&str> for Global {
         let mut entities = vec![];
         let mut initial_belts = vec![];
         let mut targets = None;
+        let mut use_tickwise = false;
 
         let mut lines = input.lines().peekable();
         while lines.peek().is_some_and(|line| line.starts_with(':')) {
@@ -137,6 +139,8 @@ impl From<&str> for Global {
                 );
             } else if flag.starts_with(":comment") {
                 // Not stored, just do nothing   
+            } else if flag.starts_with(":tickwise") {
+                use_tickwise = true;
             } else {
                 panic!("Invalid/unknown flag: {flag}");
             }
@@ -177,6 +181,7 @@ impl From<&str> for Global {
             entities,
             initial_belts,
             targets,
+            use_tickwise,
         }
     }
 }
@@ -219,6 +224,15 @@ impl Global {
 static SIMULATE_CACHE: LazyLock<Mutex<HashMap<Local, Vec<(Point, Toppings)>>>> =
     LazyLock::new(|| Mutex::new(HashMap::new()));
 
+static SIMULATE_TICKWISE_CACHE: LazyLock<Mutex<HashMap<Local, SimulateTickwiseResult>>> =
+    LazyLock::new(|| Mutex::new(HashMap::new()));
+
+#[allow(dead_code)]
+#[derive(Debug, Clone)]
+struct SimulateTickwiseResult {
+    deliveries: HashMap<Point, HashSet<(Point, Toppings)>>,
+}
+
 impl Local {
     fn is_empty(&self, global: &Global, p: Point) -> bool {
         if !global.in_bounds(p) {
@@ -229,6 +243,288 @@ impl Local {
             && global.entities[p.index(global.width)].is_none()
     }
 
+    #[allow(dead_code)]
+    fn simulate_tickwise(&self, global: &Global) -> Result<SimulateTickwiseResult, String> {
+        // Check the cache first
+        if let Some(cached) = SIMULATE_TICKWISE_CACHE.lock().unwrap().get(self) {
+            return Ok(cached.clone());
+        }
+
+        let vec_size = global.width as usize * global.height as usize;
+
+        #[derive(Debug, Clone, Default, PartialEq, Eq, Hash)]
+        struct TileState {
+            toppings: Option<Toppings>,
+            source: Option<Point>,
+            updated: bool,
+            waiting_time: usize,
+            split_next_right: bool,
+        }
+
+        let mut state = vec![TileState::default(); vec_size];
+        let mut deliveries = HashMap::new();
+        let mut states_seen = HashSet::new();
+
+        macro_rules! state_at {
+            ($p:expr) => {
+                state[$p.index(global.width)]
+            };
+        }
+
+        // We have a very expensive tracing option; so don't calculate it if we're not going to print it
+        let tracing_enabled = std::env::var("FRESHLY_FROSTED_TRACE").is_ok();
+
+        // Advance the simulation one tick
+        'tick: loop {
+            state.iter_mut().for_each(|s| s.updated = false);
+
+            // Debugging ticking
+            if tracing_enabled {
+                let mut map = self.stringify(global).chars().collect::<Vec<_>>();
+
+                for y in 0..global.height {
+                    for x in 0..global.width {
+                        let p = Point { x, y };
+                        if let Some(toppings) = state_at!(p).toppings {
+                            map[p.index(global.width + 1)] =
+                                toppings.bits.to_string().chars().next().unwrap();
+                        }
+                    }
+                }
+
+                let map = map.iter().collect::<String>();
+                let cache_size = states_seen.len();
+                let max_waiting_time = state.iter().map(|s| s.waiting_time).max().unwrap_or(0);
+
+                tracing::debug!(
+                    "\
+=== Starting tick ===
+Deliveries: {deliveries:?}
+States seen: {cache_size}
+Max waiting time: {max_waiting_time}
+
+{map}
+",
+                );
+            }
+
+            // Cache which exact states we've seen; break once we see the same more than once
+            // TODO: This is expensive..
+
+            // TODO: I don't think we should be able to get away with just caching the toppings, but it's working so far
+            if !states_seen.insert(state.clone()) {
+                tracing::debug!("Loop detected, breaking");
+                tracing::debug!("Deliveries are: {deliveries:#?}");
+                break 'tick;
+            }
+
+            // Look for a space that can be updated
+            // This is always a destination space, find a donut that can be put there
+            'find_update: loop {
+                for x in 0..global.width {
+                    for y in 0..global.height {
+                        let p = Point { x, y };
+
+                        // Only update each point once
+                        if state_at!(p).updated {
+                            continue;
+                        }
+
+                        // If the spot is occupied, skip it
+                        if state_at!(p).toppings.is_some() {
+                            continue;
+                        }
+
+                        // Find the potential donuts that can move into this space
+                        let mut potential_donuts = vec![];
+                        for d in Direction::all() {
+                            let p_from = p - d.into();
+                            if !global.in_bounds(p_from) {
+                                continue;
+                            }
+
+                            // TODO: We can only move into a target or splitter the correct way
+
+                            // A belt pointing at us, containing a donut, and didn't just get that donut
+                            if let Some(belt) = self.belts[p_from.index(global.width)] {
+                                if belt == d && !state_at!(p_from).updated {
+                                    if let Some(toppings) = state_at!(p_from).toppings {
+                                        potential_donuts.push((p_from, toppings, d));
+                                    }
+                                }
+                                continue;
+                            }
+
+                            // A source pointing at us
+                            if let Some(Entity {
+                                kind: EntityKind::Source,
+                                facing,
+                            }) = global.entities[p_from.index(global.width)]
+                            {
+                                if facing == d {
+                                    potential_donuts.push((p_from, Toppings::none(), d));
+                                }
+                                continue;
+                            }
+
+                            // A splitter pointing at us + on the correct cycle
+                            if let Some(Entity {
+                                kind: EntityKind::Splitter,
+                                facing,
+                            }) = global.entities[p_from.index(global.width)]
+                            {
+                                let next_left = !state_at!(p_from).split_next_right;
+
+                                if next_left && facing.turn_left() == d
+                                    || !next_left && facing.turn_right() == d
+                                {
+                                    if let Some(toppings) = state_at!(p_from).toppings {
+                                        potential_donuts.push((p_from, toppings, d));
+                                    }
+                                }
+
+                                continue;
+                            }
+
+                            // TODO: Bumpers
+                        }
+
+                        // If we have no potential donuts, try the next position
+                        // TODO: Is this correct to treat it as updated?
+                        if potential_donuts.is_empty() {
+                            state_at!(p).updated = true;
+                            continue;
+                        }
+
+                        // If we have at least one donut, make sure we're moving it onto something valid
+                        if let Some(entity) = global.entities[p.index(global.width)] {
+                            match entity.kind {
+                                // Can never be moved onto
+                                EntityKind::Block
+                                | EntityKind::Source
+                                | EntityKind::Topper(_)
+                                | EntityKind::Bumper(_) => {
+                                    return Err(format!(
+                                        "Attempted to move donut onto a {:?} at {:?}",
+                                        entity.kind, p
+                                    ))
+                                }
+                                // Can only be moved onto matching the facing
+                                EntityKind::Target(_) | EntityKind::Splitter => {
+                                    if entity.facing != potential_donuts[0].2 {
+                                        return Err(format!("Attempted to move donut onto a {:?} at {:?} facing the wrong way (expected {:?}, got {:?})", entity.kind, p, entity.facing, potential_donuts[0].2));
+                                    }
+                                }
+                            };
+                        }
+
+                        // If we have multiple potential donuts, choose the one waiting longest
+                        // TODO: What if there is a tie?
+                        potential_donuts.sort_by(|(p1, _, _), (p2, _, _)| {
+                            state_at!(p2).waiting_time.cmp(&state_at!(p1).waiting_time)
+                        });
+
+                        // Potential donut 0 moves here and resets wait time
+                        state_at!(p).toppings = Some(potential_donuts[0].1);
+                        state_at!(potential_donuts[0].0).toppings = None;
+                        state_at!(potential_donuts[0].0).waiting_time = 0;
+
+                        // Update the source as well, if the previous had a source, that's what we get, otherwise it's the source point
+                        if let Some(source) = state_at!(potential_donuts[0].0).source {
+                            state_at!(p).source = Some(source);
+                        } else {
+                            state_at!(p).source = Some(potential_donuts[0].0);
+                        }
+
+                        // If potential 0 was a splitter, toggle it
+                        if let Some(Entity {
+                            kind: EntityKind::Splitter,
+                            ..
+                        }) = global.entities[potential_donuts[0].0.index(global.width)]
+                        {
+                            state_at!(potential_donuts[0].0).split_next_right =
+                                !state_at!(potential_donuts[0].0).split_next_right;
+                        }
+
+                        // Any others increment their wait time
+                        potential_donuts.iter().skip(1).for_each(|(p_from, _, _)| {
+                            state_at!(p_from).waiting_time += 1;
+                        });
+
+                        // If there is a valid topper pointing at us, apply it
+                        for top_d in Direction::all() {
+                            let p2 = p - top_d.into();
+                            if !global.in_bounds(p2) {
+                                continue;
+                            }
+
+                            if let Some(Entity {
+                                kind: EntityKind::Topper(new_toppings),
+                                facing,
+                            }) = global.entities[p2.index(global.width)]
+                            {
+                                if top_d == facing {
+                                    // Only add the toppings if we have all previous stoppings, otherwise ignore it
+                                    assert!(new_toppings.bits().count_ones() == 1);
+                                    let must_have = Toppings::from(new_toppings.bits() - 1);
+                                    if state_at!(p).toppings.unwrap() & must_have != must_have {
+                                        continue;
+                                    }
+
+                                    // Add the new topping!
+                                    state_at!(p).toppings =
+                                        Some(state_at!(p).toppings.unwrap() | new_toppings);
+                                }
+                            }
+                        }
+
+                        // If we are now sitting on a target, either deliver the donut or break
+                        if let Some(Entity {
+                            kind: EntityKind::Target(target_toppings),
+                            ..
+                        }) = global.entities[p.index(global.width)]
+                        {
+                            // Always remove if there's no target
+                            let toppings = state_at!(p).toppings.unwrap();
+                            let valid = match target_toppings {
+                                None => true,
+                                Some(target_toppings) => toppings == target_toppings,
+                            };
+
+                            if valid {
+                                state_at!(p).toppings = None;
+                                deliveries
+                                    .entry(p)
+                                    .or_insert_with(HashSet::new)
+                                    .insert((state_at!(p).source.unwrap(), toppings));
+                            } else {
+                                return Err(format!("Attempted to deliver {toppings:?} to {p:?} but needed {target_toppings:?}"));
+                            }
+                        }
+
+                        // If we made it this far, there was an update to this space, log it and continue
+                        state_at!(p).updated = true;
+                        continue 'find_update;
+                    }
+                }
+
+                // If we make it here without continuing, there are no more updates
+                break 'find_update;
+            }
+        }
+
+        let result = SimulateTickwiseResult { deliveries };
+
+        // Cache the result
+        SIMULATE_TICKWISE_CACHE
+            .lock()
+            .unwrap()
+            .insert(self.clone(), result.clone());
+
+        Ok(result)
+    }
+
+    #[allow(dead_code)]
     fn simulate(&self, global: &Global) -> Result<Vec<(Point, Toppings)>, String> {
         // Check the cache first
         if let Some(cached) = SIMULATE_CACHE.lock().unwrap().get(self) {
@@ -251,7 +547,7 @@ impl Local {
                 // Start a source here
                 if let Some(Entity {
                     kind: EntityKind::Source,
-                    facing
+                    facing,
                 }) = global.entities[index]
                 {
                     donuts.push((p, toppings, facing, visited.clone()));
@@ -260,13 +556,17 @@ impl Local {
         }
 
         // Now, until we've simulated all of the donuts, simulate each
-        'each_donut: while let Some((mut p, mut toppings, initial_facing, mut visited)) = donuts.pop() {
+        'each_donut: while let Some((mut p, mut toppings, initial_facing, mut visited)) =
+            donuts.pop()
+        {
             let span = tracing::debug_span!("Simulating donut", p = ?p, t = ?toppings, f = ?initial_facing);
             let _enter = span.enter();
 
             p = p + initial_facing.into();
             if !global.in_bounds(p) {
-                return Err(format!("Donut started at {p:?} but immediately went out of bounds"));
+                return Err(format!(
+                    "Donut started at {p:?} but immediately went out of bounds"
+                ));
             }
             visited[p.index(global.width)] = true;
 
@@ -433,7 +733,9 @@ impl Local {
 impl State<Global, ()> for Local {
     #[tracing::instrument(skip(self, global), fields(belts = %self), ret)]
     fn is_valid(&self, global: &Global) -> bool {
-        // This is expensive to run on each state, but it also means that we can prune a *lot* of invalid states
+        if global.use_tickwise {
+            self.simulate_tickwise(global).is_ok()
+        } else {
         let donuts = match self.simulate(global) {
             Ok(donuts) => donuts,
             Err(e) => {
@@ -519,10 +821,91 @@ impl State<Global, ()> for Local {
         }
 
         true
+        }
     }
 
     #[tracing::instrument(skip(self, global), fields(belts = %self), ret)]
     fn is_solved(&self, global: &Global) -> bool {
+        if global.use_tickwise {
+            let simulation_result = match self.simulate_tickwise(global) {
+                Ok(simulation_result) => simulation_result,
+                Err(e) => {
+                    tracing::debug!("Simulation failed: {e}");
+                    return false;
+                }
+            };
+            tracing::debug!("Simulation result: {simulation_result:#?}");
+
+            // All sources must have been delivered from
+            let all_delivered_from = simulation_result
+                .deliveries
+                .values()
+                .flatten()
+                .map(|(p, _)| *p)
+                .collect::<HashSet<_>>();
+
+            for (index, entity) in global.entities.iter().enumerate() {
+                if let Some(Entity {
+                    kind: EntityKind::Source,
+                    ..
+                }) = entity
+                {
+                    let p = Point {
+                        x: index as isize % global.width,
+                        y: index as isize / global.width,
+                    };
+
+                    if !all_delivered_from.contains(&p) {
+                        tracing::debug!("Source at {index} was not delivered from");
+                        return false;
+                    }
+                }
+            }
+
+            // All targets must have been delivered to
+            for (index, entity) in global.entities.iter().enumerate() {
+                if let Some(Entity {
+                    kind: EntityKind::Target(_),
+                    ..
+                }) = entity
+                {
+                    let p = Point {
+                        x: index as isize % global.width,
+                        y: index as isize / global.width,
+                    };
+
+                    if !simulation_result.deliveries.contains_key(&p) {
+                        tracing::debug!("Target at {index} was not delivered to");
+                        return false;
+                    }
+                }
+            }
+
+            // If a global target list is set, check that the donuts match
+            if let Some(global_targets) = &global.targets {
+                // For this check, a single source delivering to multiple targets counts as a single donut
+                // That's why we HashSet first
+                let mut all_delivered_donuts = simulation_result
+                    .deliveries
+                    .values()
+                    .flatten()
+                    .map(|pt| pt)
+                    .collect::<HashSet<_>>()
+                    .into_iter()
+                    .map(|(_, t)| Some(*t))
+                    .collect::<Vec<_>>();
+
+                all_delivered_donuts.sort();
+
+                if &all_delivered_donuts != global_targets {
+                    tracing::debug!("Invalid solution, types don't match. Got {all_delivered_donuts:?} but needed {global_targets:?}");
+                    return false;
+                }
+            }
+
+            // We passed all conditions, we're SOLVED!
+            true
+        } else {
         // Each target must have a belt or splitter pointing at it
         for x in 0..global.width {
             for y in 0..global.height {
@@ -605,6 +988,7 @@ impl State<Global, ()> for Local {
         }
 
         true
+        }
     }
 
     #[tracing::instrument(skip(self, global), fields(belts = %self))]
@@ -729,6 +1113,8 @@ impl State<Global, ()> for Local {
     }
 
     fn heuristic(&self, global: &Global) -> i64 {
+        // TODO: This uses the non-tickwise solver in both modes, is this okay?
+
         // For each donut, the distance to the nearest reachable target
         let donuts = match self.simulate(global) {
             Ok(donuts) => donuts,
@@ -840,7 +1226,7 @@ fn main() {
     let mut solver = Solver::new(global.clone(), local.clone());
 
     while let Some(state) = solver.next() {
-        if solver.states_checked() % 100_000 == 0 {
+        if solver.states_checked() % 10_000 == 0 {
             log::debug!("\n{}", state.stringify(&global));
             log::debug!("{solver}");
         }
