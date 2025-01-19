@@ -127,34 +127,37 @@ impl From<&str> for Global {
         let mut targets = None;
         let mut use_tickwise = false;
 
-        let mut lines = input.lines().peekable();
-        while lines.peek().is_some_and(|line| line.starts_with(':')) {
-            let flag = lines.next().unwrap();
-
-            if flag.starts_with(":target") {
-                targets = Some(
-                    flag.split_whitespace()
-                        .skip(1)
-                        .map(|t| {
-                            Some(
-                                t.parse::<usize>()
-                                    .expect("Invalid target, must be numeric")
-                                    .into(),
-                            )
-                        })
-                        .collect::<Vec<_>>(),
-                );
-            } else if flag.starts_with(":comment") {
-                // Not stored, just do nothing   
-            } else if flag.starts_with(":tickwise") {
-                use_tickwise = true;
-            } else {
-                panic!("Invalid/unknown flag: {flag}");
-            }
-        }
-
-        for line in lines {
+        for line in input.lines() {
             let mut line_width = 0;
+            let line = line.trim();
+
+            if line.is_empty() {
+                continue;
+            }
+
+            if line.starts_with(':') {
+                if line.starts_with(":target") {
+                    targets = Some(
+                        line.split_whitespace()
+                            .skip(1)
+                            .map(|t| {
+                                Some(
+                                    t.parse::<usize>()
+                                        .expect("Invalid target, must be numeric")
+                                        .into(),
+                                )
+                            })
+                            .collect::<Vec<_>>(),
+                    );
+                } else if line.starts_with(":comment") {
+                    // Not stored, just do nothing
+                } else if line.starts_with(":tickwise") {
+                    use_tickwise = true;
+                } else {
+                    panic!("Invalid/unknown flag: {line}");
+                }
+                continue;
+            }
 
             for part in line.split_whitespace() {
                 let mut belt = None;
@@ -238,6 +241,7 @@ static SIMULATE_TICKWISE_CACHE: LazyLock<Mutex<HashMap<Local, SimulateTickwiseRe
 #[derive(Debug, Clone)]
 struct SimulateTickwiseResult {
     deliveries: HashMap<Point, HashSet<(Point, Toppings)>>,
+    extras: Vec<(Point, Toppings)>,
 }
 
 impl Local {
@@ -250,6 +254,7 @@ impl Local {
             && global.entities[p.index(global.width)].is_none()
     }
 
+    #[tracing::instrument(skip(self, global), ret)]
     fn simulate_tickwise(&self, global: &Global) -> Result<SimulateTickwiseResult, String> {
         // Check the cache first
         if let Some(cached) = SIMULATE_TICKWISE_CACHE.lock().unwrap().get(self) {
@@ -279,6 +284,7 @@ impl Local {
 
         // We have a very expensive tracing option; so don't calculate it if we're not going to print it
         let tracing_enabled = std::env::var("FRESHLY_FROSTED_TRACE").is_ok();
+        let step_tracing_eabled = std::env::var("FRESHLY_FROSTED_STEP_TRACE").is_ok();
 
         // Advance the simulation one tick
         'tick: loop {
@@ -298,12 +304,13 @@ impl Local {
                     }
                 }
 
-                let map = map.iter().collect::<String>();
-                let cache_size = states_seen.len();
-                let max_waiting_time = state.iter().map(|s| s.waiting_time).max().unwrap_or(0);
+                if step_tracing_eabled {
+                    let map = map.iter().collect::<String>();
+                    let cache_size = states_seen.len();
+                    let max_waiting_time = state.iter().map(|s| s.waiting_time).max().unwrap_or(0);
 
-                tracing::debug!(
-                    "\
+                    tracing::debug!(
+                        "\
 === Starting tick ===
 Deliveries: {deliveries:?}
 States seen: {cache_size}
@@ -311,7 +318,8 @@ Max waiting time: {max_waiting_time}
 
 {map}
 ",
-                );
+                    );
+                }
             }
 
             // Cache which exact states we've seen; break once we see the same more than once
@@ -320,7 +328,7 @@ Max waiting time: {max_waiting_time}
             // TODO: I don't think we should be able to get away with just caching the toppings, but it's working so far
             if !states_seen.insert(state.clone()) {
                 tracing::debug!("Loop detected, breaking");
-                tracing::debug!("Deliveries are: {deliveries:#?}");
+                tracing::debug!("Deliveries are: {deliveries:?}");
                 break 'tick;
             }
 
@@ -418,11 +426,11 @@ Max waiting time: {max_waiting_time}
                             continue;
                         }
 
-                        tracing::debug!(
-                            "Found potential donuts at {p:?}: {potential_donuts:?}",
-                            p = p,
-                            potential_donuts = potential_donuts
-                        );
+                        // tracing::debug!(
+                        //     "Found potential donuts at {p:?}: {potential_donuts:?}",
+                        //     p = p,
+                        //     potential_donuts = potential_donuts
+                        // );
 
                         // If we have at least one donut, make sure we're moving it onto something valid
                         if let Some(entity) = global.entities[p.index(global.width)] {
@@ -541,7 +549,25 @@ Max waiting time: {max_waiting_time}
             }
         }
 
-        let result = SimulateTickwiseResult { deliveries };
+        // At the end, extra donuts are any on an empty space
+        let extras = state
+            .iter()
+            .enumerate()
+            .filter_map(|(index, s)| {
+                let p = Point {
+                    x: index as isize % global.width,
+                    y: index as isize / global.width,
+                };
+
+                if self.is_empty(global, p) && s.toppings.is_some() {
+                    Some((p, s.toppings.unwrap()))
+                } else {
+                    None
+                }
+            })
+            .collect();
+
+        let result = SimulateTickwiseResult { deliveries, extras };
 
         // Cache the result
         SIMULATE_TICKWISE_CACHE
@@ -552,6 +578,7 @@ Max waiting time: {max_waiting_time}
         Ok(result)
     }
 
+    #[tracing::instrument(skip(self, global), ret)]
     fn simulate(&self, global: &Global) -> Result<Vec<(Point, Toppings)>, String> {
         // Check the cache first
         if let Some(cached) = SIMULATE_CACHE.lock().unwrap().get(self) {
@@ -598,7 +625,7 @@ Max waiting time: {max_waiting_time}
                     "Donut started at {p:?} but immediately went out of bounds"
                 ));
             }
-            
+
             visited[toppings.bits][p.index(global.width)] = true;
 
             while !matches!(
@@ -611,24 +638,6 @@ Max waiting time: {max_waiting_time}
                 if !global.in_bounds(p) {
                     return Err(format!("Attempted to move out of bounds at {p:?}"));
                 }
-
-                // tracing::debug!("Step {p:?}, visited: {}",
-                //     visited
-                //         .iter()
-                //         .enumerate()
-                //         .flat_map(|(i, v)|
-                //             if *v {
-                //                 Some(format!("({x}, {y})",
-                //                     x = i as isize % global.width,
-                //                     y = i as isize / global.width,
-                //                 ))
-                //             } else {
-                //                 None
-                //             }
-                //         )
-                //         .collect::<Vec<_>>()
-                //         .join(" ")
-                //     );
 
                 // If there is a topper adjacent to us, apply it's topping
                 for top_d in Direction::all() {
@@ -686,8 +695,8 @@ Max waiting time: {max_waiting_time}
                         facing,
                     }) = global.entities[p2.index(global.width)]
                     {
-                        tracing::debug!("Bumper at {p2:?} with facing {bump_d:?} and toppings {bump_toppings:?}");
-                        tracing::debug!("Donut at {p:?} with toppings {toppings:?}");
+                        // tracing::debug!("Bumper at {p2:?} with facing {bump_d:?} and toppings {bump_toppings:?}");
+                        // tracing::debug!("Donut at {p:?} with toppings {toppings:?}");
 
                         if bump_d == facing && toppings == bump_toppings {
                             p = p + bump_d.into();
@@ -699,11 +708,28 @@ Max waiting time: {max_waiting_time}
                 // Move move along the belt
                 if let Some(belt) = self.belts[p.index(global.width)] {
                     p = p + belt.into();
+
+                    // Some entities cannot be run into at all
+                    // Some require that you are moving the right direction
+                    if let Some(entity) = global.entities[p.index(global.width)] {
+                        match entity.kind {
+                            EntityKind::Block
+                            | EntityKind::Source
+                            | EntityKind::Topper(_)
+                            | EntityKind::Bumper(_) => {
+                                return Err(format!("Ran into a {:?} at {p:?}", entity.kind))
+                            }
+                            EntityKind::Target(_) | EntityKind::Splitter => {
+                                if entity.facing != belt {
+                                    return Err(format!("Ran into a {:?} at {p:?} facing the wrong way (expected {:?}, got {belt:?})", entity.kind, entity.facing));
+                                }
+                            }
+                        }
+                    }
                 } else {
                     break; // Ran off the end of a belt
                 }
 
-                // Error on loops
                 if visited[toppings.bits][p.index(global.width)] {
                     return Err(format!("Loop detected at {p:?}"));
                 } else {
@@ -910,7 +936,7 @@ impl State<Global, ()> for Local {
                     };
 
                     if !all_delivered_from.contains(&p) {
-                        tracing::debug!("Source at {index} was not delivered from");
+                        tracing::debug!("Source at {p:?} was not delivered from");
                         return false;
                     }
                 }
@@ -929,7 +955,7 @@ impl State<Global, ()> for Local {
                     };
 
                     if !simulation_result.deliveries.contains_key(&p) {
-                        tracing::debug!("Target at {index} was not delivered to");
+                        tracing::debug!("Target at {p:?} was not delivered to");
                         return false;
                     }
                 }
@@ -1004,8 +1030,57 @@ impl State<Global, ()> for Local {
         }
     }
 
+    #[allow(unreachable_code)]
     #[tracing::instrument(skip(self, global), fields(belts = %self))]
     fn next_states(&self, global: &Global) -> Option<Vec<(i64, (), Local)>> {
+        let mut donuts = if global.use_tickwise {
+            match self.simulate_tickwise(global) {
+                Ok(tickwise_result) => tickwise_result.extras,
+                Err(e) => {
+                    tracing::debug!("Simulation failed: {e}");
+                    return None;
+                }
+            }
+        } else {
+            match self.simulate(global) {
+                Ok(donuts) => donuts,
+                Err(e) => {
+                    tracing::debug!("Simulation failed: {e}");
+                    return None;
+                }
+            }
+        };
+        donuts.sort();
+
+        // Find the first empty point
+        for (p, _) in donuts {
+            tracing::debug!("Checking for expansion at {p:?}");
+
+            if !self.is_empty(global, p) {
+                continue;
+            }
+
+            tracing::debug!("Expanding new_state at {p:?}");
+
+            return Some(
+                Direction::all()
+                    .iter()
+                    .flat_map(|&d| {
+                        if global.in_bounds(p + d.into()) {
+                            let mut new_state = self.clone();
+                            new_state.belts[p.index(global.width)] = Some(d);
+                            Some((1, (), new_state))
+                        } else {
+                            None
+                        }
+                    })
+                    .collect(),
+            );
+        }
+
+        return None;
+
+        // OLD VERSION:
         let mut next_states = vec![];
 
         // For each 'head', add a belt in each valid direction
@@ -1036,7 +1111,26 @@ impl State<Global, ()> for Local {
                     })
                 );
 
-                if !(is_belt || is_source || is_splitter) {
+                let mut two_bumper_facing = None;
+
+                for d in Direction::all() {
+                    let p2 = p - d.into();
+                    if !global.in_bounds(p2) {
+                        continue;
+                    }
+
+                    if let Some(Entity {
+                        kind: EntityKind::Bumper(_),
+                        facing,
+                    }) = global.entities[p2.index(global.width)]
+                    {
+                        if facing == d {
+                            two_bumper_facing = Some(d);
+                        }
+                    }
+                }
+
+                if !(is_belt || is_source || is_splitter || two_bumper_facing.is_some()) {
                     continue;
                 }
 
@@ -1058,6 +1152,8 @@ impl State<Global, ()> for Local {
                         // Both branches of the splitter are already filled in
                         continue;
                     }
+                } else if let Some(d) = two_bumper_facing {
+                    d
                 } else {
                     unreachable!()
                 };
@@ -1259,5 +1355,141 @@ fn main() {
     } else {
         println!("No solution found");
         std::process::exit(1);
+    }
+}
+
+#[cfg(test)]
+mod freshly_frosted_tests {
+    use super::*;
+    use Direction::{Down, Left, Right, Up};
+
+    macro_rules! test_next_states_inner {
+        ($name:ident, $source:expr, $expected_states:expr) => {
+            // Initial stringify
+            let global = Global::from($source);
+            let local = global.make_local();
+            let mut failures = vec![];
+
+            match local.next_states(&global) {
+                None => {
+                    failures.push(format!(
+                        "No next states found, simulation result:\n{:#?}\nTickwise result:\n{:#?}",
+                        local.simulate(&global),
+                        local.simulate_tickwise(&global)
+                    ))
+                },
+                Some(next_states) => {
+                    let expected_len = $expected_states
+                        .iter()
+                        .map(|(_, ds)| ds.len())
+                        .sum::<usize>();
+
+                    if next_states.len() != expected_len {
+                        let next_states_stringy = next_states
+                            .iter()
+                            .map(|(_, _, state)| state.stringify(&global))
+                            .collect::<Vec<_>>()
+                            .join("\n\n");
+
+                        failures.push(format!(
+                            "Expected {} state(s), got {}:\n{}",
+                            $expected_states.len(),
+                            next_states.len(),
+                            next_states_stringy
+                        ));
+                    }
+
+                    for ((x, y), ds) in $expected_states.iter() {
+                        let i = (y * global.width + x) as usize;
+                        for d in ds.iter() {
+                            if !next_states
+                                .iter()
+                                .any(|(_, _, state)| state.belts[i].is_some_and(|bd| bd == *d))
+                            {
+                                failures.push(format!(
+                                    "({x}, {y}) + {d:?} not found",
+                                    x = x,
+                                    y = y,
+                                    d = d
+                                ));
+                            }
+                        }
+                    }
+                }
+            }
+
+            if !failures.is_empty() {
+                panic!("{}", failures.join("\n===\n"));
+            }
+        };
+    }
+
+    macro_rules! test_next_states {
+        ($name:ident, $source:expr, $expected_states:expr) => {
+            paste::paste! {
+                #[test]
+                fn [<test_next_states_ $name>] () {
+                    test_next_states_inner!($name, $source, $expected_states);
+                }
+
+                #[test]
+                fn [<test_next_states_tickwise_ $name>] () {
+                    let source = format!(":tickwise\n{}", $source);
+                    test_next_states_inner!($name, source.as_str(), $expected_states);
+                }
+            }
+        };
+    }
+
+    test_next_states! {
+        source,
+        "
+        .   .   .
+        +>  .   .
+        .   .   .
+        ",
+        [
+            ((1, 1), [Up, Down, Left, Right]),
+        ]
+    }
+
+    test_next_states! {
+        single_belt,
+        "
+        .   .   .
+        .   .   .
+        +>  ^   .
+        .   .   .
+        ",
+        [
+            ((1, 1), [Up, Down, Left, Right]),
+        ]
+    }
+
+    test_next_states! {
+        splitter_left, // Note: Splitters should default left
+        "
+        .   .   .
+        .   .   .
+        +>  x>  .
+        .   .   .
+        ",
+        [
+            ((1, 1), [Up, Down, Left, Right]),
+        ]
+    }
+
+    test_next_states! {
+        splitter_right,
+        "
+        .   .   .
+        .   -^? .
+        +>  x>  .
+        .   .   .
+        .   .   .
+        ",
+        [
+            ((1, 3), [Up, Down, Left, Right]),
+        ]
     }
 }
