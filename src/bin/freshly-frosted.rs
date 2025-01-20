@@ -1157,8 +1157,8 @@ impl State<Global, ()> for Local {
 
             tracing::debug!("Expanding new_state at {p:?}");
 
-            return Some(
-                Direction::all()
+            // This is necessary in the (rare, only 6/8 so far) case that one expansion is invalid now but will become valid after another state is added
+            let maybe_next_states =                 Direction::all()
                     .iter()
                     .flat_map(|&d| {
                         if global.in_bounds(p + d.into()) {
@@ -1169,151 +1169,14 @@ impl State<Global, ()> for Local {
                             None
                         }
                     })
-                    .collect(),
-            );
-        }
+                    .collect::<Vec<_>>();
 
-        return None;
-
-        // OLD VERSION:
-        let mut next_states = vec![];
-
-        // For each 'head', add a belt in each valid direction
-        // A head is a source or end of a belt pointing at nothing
-        // A valid direction points at empty space or a goal
-        for x in 0..global.width {
-            for y in 0..global.height {
-                let p = Point { x, y };
-
-                let span = tracing::debug_span!("Point", p = ?p);
-                let _enter = span.enter();
-
-                // If this is not a head, skip it
-                // A head is a belt, source, or splitter
-                let is_belt = self.belts[p.index(global.width)].is_some();
-                let is_source = matches!(
-                    global.entities[p.index(global.width)],
-                    Some(Entity {
-                        kind: EntityKind::Source,
-                        ..
-                    })
-                );
-                let is_splitter = matches!(
-                    global.entities[p.index(global.width)],
-                    Some(Entity {
-                        kind: EntityKind::Splitter,
-                        ..
-                    })
-                );
-
-                let mut two_bumper_facing = None;
-
-                for d in Direction::all() {
-                    let p2 = p - d.into();
-                    if !global.in_bounds(p2) {
-                        continue;
-                    }
-
-                    if let Some(Entity {
-                        kind: EntityKind::Bumper(_),
-                        facing,
-                    }) = global.entities[p2.index(global.width)]
-                    {
-                        if facing == d {
-                            two_bumper_facing = Some(d);
-                        }
-                    }
-                }
-
-                if !(is_belt || is_source || is_splitter || two_bumper_facing.is_some()) {
-                    continue;
-                }
-
-                // p2 is the new belt, so this point must be currently empty
-                let facing = if is_belt {
-                    self.belts[p.index(global.width)].unwrap()
-                } else if is_source {
-                    global.entities[p.index(global.width)].unwrap().facing
-                } else if is_splitter {
-                    let splitter_facing = global.entities[p.index(global.width)].unwrap().facing;
-
-                    // If we would continue with turn left, return turn right as facing and check it below
-                    // If we wouldn't, return turn left and we'll pass that check below too
-                    if self.is_empty(global, p + splitter_facing.turn_left().into()) {
-                        splitter_facing.turn_left()
-                    } else if self.is_empty(global, p + splitter_facing.turn_right().into()) {
-                        splitter_facing.turn_right()
-                    } else {
-                        // Both branches of the splitter are already filled in
-                        continue;
-                    }
-                } else if let Some(d) = two_bumper_facing {
-                    d
-                } else {
-                    unreachable!()
-                };
-                let p2 = p + facing.into();
-
-                if !self.is_empty(global, p2) {
-                    continue;
-                }
-
-                // Now, for each direction from *that* point, we can potentially add a belt
-                for d2 in Direction::all() {
-                    // for d2 in [Direction::Right] {
-                    // We cannot go back the way we came
-                    // This wasn't a problem until world 4 allowed merging
-                    if d2 == facing.flip() {
-                        continue;
-                    }
-
-                    let p3 = p2 + d2.into();
-
-                    let span = tracing::debug_span!("Checking direction", d = ?d2);
-                    let _enter = span.enter();
-
-                    // The new point must be in bounds
-                    if !global.in_bounds(p3) {
-                        tracing::debug!("Skipping, out of bounds");
-                        continue;
-                    }
-
-                    // This belt can point to:
-                    // - Empty space
-                    // - Other belts (as of world 4: merging)
-                    // - Targets
-                    // - Splitters (as of world 6)
-                    match global.entities[p3.index(global.width)] {
-                        None => {}
-                        Some(Entity {
-                            kind: EntityKind::Target(_) | EntityKind::Splitter,
-                            facing,
-                        }) if facing == d2 => {}
-                        _ => {
-                            tracing::debug!("Skipping, directed to a non-valid space/entity");
-                            continue;
-                        }
-                    }
-
-                    // If we made it this far, this is a valid new state
-                    let mut new_state = self.clone();
-                    new_state.belts[p2.index(global.width)] = Some(d2);
-                    tracing::debug!("Valid new state: {}", &new_state);
-
-                    next_states.push((1, (), new_state));
-                }
-
-                // DEBUG: If we are here, we've expanded one head in x/y order
-                if !next_states.is_empty() {
-                    return Some(next_states);
-                }
+            if !maybe_next_states.is_empty() {
+                return Some(maybe_next_states);
             }
         }
 
-        if next_states.is_empty() {
-            return None;
-        }
-        Some(next_states)
+        None
     }
 
     fn heuristic(&self, global: &Global) -> i64 {
