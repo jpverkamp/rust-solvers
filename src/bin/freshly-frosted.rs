@@ -307,7 +307,8 @@ impl Local {
             // Debugging ticking
             if tracing_enabled {
                 let mut map = self.stringify(global).chars().collect::<Vec<_>>();
-                let mut waiting_time_map  = map.clone();
+                let mut waiting_time_map = map.clone();
+                let mut splitter_map = map.clone();
 
                 for y in 0..global.height {
                     for x in 0..global.width {
@@ -317,14 +318,42 @@ impl Local {
                                 toppings.bits.to_string().chars().next().unwrap();
                         }
 
-                        waiting_time_map[p.index(global.width + 1)] =
-                            state_at!(p).waiting_time.to_string().chars().next().unwrap();
+                        waiting_time_map[p.index(global.width + 1)] = state_at!(p)
+.waiting_time
+.to_string()
+.chars()
+.next()
+.unwrap();
+
+                        if let Some(Entity {
+                            kind: EntityKind::Splitter,
+                            ..
+                        }) = global.entities[p.index(global.width)]
+                        {
+                            if state_at!(p).split_next_right {
+                                splitter_map[p.index(global.width + 1)] = 'R';
+                            } else {
+                                splitter_map[p.index(global.width + 1)] = 'L';
+                            }
+                        } else {
+                            splitter_map[p.index(global.width + 1)] = '.';
+                        }
                     }
                 }
 
                 if step_tracing_enabled {
                     let map = map.iter().collect::<String>();
                     let waiting_time_map = waiting_time_map.iter().collect::<String>();
+let splitter_map = splitter_map.iter().collect::<String>();
+
+                    // Split them by lines and them merge the lines
+                    let final_map = map
+                        .split("\n")
+                        .zip(waiting_time_map.split("\n"))
+                        .zip(splitter_map.split("\n"))
+                        .map(|((m, w), s)| format!("{} {} {}", m, w, s))
+                        .collect::<Vec<_>>()
+                        .join("\n");
 
                     let cache_size = states_seen.len();
 
@@ -335,11 +364,8 @@ Deliveries: {deliveries:?}
 States seen: {cache_size}
 Max waiting time: {max_waiting_time}
 
-{map}
-
-Waiting times: 
-
-{waiting_time_map}
+Maps (toppings, waiting times, splitters):
+{final_map}
 ",
                     );
                 }
