@@ -101,7 +101,7 @@ impl TryFrom<&str> for Entity {
     }
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 struct Global {
     width: isize,
     height: isize,
@@ -109,6 +109,7 @@ struct Global {
     targets: Option<Vec<Option<Toppings>>>,
     initial_belts: Vec<Option<Direction>>,
     use_tickwise: bool,
+    allow_invalid_deliveries: bool,
 }
 
 impl Global {
@@ -119,13 +120,7 @@ impl Global {
 
 impl From<&str> for Global {
     fn from(input: &str) -> Self {
-        let mut width = 0;
-        let mut height = 0;
-
-        let mut entities = vec![];
-        let mut initial_belts = vec![];
-        let mut targets = None;
-        let mut use_tickwise = false;
+        let mut global = Global::default();
 
         for line in input.lines() {
             let mut line_width = 0;
@@ -137,7 +132,7 @@ impl From<&str> for Global {
 
             if line.starts_with(':') {
                 if line.starts_with(":target") {
-                    targets = Some(
+                    global.targets = Some(
                         line.split_whitespace()
                             .skip(1)
                             .map(|t| {
@@ -152,7 +147,9 @@ impl From<&str> for Global {
                 } else if line.starts_with(":comment") {
                     // Not stored, just do nothing
                 } else if line.starts_with(":tickwise") {
-                    use_tickwise = true;
+                    global.use_tickwise = true;
+                } else if line.starts_with(":allow_invalid_deliveries") {
+                    global.allow_invalid_deliveries = true;
                 } else {
                     panic!("Invalid/unknown flag: {line}");
                 }
@@ -177,22 +174,15 @@ impl From<&str> for Global {
 
                 assert!(!(entity.is_some() && belt.is_some()));
 
-                initial_belts.push(belt);
-                entities.push(entity);
+                global.initial_belts.push(belt);
+                global.entities.push(entity);
             }
 
-            width = width.max(line_width);
-            height += 1;
+            global.width = global.width.max(line_width);
+            global.height += 1;
         }
 
-        Global {
-            width,
-            height,
-            entities,
-            initial_belts,
-            targets,
-            use_tickwise,
-        }
+        global
     }
 }
 
@@ -306,55 +296,55 @@ impl Local {
 
             // Debugging ticking
             if tracing_enabled {
-if step_tracing_enabled {
-                let initial_map = self.stringify(global).chars().collect::<Vec<_>>();
-                let mut maps = [
+                if step_tracing_enabled {
+                    let initial_map = self.stringify(global).chars().collect::<Vec<_>>();
+                    let mut maps = [
                         initial_map.clone(), // Map 0: Default
                         initial_map.clone(), // Map 1: Current toppings
                         initial_map.clone(), // Map 2: Waiting times
                         initial_map.clone(), // Map 3: Splitters
                     ];
 
-                for y in 0..global.height {
-                    for x in 0..global.width {
-// Map 0 does nothing
+                    for y in 0..global.height {
+                        for x in 0..global.width {
+                            // Map 0 does nothing
 
                             // Map 1 shows the toppings
                             // Map 2 shows the wait times (only for donuts)
-                        let p = Point { x, y };
-                        if let Some(toppings) = state_at!(p).toppings {
-                            maps[1][p.index(global.width + 1)] =
-                                toppings.bits.to_string().chars().next().unwrap();
-                        
-                        maps[2][p.index(global.width + 1)] = state_at!(p)
-.waiting_time
-.to_string()
-.chars()
-.next()
-.unwrap();
-} else {
+                            let p = Point { x, y };
+                            if let Some(toppings) = state_at!(p).toppings {
+                                maps[1][p.index(global.width + 1)] =
+                                    toppings.bits.to_string().chars().next().unwrap();
+
+                                maps[2][p.index(global.width + 1)] = state_at!(p)
+                                    .waiting_time
+                                    .to_string()
+                                    .chars()
+                                    .next()
+                                    .unwrap();
+                            } else {
                                 maps[1][p.index(global.width + 1)] = '.';
                                 maps[2][p.index(global.width + 1)] = '.';
                             }
 
-// Map 3 shows current splitter state
-                        if let Some(Entity {
-                            kind: EntityKind::Splitter,
-                            ..
-                        }) = global.entities[p.index(global.width)]
-                        {
-                            if state_at!(p).split_next_right {
-                                maps[3][p.index(global.width + 1)] = 'R';
+                            // Map 3 shows current splitter state
+                            if let Some(Entity {
+                                kind: EntityKind::Splitter,
+                                ..
+                            }) = global.entities[p.index(global.width)]
+                            {
+                                if state_at!(p).split_next_right {
+                                    maps[3][p.index(global.width + 1)] = 'R';
+                                } else {
+                                    maps[3][p.index(global.width + 1)] = 'L';
+                                }
                             } else {
-                                maps[3][p.index(global.width + 1)] = 'L';
+                                maps[3][p.index(global.width + 1)] = '.';
                             }
-                        } else {
-                            maps[3][p.index(global.width + 1)] = '.';
                         }
                     }
-                }
 
-                // We want to render them side by side
+                    // We want to render them side by side
 
                     // Convert into a string
                     let maps = maps.iter().map(|m| m.iter().collect::<String>()).collect::<Vec<_>>();
@@ -500,6 +490,7 @@ Maps (belts, toppings, waiting times, splitters):
                             EntityKind::Target(toppings) => {
                                 if toppings.is_none()
                                     || state_at!(p).toppings.unwrap() == toppings.unwrap()
+                                    || global.allow_invalid_deliveries
                                 {
                                     deliveries.entry(p).or_insert_with(HashSet::new).insert((
                                         state_at!(p).source.unwrap(),
@@ -1011,6 +1002,27 @@ impl State<Global, ()> for Local {
             };
             tracing::debug!("Simulation result: {simulation_result:#?}");
 
+            // If we're allowing invalid deliveries, it's still not solved if there are any that don't match
+            if global.allow_invalid_deliveries {
+                for (dst, donuts) in simulation_result.deliveries.iter() {
+                    for (_, toppings) in donuts.iter() {
+                        match global.entities[dst.index(global.width)] {
+                            // Each destination must be none or matching
+                            Some(Entity {
+                                kind: EntityKind::Target(target_toppings),
+                                ..
+                            }) if target_toppings.is_none() || *toppings == target_toppings.unwrap() => {}
+                            // If not, this is not a valid solution
+                            _ => {
+                                tracing::debug!("Invalid delivery at {dst:?} with toppings {toppings:?}");
+                                return false;
+                            }
+                        }
+                    }
+                }
+
+            }
+
             // All sources must have been delivered from
             let all_delivered_from = simulation_result
                 .deliveries
@@ -1158,18 +1170,18 @@ impl State<Global, ()> for Local {
             tracing::debug!("Expanding new_state at {p:?}");
 
             // This is necessary in the (rare, only 6/8 so far) case that one expansion is invalid now but will become valid after another state is added
-            let maybe_next_states =                 Direction::all()
-                    .iter()
-                    .flat_map(|&d| {
-                        if global.in_bounds(p + d.into()) {
-                            let mut new_state = self.clone();
-                            new_state.belts[p.index(global.width)] = Some(d);
-                            Some((1, (), new_state))
-                        } else {
-                            None
-                        }
-                    })
-                    .collect::<Vec<_>>();
+            let maybe_next_states = Direction::all()
+                .iter()
+                .flat_map(|&d| {
+                    if global.in_bounds(p + d.into()) {
+                        let mut new_state = self.clone();
+                        new_state.belts[p.index(global.width)] = Some(d);
+                        Some((1, (), new_state))
+                    } else {
+                        None
+                    }
+                })
+                .collect::<Vec<_>>();
 
             if !maybe_next_states.is_empty() {
                 return Some(maybe_next_states);

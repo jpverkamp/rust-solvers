@@ -1,5 +1,7 @@
 :tickwise
+:allow_invalid_deliveries
 :comment There's a 1 tick offset so the splitter just works
+:comment But this relies on the fact that in the case of a tie here, the Bottom goes before the Left for some reason?
 .   .   +>  .   .   .
 .   .   .   +<  -^1 .
 .   .   .   .   x>  .
