@@ -267,12 +267,20 @@ impl Local {
         struct TileState {
             toppings: Option<Toppings>,
             source: Option<Point>,
-            updated: bool,
             waiting_time: usize,
             split_next_right: bool,
         }
 
+        #[derive(Debug, Clone, PartialEq, Eq, Hash)]
+        struct Update {
+            move_from: Point,
+            move_to: Point,
+            toppings: Toppings,
+            source: Point,
+        }
+
         let mut state = vec![TileState::default(); vec_size];
+
         let mut deliveries = HashMap::new();
         let mut states_seen = HashSet::new();
 
@@ -284,15 +292,22 @@ impl Local {
 
         // We have a very expensive tracing option; so don't calculate it if we're not going to print it
         let tracing_enabled = std::env::var("FRESHLY_FROSTED_TRACE").is_ok();
-        let step_tracing_eabled = std::env::var("FRESHLY_FROSTED_STEP_TRACE").is_ok();
+        let step_tracing_enabled = std::env::var("FRESHLY_FROSTED_STEP_TRACE").is_ok();
 
         // Advance the simulation one tick
         'tick: loop {
-            state.iter_mut().for_each(|s| s.updated = false);
+            let mut updates = vec![];
+            let max_waiting_time = state.iter().map(|s| s.waiting_time).max().unwrap_or(0);
+
+            // This shouldn't generally happen; but if it does we have an infinite loop so don't hang
+            if max_waiting_time > global.width as usize * global.height as usize {
+                panic!("Waiting time exceeded maximum");
+            }
 
             // Debugging ticking
             if tracing_enabled {
                 let mut map = self.stringify(global).chars().collect::<Vec<_>>();
+                let mut waiting_time_map  = map.clone();
 
                 for y in 0..global.height {
                     for x in 0..global.width {
@@ -301,13 +316,17 @@ impl Local {
                             map[p.index(global.width + 1)] =
                                 toppings.bits.to_string().chars().next().unwrap();
                         }
+
+                        waiting_time_map[p.index(global.width + 1)] =
+                            state_at!(p).waiting_time.to_string().chars().next().unwrap();
                     }
                 }
 
-                if step_tracing_eabled {
+                if step_tracing_enabled {
                     let map = map.iter().collect::<String>();
+                    let waiting_time_map = waiting_time_map.iter().collect::<String>();
+
                     let cache_size = states_seen.len();
-                    let max_waiting_time = state.iter().map(|s| s.waiting_time).max().unwrap_or(0);
 
                     tracing::debug!(
                         "\
@@ -317,6 +336,10 @@ States seen: {cache_size}
 Max waiting time: {max_waiting_time}
 
 {map}
+
+Waiting times: 
+
+{waiting_time_map}
 ",
                     );
                 }
@@ -324,228 +347,263 @@ Max waiting time: {max_waiting_time}
 
             // Cache which exact states we've seen; break once we see the same more than once
             // TODO: This is expensive..
-
-            // TODO: I don't think we should be able to get away with just caching the toppings, but it's working so far
+            // TODO: Loops with bumpers can mess with this
             if !states_seen.insert(state.clone()) {
                 tracing::debug!("Loop detected, breaking");
                 tracing::debug!("Deliveries are: {deliveries:?}");
                 break 'tick;
             }
 
-            // Look for a space that can be updated
-            // This is always a destination space, find a donut that can be put there
-            'find_update: loop {
-                for x in 0..global.width {
-                    for y in 0..global.height {
-                        let p = Point { x, y };
+            // Calculate all requested updates
+            for x in 0..global.width {
+                'next_point: for y in 0..global.height {
+                    let p = Point { x, y };
 
-                        // Only update each point once
-                        if state_at!(p).updated {
+                    // Create a potential update for sources
+                    if let Some(Entity {
+                        kind: EntityKind::Source,
+                        facing,
+                    }) = global.entities[p.index(global.width)]
+                    {
+                        updates.push(Update {
+                            move_from: p,
+                            move_to: p + facing.into(),
+                            toppings: Toppings::none(),
+                            source: p,
+                        });
+                        continue 'next_point;
+                    }
+
+                    // No updates for spaces that do not have a donut
+                    if state_at!(p).toppings.is_none() {
+                        continue;
+                    }
+
+                    // Bumpers take priority over belts
+                    // TODO: Can you push into a merge situation? Then we'd need both.
+                    // TODO: Assume there's only one bumper per space
+                    for d in Direction::all() {
+                        let p2 = p - d.into();
+                        if !global.in_bounds(p2) {
                             continue;
                         }
 
-                        // If the spot is occupied, skip it
-                        if state_at!(p).toppings.is_some() {
-                            continue;
-                        }
-
-                        // Find the potential donuts that can move into this space
-                        let mut potential_donuts = vec![];
-                        for d in Direction::all() {
-                            let p_from = p - d.into();
-                            if !global.in_bounds(p_from) {
-                                continue;
-                            }
-
-                            // TODO: We can only move into a target or splitter the correct way
-
-                            // A belt pointing at us, containing a donut, and didn't just get that donut
-                            if let Some(belt) = self.belts[p_from.index(global.width)] {
-                                if belt == d && !state_at!(p_from).updated {
-                                    if let Some(toppings) = state_at!(p_from).toppings {
-                                        potential_donuts.push((p_from, toppings, d));
-                                    }
-                                }
-                                continue;
-                            }
-
-                            // A source pointing at us
-                            if let Some(Entity {
-                                kind: EntityKind::Source,
-                                facing,
-                            }) = global.entities[p_from.index(global.width)]
-                            {
-                                if facing == d {
-                                    potential_donuts.push((p_from, Toppings::none(), d));
-                                }
-                                continue;
-                            }
-
-                            // A splitter pointing at us + on the correct cycle
-                            if let Some(Entity {
-                                kind: EntityKind::Splitter,
-                                facing,
-                            }) = global.entities[p_from.index(global.width)]
-                            {
-                                let next_left = !state_at!(p_from).split_next_right;
-
-                                if next_left && facing.turn_left() == d
-                                    || !next_left && facing.turn_right() == d
-                                {
-                                    if let Some(toppings) = state_at!(p_from).toppings {
-                                        potential_donuts.push((p_from, toppings, d));
-                                    }
-                                }
-
-                                continue;
-                            }
-
-                            // A bumper two spaces away matching a donut on a belt one tile away
-                            let p_bumper = p_from - d.into();
-                            if global.in_bounds(p_bumper) {
-                                if let Some(Entity {
-                                    kind: EntityKind::Bumper(bumper_toppings),
-                                    facing,
-                                }) = global.entities[p_bumper.index(global.width)]
-                                {
-                                    if facing == d {
-                                        if let Some(toppings) = state_at!(p_from).toppings {
-                                            if toppings == bumper_toppings {
-                                                potential_donuts.push((p_from, toppings, d));
-                                            }
-                                        }
-                                    }
-                                }
+                        if let Some(Entity {
+                            kind: EntityKind::Bumper(bumper_toppings),
+                            facing,
+                        }) = global.entities[p2.index(global.width)]
+                        {
+                            if facing == d && bumper_toppings == state_at!(p).toppings.unwrap() {
+                                tracing::warn!("Bumper at {p2:?} with facing {d:?} and toppings {bumper_toppings:?}");
+                                updates.push(Update {
+                                    move_from: p,
+                                    move_to: p + d.into(),
+                                    toppings: state_at!(p).toppings.unwrap(),
+                                    source: state_at!(p).source.unwrap(),
+                                });
+                                continue 'next_point;
                             }
                         }
+                    }
 
-                        // If we have no potential donuts, try the next position
-                        // TODO: Is this correct to treat it as updated?
-                        if potential_donuts.is_empty() {
-                            state_at!(p).updated = true;
-                            continue;
+                    // Belts are easy!
+                    if let Some(belt) = self.belts[p.index(global.width)] {
+                        // We have to be able to move onto that space
+                        let p2 = p + belt.into();
+                        if !global.in_bounds(p2) {
+                            return Err(format!("Attempted to move out of bounds at {p:?}"));
                         }
 
-                        // tracing::debug!(
-                        //     "Found potential donuts at {p:?}: {potential_donuts:?}",
-                        //     p = p,
-                        //     potential_donuts = potential_donuts
-                        // );
-
-                        // If we have at least one donut, make sure we're moving it onto something valid
-                        if let Some(entity) = global.entities[p.index(global.width)] {
+                        // Some entities cannot be moved onto (at all or in a specific direction)
+                        if let Some(entity) = global.entities[p2.index(global.width)] {
                             match entity.kind {
-                                // Can never be moved onto
                                 EntityKind::Block
                                 | EntityKind::Source
                                 | EntityKind::Topper(_)
                                 | EntityKind::Bumper(_) => {
                                     return Err(format!(
-                                        "Attempted to move donut onto a {:?} at {:?}",
-                                        entity.kind, p
-                                    ))
+                                        "Donut at {p:?} tried to move onto a {:?}",
+                                        entity.kind
+                                    ));
                                 }
-                                // Can only be moved onto matching the facing
                                 EntityKind::Target(_) | EntityKind::Splitter => {
-                                    if entity.facing != potential_donuts[0].2 {
-                                        return Err(format!("Attempted to move donut onto a {:?} at {:?} facing the wrong way (expected {:?}, got {:?})", entity.kind, p, entity.facing, potential_donuts[0].2));
+                                    if entity.facing != belt {
+                                        return Err(format!("Donut at {p:?} tried to move onto a {:?} facing the wrong way", entity.kind));
                                     }
                                 }
-                            };
-                        }
-
-                        // If we have multiple potential donuts, choose the one waiting longest
-                        // TODO: What if there is a tie?
-                        potential_donuts.sort_by(|(p1, _, _), (p2, _, _)| {
-                            state_at!(p2).waiting_time.cmp(&state_at!(p1).waiting_time)
-                        });
-
-                        // Potential donut 0 moves here and resets wait time
-                        state_at!(p).toppings = Some(potential_donuts[0].1);
-                        state_at!(potential_donuts[0].0).toppings = None;
-                        state_at!(potential_donuts[0].0).waiting_time = 0;
-
-                        // Update the source as well, if the previous had a source, that's what we get, otherwise it's the source point
-                        if let Some(source) = state_at!(potential_donuts[0].0).source {
-                            state_at!(p).source = Some(source);
-                        } else {
-                            state_at!(p).source = Some(potential_donuts[0].0);
-                        }
-
-                        // If potential 0 was a splitter, toggle it
-                        if let Some(Entity {
-                            kind: EntityKind::Splitter,
-                            ..
-                        }) = global.entities[potential_donuts[0].0.index(global.width)]
-                        {
-                            state_at!(potential_donuts[0].0).split_next_right =
-                                !state_at!(potential_donuts[0].0).split_next_right;
-                        }
-
-                        // Any others increment their wait time
-                        potential_donuts.iter().skip(1).for_each(|(p_from, _, _)| {
-                            state_at!(p_from).waiting_time += 1;
-                        });
-
-                        // If there is a valid topper pointing at us, apply it
-                        for top_d in Direction::all() {
-                            let p2 = p - top_d.into();
-                            if !global.in_bounds(p2) {
-                                continue;
                             }
+                        }
 
-                            if let Some(Entity {
-                                kind: EntityKind::Topper(new_toppings),
-                                facing,
-                            }) = global.entities[p2.index(global.width)]
-                            {
-                                if top_d == facing {
-                                    // Only add the toppings if we have all previous stoppings, otherwise ignore it
-                                    assert!(new_toppings.bits().count_ones() == 1);
-                                    let must_have = Toppings::from(new_toppings.bits() - 1);
-                                    if state_at!(p).toppings.unwrap() & must_have != must_have {
-                                        continue;
-                                    }
+                        // If we make it this far, this is a valid potential move
+                        updates.push(Update {
+                            move_from: p,
+                            move_to: p + belt.into(),
+                            toppings: state_at!(p).toppings.unwrap(),
+                            source: state_at!(p).source.unwrap(),
+                        });
+                        continue 'next_point;
+                    }
 
-                                    // Add the new topping!
-                                    state_at!(p).toppings =
-                                        Some(state_at!(p).toppings.unwrap() | new_toppings);
+                    // Any entities we could be standing on
+                    // We should never have moved onto invalid ones (see above)
+                    if let Some(entity) = global.entities[p.index(global.width)] {
+                        match entity.kind {
+                            EntityKind::Block | EntityKind::Topper(_) | EntityKind::Bumper(_) => {
+                                unreachable!("Donut at {p:?} is on a {:?}", entity.kind);
+                            }
+                            // Try to create a (potential) new donut
+                            EntityKind::Source => unreachable!("Sources are handled earlier"),
+                            // If we're on a target, matching done/not error
+                            EntityKind::Target(toppings) => {
+                                if toppings.is_none()
+                                    || state_at!(p).toppings.unwrap() == toppings.unwrap()
+                                {
+                                    deliveries.entry(p).or_insert_with(HashSet::new).insert((
+                                        state_at!(p).source.unwrap(),
+                                        state_at!(p).toppings.unwrap(),
+                                    ));
+                                } else {
+                                    return Err(format!(
+                                        "Donut at {p:?} is on a target with the wrong toppings"
+                                    ));
+                                }
+                            }
+                            // Splitters try to move in the next direction
+                            EntityKind::Splitter => {
+                                if state_at!(p).split_next_right {
+                                    updates.push(Update {
+                                        move_from: p,
+                                        move_to: p + entity.facing.turn_right().into(),
+                                        toppings: state_at!(p).toppings.unwrap(),
+                                        source: state_at!(p).source.unwrap(),
+                                    });
+                                } else {
+                                    updates.push(Update {
+                                        move_from: p,
+                                        move_to: p + entity.facing.turn_left().into(),
+                                        toppings: state_at!(p).toppings.unwrap(),
+                                        source: state_at!(p).source.unwrap(),
+                                    });
                                 }
                             }
                         }
+                    }
+                }
+            }
 
-                        // If we are now sitting on a target, either deliver the donut or break
-                        if let Some(Entity {
-                            kind: EntityKind::Target(target_toppings),
-                            ..
-                        }) = global.entities[p.index(global.width)]
+            if step_tracing_enabled {
+                tracing::debug!("Updates: {updates:?}");
+            }
+
+            // Okay, now for any update that has multiple choices, we have to choose one
+            // Choose the one that has the largest waiting_time
+            // Then we have to increment the waiting time for the rest and wind back any updates depending on those
+            let mut will_update = vec![true; updates.len()];
+            for x in 0..global.width {
+                for y in 0..global.height {
+                    let p = Point { x, y };
+
+                    let mut updates = updates
+                        .iter()
+                        .enumerate()
+                        .filter(|(_, u)| u.move_to == p)
+                        .collect::<Vec<_>>();
+
+                    if updates.len() <= 1 {
+                        continue;
+                    }
+
+                    // Sort, the longest waiting will end up first
+                    updates.sort_by(|(_, a), (_, b)| {
+                        state_at!(b.move_from)
+                            .waiting_time
+                            .cmp(&state_at!(a.move_from).waiting_time)
+                    });
+
+                    // The waiting time for the source of the one that moves is 0'ed
+                    // The rest incremented
+                    state[updates[0].1.move_from.index(global.width)].waiting_time = 0;
+                    for (_, u) in updates.iter().skip(1) {
+                        state[u.move_from.index(global.width)].waiting_time += 1;
+                    }
+
+                    // All the rest of them are flagged as not updating
+                    for (index, _) in updates.iter().skip(1) {
+                        will_update[*index] = false;
+                    }
+                }
+            }
+
+            // Now propagate that backwards
+            'still_did_not_updating: loop {
+                for (i, ui) in updates.iter().enumerate() {
+                    for (j, uj) in updates.iter().enumerate() {
+                        if i != j
+                            && will_update[i]
+                            && !will_update[j]
+                            && ui.move_to == uj.move_from
                         {
-                            // Always remove if there's no target
-                            let toppings = state_at!(p).toppings.unwrap();
-                            let valid = match target_toppings {
-                                None => true,
-                                Some(target_toppings) => toppings == target_toppings,
-                            };
-
-                            if valid {
-                                state_at!(p).toppings = None;
-                                deliveries
-                                    .entry(p)
-                                    .or_insert_with(HashSet::new)
-                                    .insert((state_at!(p).source.unwrap(), toppings));
-                            } else {
-                                return Err(format!("Attempted to deliver {toppings:?} to {p:?} but needed {target_toppings:?}"));
-                            }
+                            will_update[i] = false;
+                            continue 'still_did_not_updating;
                         }
-
-                        // If we made it this far, there was an update to this space, log it and continue
-                        state_at!(p).updated = true;
-                        continue 'find_update;
                     }
                 }
 
-                // If we make it here without continuing, there are no more updates
-                break 'find_update;
+                // If we make it through the loops without updating anything, we're done
+                break;
+            }
+
+            // Now apply each update that is still in the list
+
+            // First, remove from the source to make space for the destinations
+            for (i, u) in updates.iter().enumerate() {
+                if will_update[i] {
+                    state_at!(u.move_from).toppings = None;
+                    state_at!(u.move_from).source = None;
+
+                    // Moving from a splitter means it toggles
+                    // This updates the flag for everything, even non-splitters, but we never read it otherwise
+                    state_at!(u.move_from).split_next_right =
+                        !state_at!(u.move_from).split_next_right;
+                }
+            }
+
+            // And then set each destination
+            for (i, u) in updates.iter().enumerate() {
+                if will_update[i] {
+                    state_at!(u.move_to).toppings = Some(u.toppings);
+                    state_at!(u.move_to).source = Some(u.source);
+
+                    // Moving to a splitter does *not* toggle it
+                }
+            }
+
+            // Finally, apply toppers
+            for x in 0..global.width {
+                for y in 0..global.height {
+                    let p = Point { x, y };
+
+                    if let Some(Entity {
+                        kind: EntityKind::Topper(topping),
+                        facing,
+                    }) = global.entities[p.index(global.width)]
+                    {
+                        let p2 = p + facing.into();
+                        if !global.in_bounds(p2) {
+                            continue;
+                        }
+
+                        if let Some(state) = state.get_mut(p2.index(global.width)) {
+                            if let Some(toppings) = state.toppings {
+                                // We have to have exactly all previous toppings; if so apply the new one
+                                let must_have = Toppings::from(topping.bits() - 1);
+                                if toppings & must_have == must_have {
+                                    state.toppings = Some(toppings | topping);
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
@@ -695,9 +753,6 @@ Max waiting time: {max_waiting_time}
                         facing,
                     }) = global.entities[p2.index(global.width)]
                     {
-                        // tracing::debug!("Bumper at {p2:?} with facing {bump_d:?} and toppings {bump_toppings:?}");
-                        // tracing::debug!("Donut at {p:?} with toppings {toppings:?}");
-
                         if bump_d == facing && toppings == bump_toppings {
                             p = p + bump_d.into();
                             break;
@@ -1371,13 +1426,7 @@ mod freshly_frosted_tests {
             let mut failures = vec![];
 
             match local.next_states(&global) {
-                None => {
-                    failures.push(format!(
-                        "No next states found, simulation result:\n{:#?}\nTickwise result:\n{:#?}",
-                        local.simulate(&global),
-                        local.simulate_tickwise(&global)
-                    ))
-                },
+                None => failures.push("No next states found".to_owned()),
                 Some(next_states) => {
                     let expected_len = $expected_states
                         .iter()
@@ -1393,7 +1442,7 @@ mod freshly_frosted_tests {
 
                         failures.push(format!(
                             "Expected {} state(s), got {}:\n{}",
-                            $expected_states.len(),
+                            expected_len,
                             next_states.len(),
                             next_states_stringy
                         ));
@@ -1419,7 +1468,18 @@ mod freshly_frosted_tests {
             }
 
             if !failures.is_empty() {
-                panic!("{}", failures.join("\n===\n"));
+                println!("Failures:");
+                for failure in failures {
+                    println!("  {}", failure);
+                }
+
+                println!("Simulate results: {:#?}", local.simulate(&global));
+                println!(
+                    "Tickwise simulate results: {:#?}",
+                    local.simulate_tickwise(&global)
+                );
+
+                panic!();
             }
         };
     }
@@ -1490,6 +1550,58 @@ mod freshly_frosted_tests {
         ",
         [
             ((1, 3), [Up, Down, Left, Right]),
+        ]
+    }
+
+    test_next_states! {
+        bumper,
+        "
+        .   .   .
+        .   bv0 .
+        +>  >   .
+        .   .   .
+        ",
+        [
+            ((1, 3), [Left, Right, Up]),
+        ]
+    }
+
+    test_next_states! {
+        non_matching_bumper,
+        "
+        .   .   .
+        .   bv1 .
+        +>  >   .
+        .   .   .
+        ",
+        [
+            ((2, 2), [Up, Down, Left]),
+        ]
+    }
+
+    test_next_states! {
+        bumper_loop,
+        "
+        1>  v   <   <
+        .   v   bv1 ^
+        +>  >   >   ^
+        .   .   .   .
+        ",
+        [
+            ((2, 3), [Up, Left, Right]),
+        ]
+    }
+
+    test_next_states! {
+        bumper_double_loop,
+        "
+        2>  v   <   <
+        1>  v   bv3 ^
+        +>  >   >   ^
+        .   .   .   .
+        ",
+        [
+            ((2, 3), [Up, Left, Right]),
         ]
     }
 }
