@@ -534,10 +534,6 @@ Maps (belts, toppings, waiting times, splitters):
                 }
             }
 
-            if step_tracing_enabled {
-                tracing::debug!("Updates: {updates:?}");
-            }
-
             // Okay, now for any update that has multiple choices, we have to choose one
             // Choose the one that has the largest waiting_time
             // Then we have to increment the waiting time for the rest and wind back any updates depending on those
@@ -555,6 +551,10 @@ Maps (belts, toppings, waiting times, splitters):
                     if updates.len() <= 1 {
                         continue;
                     }
+
+                    // This is a kludge for 6/8; it requires that Bottom goes before Left
+                    // So we'll initially sort bottom up and then because they're tied, it will win
+                    updates.reverse();
 
                     // Sort, the longest waiting will end up first
                     updates.sort_by(|(_, a), (_, b)| {
@@ -581,10 +581,7 @@ Maps (belts, toppings, waiting times, splitters):
             'still_did_not_updating: loop {
                 for (i, ui) in updates.iter().enumerate() {
                     for (j, uj) in updates.iter().enumerate() {
-                        if i != j
-                            && will_update[i]
-                            && !will_update[j]
-                            && ui.move_to == uj.move_from
+                        if i != j && will_update[i] && !will_update[j] && ui.move_to == uj.move_from
                         {
                             will_update[i] = false;
                             continue 'still_did_not_updating;
