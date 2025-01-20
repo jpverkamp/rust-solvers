@@ -347,10 +347,16 @@ impl Local {
                     // We want to render them side by side
 
                     // Convert into a string
-                    let maps = maps.iter().map(|m| m.iter().collect::<String>()).collect::<Vec<_>>();
+                    let maps = maps
+                        .iter()
+                        .map(|m| m.iter().collect::<String>())
+                        .collect::<Vec<_>>();
 
                     // Convert into a list of lines
-                    let maps = maps.iter().map(|m| m.split("\n").collect::<Vec<_>>()).collect::<Vec<_>>();
+                    let maps = maps
+                        .iter()
+                        .map(|m| m.split("\n").collect::<Vec<_>>())
+                        .collect::<Vec<_>>();
 
                     // Combine them line by line
                     let mut final_map = String::new();
@@ -1011,16 +1017,18 @@ impl State<Global, ()> for Local {
                             Some(Entity {
                                 kind: EntityKind::Target(target_toppings),
                                 ..
-                            }) if target_toppings.is_none() || *toppings == target_toppings.unwrap() => {}
+                            }) if target_toppings.is_none()
+                                || *toppings == target_toppings.unwrap() => {}
                             // If not, this is not a valid solution
                             _ => {
-                                tracing::debug!("Invalid delivery at {dst:?} with toppings {toppings:?}");
+                                tracing::debug!(
+                                    "Invalid delivery at {dst:?} with toppings {toppings:?}"
+                                );
                                 return false;
                             }
                         }
                     }
                 }
-
             }
 
             // All sources must have been delivered from
