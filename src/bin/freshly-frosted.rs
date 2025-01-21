@@ -755,7 +755,13 @@ Maps (belts, toppings, waiting times, splitters):
                                 continue;
                             }
 
+                            // Already applied, not an error but we don't want to trace it
+                            if toppings | new_toppings == toppings {
+                                continue;
+                            }
+
                             // Add the new topping!
+                            tracing::debug!("Adding topping {new_toppings:?} from {p2:?} / {facing:?}");
                             toppings |= new_toppings;
                         }
                     }
