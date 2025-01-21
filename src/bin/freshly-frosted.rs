@@ -1113,6 +1113,25 @@ impl State<Global, ()> for Local {
             };
             tracing::debug!("Simulation result: {donuts:?}");
 
+            // Each target must have at least one donut
+            for (index, entity) in global.entities.iter().enumerate() {
+                if let Some(Entity {
+                    kind: EntityKind::Target(_),
+                    ..
+                }) = entity
+                {
+                    let p = Point {
+                        x: index as isize % global.width,
+                        y: index as isize / global.width,
+                    };
+
+                    if !donuts.iter().any(|(donut_p, _)| *donut_p == p) {
+                        tracing::debug!("No donut delivered to {p:?}");
+                        return false;
+                    }
+                }
+            }
+
             // Each donut must end at a matching target
             // A non-target accepts any donut
             for (donuts_p, toppings) in donuts.iter() {
