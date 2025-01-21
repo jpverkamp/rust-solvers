@@ -611,7 +611,7 @@ Maps (belts, toppings, waiting times, splitters):
                                     move_from: p,
                                     move_to: p + entity.facing.into(),
                                     toppings: state_at!(p).toppings.unwrap(),
-                                    source: p,
+                                    source: state_at!(p).source.unwrap(),
                                 });
                             }
                         }
