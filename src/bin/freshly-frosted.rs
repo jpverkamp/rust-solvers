@@ -23,8 +23,8 @@ enum EntityKind {
     Topper(Toppings),
     Splitter,
     Bumper(Toppings),
-    TeleporterIn,
-    TeleporterOut,
+    TeleporterIn(usize),
+    TeleporterOut(usize),
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -99,11 +99,20 @@ impl TryFrom<&str> for Entity {
 
             // Teleporters (in doesn't currently have a facing)
             &['T', '-'] => Ok(Entity {
-                kind: EntityKind::TeleporterIn,
+                kind: EntityKind::TeleporterIn(0),
                 facing: Direction::default(),
             }),
             &['T', '+', facing] => Ok(Entity {
-                kind: EntityKind::TeleporterOut,
+                kind: EntityKind::TeleporterOut(0),
+                facing: dir(facing)?,
+            }),
+
+            &['U', '-'] => Ok(Entity {
+                kind: EntityKind::TeleporterIn(1),
+                facing: Direction::default(),
+            }),
+            &['U', '+', facing] => Ok(Entity {
+                kind: EntityKind::TeleporterOut(1),
                 facing: dir(facing)?,
             }),
 
@@ -123,8 +132,7 @@ struct Global {
     // Map entities etc
     entities: Vec<Option<Entity>>,
     initial_belts: Vec<Option<Direction>>,
-    teleporter_in: Option<Point>,
-    teleporter_out: Option<Point>,
+    teleporter_outs: Vec<Point>,
 
     // Flags that change behavior for specific puzzles
     use_tickwise: bool,
@@ -211,33 +219,63 @@ impl From<&str> for Global {
             global.height += 1;
         }
 
-        // Store teleporters
-        for (index, entity) in global.entities.iter().enumerate() {
-            if let Some(Entity {
-                kind: EntityKind::TeleporterIn,
-                ..
-            }) = entity
-            {
-                global.teleporter_in = Some(Point {
-                    x: index as isize % global.width,
-                    y: index as isize / global.width,
-                });
-            }
+        // Teleporter validity check
+        let mut teleporter_in_ids = global
+            .entities
+            .iter()
+            .filter_map(|e| {
+                if let Some(Entity { kind: EntityKind::TeleporterIn(id), .. }) = e {
+                    Some(*id)
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+        teleporter_in_ids.sort();
 
-            if let Some(Entity {
-                kind: EntityKind::TeleporterOut,
-                ..
-            }) = entity
-            {
-                global.teleporter_out = Some(Point {
-                    x: index as isize % global.width,
-                    y: index as isize / global.width,
-                });
-            }
-        }
-        if global.teleporter_in.is_none() ^ global.teleporter_out.is_none() {
-            panic!("Teleporters must be both present or neither present");
-        }
+        let mut teleporter_out_ids = global
+            .entities
+            .iter()
+            .filter_map(|e| {
+                if let Some(Entity { kind: EntityKind::TeleporterOut(id), .. }) = e {
+                    Some(*id)
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+        teleporter_out_ids.sort();
+
+        // Teleporters must be defined in order (so no 1 without 0)
+        assert_eq!(teleporter_in_ids, (0..teleporter_in_ids.len()).collect::<Vec<_>>(), "Teleporter in IDs not in order");
+
+        // There must be exactly one out for every in
+        assert_eq!(teleporter_in_ids, teleporter_out_ids, "Mismatched teleporters");
+
+        // There cannot be any duplicates in either list
+        // This seems like a silly way to do it :smile:
+        assert_eq!(teleporter_in_ids.len(), teleporter_in_ids.iter().collect::<HashSet<_>>().len(), "Duplicate teleporter in");
+        assert_eq!(teleporter_out_ids.len(), teleporter_out_ids.iter().collect::<HashSet<_>>().len(), "Duplicate teleporter out");
+
+        // Store the teleporter outs by ID for easy access
+        let mut teleporter_outs = global
+            .entities
+            .iter()
+            .enumerate()
+            .filter_map(|(index, e)| {
+                if let Some(Entity { kind: EntityKind::TeleporterOut(id), .. }) = e {
+                    Some((id, Point {
+                        x: index as isize % global.width,
+                        y: index as isize / global.width,
+                    }))
+                } else {
+                    None
+                }
+            })
+            .collect::<Vec<_>>();
+        teleporter_outs.sort_by_key(|(id, _)| *id);
+
+        global.teleporter_outs = teleporter_outs.into_iter().map(|(_, p)| p).collect();
 
         global
     }
@@ -525,7 +563,7 @@ Maps (belts, toppings, waiting times, splitters):
                                 | EntityKind::Source
                                 | EntityKind::Topper(_)
                                 | EntityKind::Bumper(_)
-                                | EntityKind::TeleporterOut => {
+                                | EntityKind::TeleporterOut(_) => {
                                     return Err(format!(
                                         "Donut at {p:?} tried to move onto a {:?}",
                                         entity.kind
@@ -536,7 +574,7 @@ Maps (belts, toppings, waiting times, splitters):
                                         return Err(format!("Donut at {p:?} tried to move onto a {:?} facing the wrong way", entity.kind));
                                     }
                                 }
-                                EntityKind::TeleporterIn => {
+                                EntityKind::TeleporterIn(_) => {
                                     // No facing, we can always move onto this
                                 }
                             }
@@ -597,16 +635,16 @@ Maps (belts, toppings, waiting times, splitters):
                             }
                             // Teleporter in tries to move to the teleporter out
                             // If we have an in, we have an out (according to the loading function)
-                            EntityKind::TeleporterIn => {
+                            EntityKind::TeleporterIn(id) => {
                                 updates.push(Update {
                                     move_from: p,
-                                    move_to: global.teleporter_out.unwrap(),
+                                    move_to: global.teleporter_outs[id],
                                     toppings: state_at!(p).toppings.unwrap(),
                                     source: state_at!(p).source.unwrap(),
                                 })
                             }
                             // Teleporter out basically acts like a source
-                            EntityKind::TeleporterOut => {
+                            EntityKind::TeleporterOut(_) => {
                                 updates.push(Update {
                                     move_from: p,
                                     move_to: p + entity.facing.into(),
@@ -875,17 +913,17 @@ Maps (belts, toppings, waiting times, splitters):
 
                 // If we're on a teleporter in, apply it
                 if let Some(Entity {
-                    kind: EntityKind::TeleporterIn,
+                    kind: EntityKind::TeleporterIn(id),
                     ..
                 }) = global.entities[p.index(global.width)]
                 {
-                    p = global.teleporter_out.unwrap();
+                    p = global.teleporter_outs[id];
                     continue;
                 }
 
                 // A teleporter out just moves
                 if let Some(Entity {
-                    kind: EntityKind::TeleporterOut,
+                    kind: EntityKind::TeleporterOut(_),
                     facing,
                 }) = global.entities[p.index(global.width)]
                 {
@@ -925,7 +963,7 @@ Maps (belts, toppings, waiting times, splitters):
                             | EntityKind::Source
                             | EntityKind::Topper(_)
                             | EntityKind::Bumper(_)
-                            | EntityKind::TeleporterOut => {
+                            | EntityKind::TeleporterOut(_) => {
                                 return Err(format!("Ran into a {:?} at {p:?}", entity.kind))
                             }
                             EntityKind::Target(_) | EntityKind::Splitter => {
@@ -933,7 +971,7 @@ Maps (belts, toppings, waiting times, splitters):
                                     return Err(format!("Ran into a {:?} at {p:?} facing the wrong way (expected {:?}, got {belt:?})", entity.kind, entity.facing));
                                 }
                             }
-                            EntityKind::TeleporterIn => {
+                            EntityKind::TeleporterIn(_) => {
                                 // No facing, we can always move onto this
                             }
                         }
@@ -975,10 +1013,10 @@ Maps (belts, toppings, waiting times, splitters):
                 // If we're on a teleporter, step out of it
                 if let Some(entity) = global.entities[p.index(global.width)] {
                     match entity.kind {
-                        EntityKind::TeleporterIn => {
-                            return vec![global.teleporter_out.unwrap()];
+                        EntityKind::TeleporterIn(id) => {
+                            return vec![global.teleporter_outs[id]];
                         }
-                        EntityKind::TeleporterOut => {
+                        EntityKind::TeleporterOut(_) => {
                             return vec![*p + entity.facing.into()];
                         }
                         _ => {}
@@ -1028,7 +1066,7 @@ Maps (belts, toppings, waiting times, splitters):
                     let is_teleporter_in = matches!(
                         global.entities[p2.index(global.width)],
                         Some(Entity {
-                            kind: EntityKind::TeleporterIn,
+                            kind: EntityKind::TeleporterIn(_),
                             ..
                         })
                     );
@@ -1436,8 +1474,9 @@ impl State<Global, ()> for Local {
                             Direction::Left => '┤',
                             Direction::Right => '├',
                         },
-                        EntityKind::TeleporterIn => '○',
-                        EntityKind::TeleporterOut => match entity.facing {
+                        EntityKind::TeleporterIn(_) => '○',
+                        EntityKind::TeleporterOut(_) => match entity.facing {
+                            // TODO: Different symbols for each?
                             Direction::Up => '◒',
                             Direction::Down => '◓',
                             Direction::Left => '◑',
