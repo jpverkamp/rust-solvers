@@ -23,6 +23,8 @@ enum EntityKind {
     Topper(Toppings),
     Splitter,
     Bumper(Toppings),
+    TeleporterIn,
+    TeleporterOut,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -92,6 +94,16 @@ impl TryFrom<&str> for Entity {
             // A bumper
             &['b', facing, topping] => Ok(Entity {
                 kind: EntityKind::Bumper(top(topping)?),
+                facing: dir(facing)?,
+            }),
+
+            // Teleporters (in doesn't currently have a facing)
+            &['T', '-'] => Ok(Entity {
+                kind: EntityKind::TeleporterIn,
+                facing: Direction::default(),
+            }),
+            &['T', '+', facing] => Ok(Entity {
+                kind: EntityKind::TeleporterOut,
                 facing: dir(facing)?,
             }),
 
@@ -477,7 +489,8 @@ Maps (belts, toppings, waiting times, splitters):
                                 EntityKind::Block
                                 | EntityKind::Source
                                 | EntityKind::Topper(_)
-                                | EntityKind::Bumper(_) => {
+                                | EntityKind::Bumper(_)
+                                | EntityKind::TeleporterOut => {
                                     return Err(format!(
                                         "Donut at {p:?} tried to move onto a {:?}",
                                         entity.kind
@@ -487,6 +500,9 @@ Maps (belts, toppings, waiting times, splitters):
                                     if entity.facing != belt {
                                         return Err(format!("Donut at {p:?} tried to move onto a {:?} facing the wrong way", entity.kind));
                                     }
+                                }
+                                EntityKind::TeleporterIn => {
+                                    // No facing, we can always move onto this
                                 }
                             }
                         }
@@ -505,7 +521,7 @@ Maps (belts, toppings, waiting times, splitters):
                     // We should never have moved onto invalid ones (see above)
                     if let Some(entity) = global.entities[p.index(global.width)] {
                         match entity.kind {
-                            EntityKind::Block | EntityKind::Topper(_) | EntityKind::Bumper(_) => {
+                            EntityKind::Block | EntityKind::Topper(_) | EntityKind::Bumper(_) | EntityKind::TeleporterOut => {
                                 unreachable!("Donut at {p:?} is on a {:?}", entity.kind);
                             }
                             // Try to create a (potential) new donut
@@ -543,6 +559,10 @@ Maps (belts, toppings, waiting times, splitters):
                                         source: state_at!(p).source.unwrap(),
                                     });
                                 }
+                            }
+                            // On a teleporter, try to teleport
+                            EntityKind::TeleporterIn => {
+                                todo!();
                             }
                         }
                     }
@@ -834,13 +854,17 @@ Maps (belts, toppings, waiting times, splitters):
                             EntityKind::Block
                             | EntityKind::Source
                             | EntityKind::Topper(_)
-                            | EntityKind::Bumper(_) => {
+                            | EntityKind::Bumper(_)
+                            | EntityKind::TeleporterOut => {
                                 return Err(format!("Ran into a {:?} at {p:?}", entity.kind))
                             }
                             EntityKind::Target(_) | EntityKind::Splitter => {
                                 if entity.facing != belt {
                                     return Err(format!("Ran into a {:?} at {p:?} facing the wrong way (expected {:?}, got {belt:?})", entity.kind, entity.facing));
                                 }
+                            }
+                            EntityKind::TeleporterIn => {
+                                // No facing, we can always move onto this
                             }
                         }
                     }
@@ -1313,6 +1337,13 @@ impl State<Global, ()> for Local {
                             Direction::Down => '┬',
                             Direction::Left => '┤',
                             Direction::Right => '├',
+                        },
+                        EntityKind::TeleporterIn => '○',
+                        EntityKind::TeleporterOut => match entity.facing {
+                            Direction::Up => '◒',
+                            Direction::Down => '◓',
+                            Direction::Left => '◑',
+                            Direction::Right => '◐',
                         },
                     };
                 }

@@ -2,8 +2,9 @@ use anyhow::{anyhow, Result};
 
 use crate::point::Point;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum Direction {
+    #[default]
     Up,
     Down,
     Left,
