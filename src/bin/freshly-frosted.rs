@@ -110,6 +110,7 @@ struct Global {
     initial_belts: Vec<Option<Direction>>,
     use_tickwise: bool,
     allow_invalid_deliveries: bool,
+    loop_threshold: Option<usize>,
 }
 
 impl Global {
@@ -148,8 +149,17 @@ impl From<&str> for Global {
                     // Not stored, just do nothing
                 } else if line.starts_with(":tickwise") {
                     global.use_tickwise = true;
-                } else if line.starts_with(":allow_invalid_deliveries") {
+                } else if line.starts_with(":allow-invalid-deliveries") {
                     global.allow_invalid_deliveries = true;
+                } else if line.starts_with(":loop-threshold") {
+                    global.loop_threshold = Some(
+                        line.split_whitespace()
+                            .skip(1)
+                            .next()
+                            .expect("Missing loop threshold")
+                            .parse()
+                            .expect("Invalid loop threshold"),
+                    );
                 } else {
                     panic!("Invalid/unknown flag: {line}");
                 }
@@ -272,7 +282,7 @@ impl Local {
         let mut state = vec![TileState::default(); vec_size];
 
         let mut deliveries = HashMap::new();
-        let mut states_seen = HashSet::new();
+        let mut states_seen = HashMap::new();
 
         macro_rules! state_at {
             ($p:expr) => {
@@ -370,11 +380,17 @@ impl Local {
 
                     let cache_size = states_seen.len();
 
+                    let max_cache_value = states_seen
+                        .iter()
+                        .map(|(_, v)| *v)
+                        .max()
+                        .unwrap_or(0);
+
                     tracing::debug!(
                         "\
 === Starting tick ===
 Deliveries: {deliveries:?}
-States seen: {cache_size}
+States seen: {cache_size} (max: {max_cache_value})
 Max waiting time: {max_waiting_time}
 
 Maps (belts, toppings, waiting times, splitters):
@@ -384,14 +400,16 @@ Maps (belts, toppings, waiting times, splitters):
                 }
             }
 
-            // Cache which exact states we've seen; break once we see the same more than once
-            // TODO: This is expensive..
-            // TODO: Loops with bumpers can mess with this
-            if !states_seen.insert(state.clone()) {
-                tracing::debug!("Loop detected, breaking");
-                tracing::debug!("Deliveries are: {deliveries:?}");
-                break 'tick;
+            // Cache which exact states we've seen; break once we see the same more than once (or a set threshold of times)
+            if let Some(count) = states_seen.get(&state) {
+                let threshold = global.loop_threshold.unwrap_or(1);
+                if *count >= threshold {
+                    tracing::debug!("Loop detected (threshold={threshold}), breaking");
+                    tracing::debug!("Deliveries are: {deliveries:?}");
+                    break 'tick;
+                }
             }
+            states_seen.entry(state.clone()).and_modify(|e| *e += 1).or_insert(1);
 
             // Calculate all requested updates
             for x in 0..global.width {
@@ -761,7 +779,9 @@ Maps (belts, toppings, waiting times, splitters):
                             }
 
                             // Add the new topping!
-                            tracing::debug!("Adding topping {new_toppings:?} from {p2:?} / {facing:?}");
+                            tracing::debug!(
+                                "Adding topping {new_toppings:?} from {p2:?} / {facing:?}"
+                            );
                             toppings |= new_toppings;
                         }
                     }
