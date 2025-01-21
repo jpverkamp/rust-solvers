@@ -115,11 +115,18 @@ impl TryFrom<&str> for Entity {
 
 #[derive(Debug, Clone, Default)]
 struct Global {
+    // Map settings
     width: isize,
     height: isize,
-    entities: Vec<Option<Entity>>,
     targets: Option<Vec<Option<Toppings>>>,
+    
+    // Map entities etc
+    entities: Vec<Option<Entity>>,
     initial_belts: Vec<Option<Direction>>,
+    teleporter_in: Option<Point>,
+    teleporter_out: Option<Point>,
+
+    // Flags that change behavior for specific puzzles
     use_tickwise: bool,
     allow_invalid_deliveries: bool,
     loop_threshold: Option<usize>,
@@ -202,6 +209,34 @@ impl From<&str> for Global {
 
             global.width = global.width.max(line_width);
             global.height += 1;
+        }
+
+        // Store teleporters
+        for (index, entity) in global.entities.iter().enumerate() {
+            if let Some(Entity {
+                kind: EntityKind::TeleporterIn,
+                ..
+            }) = entity
+            {
+                global.teleporter_in = Some(Point {
+                    x: index as isize % global.width,
+                    y: index as isize / global.width,
+                });
+            }
+
+            if let Some(Entity {
+                kind: EntityKind::TeleporterOut,
+                ..
+            }) = entity
+            {
+                global.teleporter_out = Some(Point {
+                    x: index as isize % global.width,
+                    y: index as isize / global.width,
+                });
+            }
+        }
+        if global.teleporter_in.is_none() ^ global.teleporter_out.is_none() {
+            panic!("Teleporters must be both present or neither present");
         }
 
         global
@@ -521,7 +556,7 @@ Maps (belts, toppings, waiting times, splitters):
                     // We should never have moved onto invalid ones (see above)
                     if let Some(entity) = global.entities[p.index(global.width)] {
                         match entity.kind {
-                            EntityKind::Block | EntityKind::Topper(_) | EntityKind::Bumper(_) | EntityKind::TeleporterOut => {
+                            EntityKind::Block | EntityKind::Topper(_) | EntityKind::Bumper(_) => {
                                 unreachable!("Donut at {p:?} is on a {:?}", entity.kind);
                             }
                             // Try to create a (potential) new donut
@@ -560,9 +595,24 @@ Maps (belts, toppings, waiting times, splitters):
                                     });
                                 }
                             }
-                            // On a teleporter, try to teleport
+                            // Teleporter in tries to move to the teleporter out
+                            // If we have an in, we have an out (according to the loading function)
                             EntityKind::TeleporterIn => {
-                                todo!();
+                                updates.push(Update {
+                                    move_from: p,
+                                    move_to: global.teleporter_out.unwrap(),
+                                    toppings: state_at!(p).toppings.unwrap(),
+                                    source: state_at!(p).source.unwrap(),
+                                })
+                            }
+                            // Teleporter out basically acts like a source
+                            EntityKind::TeleporterOut => {
+                                updates.push(Update {
+                                    move_from: p,
+                                    move_to: p + entity.facing.into(),
+                                    toppings: state_at!(p).toppings.unwrap(),
+                                    source: p,
+                                });
                             }
                         }
                     }
@@ -823,6 +873,26 @@ Maps (belts, toppings, waiting times, splitters):
                     continue 'each_donut;
                 }
 
+                // If we're on a teleporter in, apply it
+                if let Some(Entity {
+                    kind: EntityKind::TeleporterIn,
+                    ..
+                }) = global.entities[p.index(global.width)]
+                {
+                    p = global.teleporter_out.unwrap();
+                    continue;
+                }
+
+                // A teleporter out just moves
+                if let Some(Entity {
+                    kind: EntityKind::TeleporterOut,
+                    facing,
+                }) = global.entities[p.index(global.width)]
+                {
+                    p = p + facing.into();
+                    continue;
+                }
+
                 // If we're adjacent to a matching bumper, bump
                 // TODO: Assume that the space we move onto is valid
                 for bump_d in Direction::all() {
@@ -902,6 +972,20 @@ Maps (belts, toppings, waiting times, splitters):
         pathfinding::prelude::bfs(
             &src,
             |p| {
+                // If we're on a teleporter, step out of it
+                if let Some(entity) = global.entities[p.index(global.width)] {
+                    match entity.kind {
+                        EntityKind::TeleporterIn => {
+                            return vec![global.teleporter_out.unwrap()];
+                        }
+                        EntityKind::TeleporterOut => {
+                            return vec![*p + entity.facing.into()];
+                        }
+                        _ => {}
+                    }
+                }
+
+                // Otherwise, try each direction
                 let mut neighbors = vec![];
                 for d in Direction::all() {
                     // If we're expanding along a belt, we have to follow the belt
@@ -940,10 +1024,20 @@ Maps (belts, toppings, waiting times, splitters):
                     );
                     let is_target_at_dst = p2 == dst && is_target;
 
-                    if self.is_empty(global, p2) || is_belt || is_splitter || is_target_at_dst {
+                    // We can always step onto the teleporter in
+                    let is_teleporter_in = matches!(
+                        global.entities[p2.index(global.width)],
+                        Some(Entity {
+                            kind: EntityKind::TeleporterIn,
+                            ..
+                        })
+                    );
+
+                    if self.is_empty(global, p2) || is_belt || is_splitter || is_target_at_dst || is_teleporter_in {
                         neighbors.push(p2);
                     }
                 }
+                
                 neighbors
             },
             |p| *p == dst,
@@ -1251,6 +1345,10 @@ impl State<Global, ()> for Local {
                 .iter()
                 .flat_map(|&d| {
                     if global.in_bounds(p + d.into()) {
+                        // TODO: Consider adding a check against the entity
+                        // TODO: These should be impl Entity...
+                        tracing::debug!("^ Expanding {d:?}");
+
                         let mut new_state = self.clone();
                         new_state.belts[p.index(global.width)] = Some(d);
                         Some((1, (), new_state))
@@ -1601,6 +1699,18 @@ mod freshly_frosted_tests {
         ",
         [
             ((2, 3), [Up, Left, Right]),
+        ]
+    }
+
+    test_next_states! {
+        teleporter,
+        "
+        T+> .   .
+        .   .   .
+        +>  >   T-
+        ",
+        [
+            ((1, 0), [Down, Right, Left]),
         ]
     }
 }
