@@ -120,6 +120,46 @@ impl TryFrom<&str> for Entity {
     }
 }
 
+impl Entity {
+    fn can_enter(self, dir: Direction) -> bool {
+        match self.kind {
+            // Can never enter
+            EntityKind::Block 
+            | EntityKind::Source 
+            | EntityKind::Topper(_)
+            | EntityKind::Bumper(_)
+            | EntityKind::TeleporterOut(_) => false,
+            
+            // Can only enter if we're going the right direction
+            EntityKind::Target(_) 
+            | EntityKind::Splitter => self.facing == dir,            
+
+            // Can always enter 
+            EntityKind::TeleporterIn(_) 
+        }
+    }
+
+    fn can_exit(self, dir: Direction) -> bool {
+        match self.kind {
+            // Can never exit
+            EntityKind::Block 
+            | EntityKind::Topper(_)
+            | EntityKind::Bumper(_) 
+            | EntityKind::TeleporterIn(_) 
+            | EntityKind::Target(_)  => false,
+
+            // Can only exit if we're going the right direction
+            EntityKind::TeleporterOut(_) 
+            | EntityKind::Source => self.facing == dir,
+
+            // Splitters do their own thing
+            EntityKind::Splitter => self.facing.turn_left() == dir || self.facing.turn_right() == dir,
+
+        }
+    }
+}
+
+
 #[derive(Debug, Clone, Default)]
 struct Global {
     // Map settings
@@ -523,6 +563,11 @@ Maps (belts, toppings, waiting times, splitters):
                         continue;
                     }
 
+                    // If we are trying to update on an empty space, stop the simulation here
+                    if self.is_empty(global, p) {
+                        break 'tick;
+                    }
+
                     // Bumpers take priority over belts
                     // TODO: Can you push into a merge situation? Then we'd need both.
                     // TODO: Assume there's only one bumper per space
@@ -538,7 +583,7 @@ Maps (belts, toppings, waiting times, splitters):
                         }) = global.entities[p2.index(global.width)]
                         {
                             if facing == d && bumper_toppings == state_at!(p).toppings.unwrap() {
-                                tracing::warn!("Bumper at {p2:?} with facing {d:?} and toppings {bumper_toppings:?}");
+                                tracing::debug!("Bumper at {p2:?} with facing {d:?} and toppings {bumper_toppings:?}");
                                 updates.push(Update {
                                     move_from: p,
                                     move_to: p + d.into(),
@@ -558,27 +603,12 @@ Maps (belts, toppings, waiting times, splitters):
                             return Err(format!("Attempted to move out of bounds at {p:?}"));
                         }
 
-                        // Some entities cannot be moved onto (at all or in a specific direction)
+                        // We have to be able to move onto the next entity
                         if let Some(entity) = global.entities[p2.index(global.width)] {
-                            match entity.kind {
-                                EntityKind::Block
-                                | EntityKind::Source
-                                | EntityKind::Topper(_)
-                                | EntityKind::Bumper(_)
-                                | EntityKind::TeleporterOut(_) => {
+                            if !entity.can_enter(belt) {
                                     return Err(format!(
-                                        "Donut at {p:?} tried to move onto a {:?}",
-                                        entity.kind
-                                    ));
-                                }
-                                EntityKind::Target(_) | EntityKind::Splitter => {
-                                    if entity.facing != belt {
-                                        return Err(format!("Donut at {p:?} tried to move onto a {:?} facing the wrong way", entity.kind));
-                                    }
-                                }
-                                EntityKind::TeleporterIn(_) => {
-                                    // No facing, we can always move onto this
-                                }
+                                    "Donut at {p:?} tried to move {belt:?} onto a {entity:?} but couldn't",
+                                ));
                             }
                         }
 
@@ -850,7 +880,8 @@ Maps (belts, toppings, waiting times, splitters):
 
             visited[toppings.bits][p.index(global.width)] = true;
 
-            while !matches!(
+
+            'simulation_tick: while !matches!(
                 global.entities[p.index(global.width)],
                 Some(Entity {
                     kind: EntityKind::Target(_),
@@ -896,42 +927,6 @@ Maps (belts, toppings, waiting times, splitters):
                     }
                 }
 
-                // If we are at a splitter, split the donut
-                if let Some(Entity {
-                    kind: EntityKind::Splitter,
-                    facing,
-                }) = global.entities[p.index(global.width)]
-                {
-                    // TODO: Check if we came into the splitter the wrong way?
-
-                    // Queue the two new donuts
-                    donuts.push((p, toppings, facing.turn_left(), visited.clone()));
-                    donuts.push((p, toppings, facing.turn_right(), visited.clone()));
-
-                    // Do not simulate this path any more
-                    continue 'each_donut;
-                }
-
-                // If we're on a teleporter in, apply it
-                if let Some(Entity {
-                    kind: EntityKind::TeleporterIn(id),
-                    ..
-                }) = global.entities[p.index(global.width)]
-                {
-                    p = global.teleporter_outs[id];
-                    continue;
-                }
-
-                // A teleporter out just moves
-                if let Some(Entity {
-                    kind: EntityKind::TeleporterOut(_),
-                    facing,
-                }) = global.entities[p.index(global.width)]
-                {
-                    p = p + facing.into();
-                    continue;
-                }
-
                 // If we're adjacent to a matching bumper, bump
                 // TODO: Assume that the space we move onto is valid
                 for bump_d in Direction::all() {
@@ -947,34 +942,58 @@ Maps (belts, toppings, waiting times, splitters):
                     {
                         if bump_d == facing && toppings == bump_toppings {
                             p = p + bump_d.into();
-                            break;
+                            continue 'simulation_tick;
                         }
                     }
                 }
 
-                // Move move along the belt
+                // Otherwise, apply entities we are on
+                    if let Some(entity) = global.entities[p.index(global.width)] {
+                        match entity.kind {
+                        // Should never move out of any of these
+                        EntityKind::Block | EntityKind::Source | EntityKind::Target(_) | EntityKind::Topper(_) | EntityKind::Bumper(_) => {
+                            return Err(format!(
+                                "Donut at {p:?} tried to move from a {entity:?}",
+                            ));
+                            }
+
+                        EntityKind::Splitter => {
+                            // Queue the two new donuts
+                            donuts.push((p, toppings, entity.facing.turn_left(), visited.clone()));
+                            donuts.push((p, toppings, entity.facing.turn_right(), visited.clone()));
+
+                            // Do not simulate this path any more
+                            continue 'each_donut;
+                        }
+                        EntityKind::TeleporterIn(id) => {
+                            p = global.teleporter_outs[id];
+                            continue 'simulation_tick;
+                        }
+                        EntityKind::TeleporterOut(_) => {
+                            // TODO: This doesn't check can_enter on the next space; assuming that's not a problem
+                            last_move = entity.facing;
+                            p = p + entity.facing.into();
+                            continue 'simulation_tick;
+                            }
+                            // TODO: This doesn't check can_enter on the next space; assuming that's not a problem
+                            p = p + last_move.into();
+                            continue 'simulation_tick;
+                        }
+                    }
+                }
+
+                // If we're on a belt, move along it
                 if let Some(belt) = self.belts[p.index(global.width)] {
+                    last_move = belt;
                     p = p + belt.into();
 
                     // Some entities cannot be run into at all
                     // Some require that you are moving the right direction
                     if let Some(entity) = global.entities[p.index(global.width)] {
-                        match entity.kind {
-                            EntityKind::Block
-                            | EntityKind::Source
-                            | EntityKind::Topper(_)
-                            | EntityKind::Bumper(_)
-                            | EntityKind::TeleporterOut(_) => {
-                                return Err(format!("Ran into a {:?} at {p:?}", entity.kind))
-                            }
-                            EntityKind::Target(_) | EntityKind::Splitter => {
-                                if entity.facing != belt {
-                                    return Err(format!("Ran into a {:?} at {p:?} facing the wrong way (expected {:?}, got {belt:?})", entity.kind, entity.facing));
-                                }
-                            }
-                            EntityKind::TeleporterIn(_) => {
-                                // No facing, we can always move onto this
-                            }
+                        if !entity.can_enter(belt) {
+                            return Err(format!(
+                                "Donut at {p:?} tried to move {belt:?} onto a {entity:?} but couldn't",
+                            ));
                         }
                     }
                 } else {
@@ -1039,40 +1058,50 @@ Maps (belts, toppings, waiting times, splitters):
                         continue;
                     }
 
-                    // We can always step onto a belt
-                    let is_belt = self.belts[p2.index(global.width)].is_some();
+                    // Trying to leave a point in a way we're not allowed
+                    if global.entities[p.index(global.width)].is_some_and(|e| !e.can_exit(d)) {
+                        continue;
+                    }
 
-                    // TODO: This ignore direction for splitters for the time being
-                    // This is technically correct, but could be optimized
-                    let is_splitter = matches!(
-                        global.entities[p2.index(global.width)],
-                        Some(Entity {
-                            kind: EntityKind::Splitter,
-                            ..
-                        })
-                    );
-
-                    // We can only step onto a splitter in the proper direction
-                    let is_target = matches!(
-                        global.entities[p2.index(global.width)],
-                        Some(Entity {
-                            kind: EntityKind::Target(_),
-                            ..
-                        })
-                    );
-                    let is_target_at_dst = p2 == dst && is_target;
-
-                    // We can always step onto the teleporter in
-                    let is_teleporter_in = matches!(
-                        global.entities[p2.index(global.width)],
-                        Some(Entity {
-                            kind: EntityKind::TeleporterIn(_),
-                            ..
-                        })
-                    );
-
-                    if self.is_empty(global, p2) || is_belt || is_splitter || is_target_at_dst || is_teleporter_in {
+                    // Otherwise, we can always step onto empty space or a belt
+                    if self.is_empty(global, p2) || self.belts[p2.index(global.width)].is_some() {
                         neighbors.push(p2);
+                    }
+
+                    // And if we're stepping onto an entity that allows it, that's fine
+                    if global.entities[p2.index(global.width)].is_some_and(|e| e.can_enter(d)) {
+                        neighbors.push(p2);
+                    }
+                }
+
+                // Also account for bumpers
+                for d in Direction::all() {
+                    let p2 = *p + d.into();
+                    if !global.in_bounds(p2) {
+                        continue;
+                    }
+
+                    // If we're looking at a bumper pointing at us, include being bumped backwards
+                    if let Some(Entity {
+                        kind: EntityKind::Bumper(_),
+                        facing,
+                    }) = global.entities[p2.index(global.width)]
+                    {
+                        if facing == d.flip() {
+                            let p3 = *p - d.into();
+
+                            if !global.in_bounds(p3) {
+                                continue;
+                            }
+
+                            if self.is_empty(global, p3) || self.belts[p3.index(global.width)].is_some() {
+                                neighbors.push(p3);
+                            }
+
+                            if global.entities[p3.index(global.width)].is_some_and(|e| e.can_enter(d)) {
+                                neighbors.push(p3);
+                            }
+                        }
                     }
                 }
                 
