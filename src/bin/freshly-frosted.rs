@@ -1,5 +1,8 @@
 use std::{
-    cell::RefCell, collections::{HashMap, HashSet}, io::Read, rc::Rc
+    cell::RefCell,
+    collections::{HashMap, HashSet},
+    io::Read,
+    rc::Rc,
 };
 
 use bitmask_enum::bitmask;
@@ -131,37 +134,36 @@ impl Entity {
     fn can_enter(self, dir: Direction) -> bool {
         match self.kind {
             // Can never enter
-            EntityKind::Block 
-            | EntityKind::Source 
+            EntityKind::Block
+            | EntityKind::Source
             | EntityKind::Topper(_)
             | EntityKind::Bumper(_)
             | EntityKind::TeleporterOut(_) => false,
-            
-            // Can only enter if we're going the right direction
-            EntityKind::Target(_) 
-            | EntityKind::Splitter => self.facing == dir,            
 
-            // Can always enter 
-            EntityKind::TeleporterIn(_) 
-            | EntityKind::Crossover => true,
+            // Can only enter if we're going the right direction
+            EntityKind::Target(_) | EntityKind::Splitter => self.facing == dir,
+
+            // Can always enter
+            EntityKind::TeleporterIn(_) | EntityKind::Crossover => true,
         }
     }
 
     fn can_exit(self, dir: Direction) -> bool {
         match self.kind {
             // Can never exit
-            EntityKind::Block 
+            EntityKind::Block
             | EntityKind::Topper(_)
-            | EntityKind::Bumper(_) 
-            | EntityKind::TeleporterIn(_) 
-            | EntityKind::Target(_)  => false,
+            | EntityKind::Bumper(_)
+            | EntityKind::TeleporterIn(_)
+            | EntityKind::Target(_) => false,
 
             // Can only exit if we're going the right direction
-            EntityKind::TeleporterOut(_) 
-            | EntityKind::Source => self.facing == dir,
+            EntityKind::TeleporterOut(_) | EntityKind::Source => self.facing == dir,
 
             // Splitters do their own thing
-            EntityKind::Splitter => self.facing.turn_left() == dir || self.facing.turn_right() == dir,
+            EntityKind::Splitter => {
+                self.facing.turn_left() == dir || self.facing.turn_right() == dir
+            }
 
             // Can always exit
             EntityKind::Crossover => true,
@@ -169,14 +171,13 @@ impl Entity {
     }
 }
 
-
 #[derive(Debug, Clone, Default)]
 struct Global {
     // Map settings
     width: isize,
     height: isize,
     targets: Option<Vec<Option<Toppings>>>,
-    
+
     // Map entities etc
     entities: Vec<Option<Entity>>,
     initial_belts: Vec<Option<Direction>>,
@@ -276,7 +277,11 @@ impl From<&str> for Global {
             .entities
             .iter()
             .filter_map(|e| {
-                if let Some(Entity { kind: EntityKind::TeleporterIn(id), .. }) = e {
+                if let Some(Entity {
+                    kind: EntityKind::TeleporterIn(id),
+                    ..
+                }) = e
+                {
                     Some(*id)
                 } else {
                     None
@@ -289,7 +294,11 @@ impl From<&str> for Global {
             .entities
             .iter()
             .filter_map(|e| {
-                if let Some(Entity { kind: EntityKind::TeleporterOut(id), .. }) = e {
+                if let Some(Entity {
+                    kind: EntityKind::TeleporterOut(id),
+                    ..
+                }) = e
+                {
                     Some(*id)
                 } else {
                     None
@@ -299,15 +308,30 @@ impl From<&str> for Global {
         teleporter_out_ids.sort();
 
         // Teleporters must be defined in order (so no 1 without 0)
-        assert_eq!(teleporter_in_ids, (0..teleporter_in_ids.len()).collect::<Vec<_>>(), "Teleporter in IDs not in order");
+        assert_eq!(
+            teleporter_in_ids,
+            (0..teleporter_in_ids.len()).collect::<Vec<_>>(),
+            "Teleporter in IDs not in order"
+        );
 
         // There must be exactly one out for every in
-        assert_eq!(teleporter_in_ids, teleporter_out_ids, "Mismatched teleporters");
+        assert_eq!(
+            teleporter_in_ids, teleporter_out_ids,
+            "Mismatched teleporters"
+        );
 
         // There cannot be any duplicates in either list
         // This seems like a silly way to do it :smile:
-        assert_eq!(teleporter_in_ids.len(), teleporter_in_ids.iter().collect::<HashSet<_>>().len(), "Duplicate teleporter in");
-        assert_eq!(teleporter_out_ids.len(), teleporter_out_ids.iter().collect::<HashSet<_>>().len(), "Duplicate teleporter out");
+        assert_eq!(
+            teleporter_in_ids.len(),
+            teleporter_in_ids.iter().collect::<HashSet<_>>().len(),
+            "Duplicate teleporter in"
+        );
+        assert_eq!(
+            teleporter_out_ids.len(),
+            teleporter_out_ids.iter().collect::<HashSet<_>>().len(),
+            "Duplicate teleporter out"
+        );
 
         // Store the teleporter outs by ID for easy access
         let mut teleporter_outs = global
@@ -315,11 +339,18 @@ impl From<&str> for Global {
             .iter()
             .enumerate()
             .filter_map(|(index, e)| {
-                if let Some(Entity { kind: EntityKind::TeleporterOut(id), .. }) = e {
-                    Some((id, Point {
-                        x: index as isize % global.width,
-                        y: index as isize / global.width,
-                    }))
+                if let Some(Entity {
+                    kind: EntityKind::TeleporterOut(id),
+                    ..
+                }) = e
+                {
+                    Some((
+                        id,
+                        Point {
+                            x: index as isize % global.width,
+                            y: index as isize / global.width,
+                        },
+                    ))
                 } else {
                     None
                 }
@@ -394,13 +425,22 @@ impl Local {
 
         let vec_size = global.width as usize * global.height as usize;
 
+        #[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Hash)]
+        enum CrossoverState {
+            #[default]
+            Open,
+            Occupied(Direction),
+            OpenHorizontal,
+            OpenVertical,
+        }
+
         #[derive(Debug, Clone, Default, PartialEq, Eq, Hash)]
         struct TileState {
             toppings: Option<Toppings>,
             source: Option<Point>,
-            last_move: Direction,
             waiting_time: usize,
             split_next_right: bool,
+            crossover_state: CrossoverState,
         }
 
         #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -445,6 +485,7 @@ impl Local {
                         initial_map.clone(), // Map 1: Current toppings
                         initial_map.clone(), // Map 2: Waiting times
                         initial_map.clone(), // Map 3: Splitters
+                        initial_map.clone(), // Map 4: Crossovers
                     ];
 
                     for y in 0..global.height {
@@ -483,6 +524,26 @@ impl Local {
                             } else {
                                 maps[3][p.index(global.width + 1)] = '.';
                             }
+
+                            // Map 4 shows current crossover state
+                            if let Some(Entity {
+                                kind: EntityKind::Crossover,
+                                ..
+                            }) = global.entities[p.index(global.width)]
+                            {
+                                maps[4][p.index(global.width + 1)] =
+                                    match state_at!(p).crossover_state {
+                                        CrossoverState::Open => '*',
+                                        CrossoverState::Occupied(Direction::Up) => '^',
+                                        CrossoverState::Occupied(Direction::Down) => 'v',
+                                        CrossoverState::Occupied(Direction::Left) => '<',
+                                        CrossoverState::Occupied(Direction::Right) => '>',
+                                        CrossoverState::OpenHorizontal => '-',
+                                        CrossoverState::OpenVertical => '|',
+                                    };
+                            } else {
+                                maps[4][p.index(global.width + 1)] = '.';
+                            }
                         }
                     }
 
@@ -512,11 +573,7 @@ impl Local {
 
                     let cache_size = states_seen.len();
 
-                    let max_cache_value = states_seen
-                        .iter()
-                        .map(|(_, v)| *v)
-                        .max()
-                        .unwrap_or(0);
+                    let max_cache_value = states_seen.iter().map(|(_, v)| *v).max().unwrap_or(0);
 
                     tracing::debug!(
                         "\
@@ -541,7 +598,10 @@ Maps (belts, toppings, waiting times, splitters):
                     break 'tick;
                 }
             }
-            states_seen.entry(state.clone()).and_modify(|e| *e += 1).or_insert(1);
+            states_seen
+                .entry(state.clone())
+                .and_modify(|e| *e += 1)
+                .or_insert(1);
 
             // Calculate all requested updates
             for x in 0..global.width {
@@ -672,14 +732,12 @@ Maps (belts, toppings, waiting times, splitters):
                             }
                             // Teleporter in tries to move to the teleporter out
                             // If we have an in, we have an out (according to the loading function)
-                            EntityKind::TeleporterIn(id) => {
-                                updates.push(Update {
-                                    move_from: p,
-                                    move_to: global.teleporter_outs[id],
-                                    toppings: state_at!(p).toppings.unwrap(),
-                                    source: state_at!(p).source.unwrap(),
-                                })
-                            }
+                            EntityKind::TeleporterIn(id) => updates.push(Update {
+                                move_from: p,
+                                move_to: global.teleporter_outs[id],
+                                toppings: state_at!(p).toppings.unwrap(),
+                                source: state_at!(p).source.unwrap(),
+                            }),
                             // Teleporter out basically acts like a source
                             EntityKind::TeleporterOut(_) => {
                                 updates.push(Update {
@@ -690,18 +748,62 @@ Maps (belts, toppings, waiting times, splitters):
                                 });
                             }
                             // Crossovers keep going in the same direction
-                            EntityKind::Crossover => {
-                                updates.push(Update {
-                                    move_from: p,
-                                    move_to: p + state_at!(p).last_move.into(),
-                                    toppings: state_at!(p).toppings.unwrap(),
-                                    source: state_at!(p).source.unwrap(),
-                                });
-                            }
+                            EntityKind::Crossover => match state_at!(p).crossover_state {
+                                CrossoverState::Open
+                                | CrossoverState::OpenHorizontal
+                                | CrossoverState::OpenVertical => {
+                                    unreachable!("Donuts should not be able to move out of non-occupied crossovers")
+                                }
+                                CrossoverState::Occupied(d) => {
+                                    updates.push(Update {
+                                        move_from: p,
+                                        move_to: p + d.into(),
+                                        toppings: state_at!(p).toppings.unwrap(),
+                                        source: state_at!(p).source.unwrap(),
+                                    });
+                                }
+                            },
                         }
                     }
                 }
             }
+
+            // Filter out any updates that are moving the wrong way into/through crossovers
+            tracing::debug!("Before filter: {}", updates.len());
+            let updates = updates
+                .into_iter()
+                .filter(|u| {
+                    if let Some(Entity {
+                        kind: EntityKind::Crossover,
+                        ..
+                    }) = global.entities[u.move_to.index(global.width)]
+                    {
+                        let d: Direction = match (u.move_to - u.move_from).try_into() {
+                            Ok(d) => d,
+                            Err(_) => return false,
+                        };
+
+                        match state_at!(u.move_to).crossover_state {
+                            // Open crossovers can always be moved into
+                            CrossoverState::Open => true,
+
+                            // Occupied can never be moved into
+                            CrossoverState::Occupied(_) => false,
+
+                            // Open horizontal/vertical must be moved into the correct way
+                            CrossoverState::OpenHorizontal => {
+                                d == Direction::Left || d == Direction::Right
+                            }
+                            CrossoverState::OpenVertical => {
+                                d == Direction::Up || d == Direction::Down
+                            }
+                        }
+                    } else {
+                        true
+                    }
+                })
+                .collect::<Vec<_>>();
+            tracing::debug!("After filter: {}", updates.len());
 
             // Okay, now for any update that has multiple choices, we have to choose one
             // Choose the one that has the largest waiting_time
@@ -774,6 +876,24 @@ Maps (belts, toppings, waiting times, splitters):
                     // This updates the flag for everything, even non-splitters, but we never read it otherwise
                     state_at!(u.move_from).split_next_right =
                         !state_at!(u.move_from).split_next_right;
+
+                    // When we move out of a crossover, it toggles the state depending on how we did
+                    if let Some(Entity {
+                        kind: EntityKind::Crossover,
+                        ..
+                    }) = global.entities[u.move_from.index(global.width)]
+                    {
+                        let d: Direction = (u.move_to - u.move_from)
+                            .try_into()
+                            .expect("Moved out of a crossover with a non-adjacent move");
+
+                        state_at!(u.move_from).crossover_state = match d {
+                            Direction::Up | Direction::Down => CrossoverState::OpenHorizontal,
+                            Direction::Left | Direction::Right => CrossoverState::OpenVertical,
+                        };
+
+                        tracing::debug!("Moved out of a crossover at {u:?} with direction {d:?}");
+                    }
                 }
             }
 
@@ -783,14 +903,22 @@ Maps (belts, toppings, waiting times, splitters):
                     state_at!(u.move_to).toppings = Some(u.toppings);
                     state_at!(u.move_to).source = Some(u.source);
 
-                    match (u.move_to - u.move_from).try_into() {
-                        Ok(d) => state_at!(u.move_to).last_move = d,
-                        Err(e) => {
-                            tracing::warn!("Invalid last_move update: {u:?}, error: {e}");
-                        }
-                    }
-
                     // Moving to a splitter does *not* toggle it
+
+                    // If we move into a crossover, toggle it's mode
+                    if let Some(Entity {
+                        kind: EntityKind::Crossover,
+                        ..
+                    }) = global.entities[u.move_to.index(global.width)]
+                    {
+                        let d = (u.move_to - u.move_from)
+                            .try_into()
+                            .expect("Moved into a crossover with a non-adjacent move");
+
+                        state_at!(u.move_to).crossover_state = CrossoverState::Occupied(d);
+
+                        tracing::debug!("Moved into a crossover at {u:?} with direction {d:?}");
+                    }
                 }
             }
 
@@ -844,7 +972,8 @@ Maps (belts, toppings, waiting times, splitters):
         let result = SimulateTickwiseResult { deliveries, extras };
 
         // Cache the result
-        global.simulate_tickwise_cache
+        global
+            .simulate_tickwise_cache
             .borrow_mut()
             .insert(self.clone(), result.clone());
 
@@ -900,9 +1029,7 @@ Maps (belts, toppings, waiting times, splitters):
             }
 
             visited[toppings.bits][p.index(global.width)] = true;
-
-            #[allow(unused_assignments)] // TODO: I don't think this is actually unused?
-            let mut last_move = initial_facing;
+            let mut crossover_direction = initial_facing;
 
             'simulation_tick: while !matches!(
                 global.entities[p.index(global.width)],
@@ -964,7 +1091,7 @@ Maps (belts, toppings, waiting times, splitters):
                     }) = global.entities[p2.index(global.width)]
                     {
                         if bump_d == facing && toppings == bump_toppings {
-                            last_move = facing;
+                            crossover_direction = bump_d;
                             p = p + bump_d.into();
                             continue 'simulation_tick;
                         }
@@ -975,10 +1102,12 @@ Maps (belts, toppings, waiting times, splitters):
                 if let Some(entity) = global.entities[p.index(global.width)] {
                     match entity.kind {
                         // Should never move out of any of these
-                        EntityKind::Block | EntityKind::Source | EntityKind::Target(_) | EntityKind::Topper(_) | EntityKind::Bumper(_) => {
-                            return Err(format!(
-                                "Donut at {p:?} tried to move from a {entity:?}",
-                            ));
+                        EntityKind::Block
+                        | EntityKind::Source
+                        | EntityKind::Target(_)
+                        | EntityKind::Topper(_)
+                        | EntityKind::Bumper(_) => {
+                            return Err(format!("Donut at {p:?} tried to move from a {entity:?}",));
                         }
 
                         EntityKind::Splitter => {
@@ -995,13 +1124,13 @@ Maps (belts, toppings, waiting times, splitters):
                         }
                         EntityKind::TeleporterOut(_) => {
                             // TODO: This doesn't check can_enter on the next space; assuming that's not a problem
-                            last_move = entity.facing;
+                            crossover_direction = entity.facing;
                             p = p + entity.facing.into();
                             continue 'simulation_tick;
                         }
                         EntityKind::Crossover => {
                             // TODO: This doesn't check can_enter on the next space; assuming that's not a problem
-                            p = p + last_move.into();
+                            p = p + crossover_direction.into();
                             continue 'simulation_tick;
                         }
                     }
@@ -1009,8 +1138,8 @@ Maps (belts, toppings, waiting times, splitters):
 
                 // If we're on a belt, move along it
                 if let Some(belt) = self.belts[p.index(global.width)] {
-                    last_move = belt;
                     p = p + belt.into();
+                    crossover_direction = belt;
 
                     // Some entities cannot be run into at all
                     // Some require that you are moving the right direction
@@ -1036,7 +1165,8 @@ Maps (belts, toppings, waiting times, splitters):
         }
 
         // Cache the result
-        global.simulate_cache
+        global
+            .simulate_cache
             .borrow_mut()
             .insert(self.clone(), complete_donuts.clone());
 
@@ -1119,17 +1249,21 @@ Maps (belts, toppings, waiting times, splitters):
                                 continue;
                             }
 
-                            if self.is_empty(global, p3) || self.belts[p3.index(global.width)].is_some() {
+                            if self.is_empty(global, p3)
+                                || self.belts[p3.index(global.width)].is_some()
+                            {
                                 neighbors.push(p3);
                             }
 
-                            if global.entities[p3.index(global.width)].is_some_and(|e| e.can_enter(d)) {
+                            if global.entities[p3.index(global.width)]
+                                .is_some_and(|e| e.can_enter(d))
+                            {
                                 neighbors.push(p3);
                             }
                         }
                     }
                 }
-                
+
                 neighbors
             },
             |p| *p == dst,
@@ -1420,7 +1554,6 @@ impl State<Global, ()> for Local {
                 }
             }
         };
-        println!("DEBUG simulation result: {donuts:?}");
         donuts.sort();
 
         // Find the first empty point
