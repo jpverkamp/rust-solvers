@@ -1,7 +1,5 @@
 use std::{
-    collections::{HashMap, HashSet},
-    io::Read,
-    sync::{LazyLock, Mutex},
+    cell::RefCell, collections::{HashMap, HashSet}, io::Read, rc::Rc
 };
 
 use bitmask_enum::bitmask;
@@ -138,6 +136,10 @@ struct Global {
     use_tickwise: bool,
     allow_invalid_deliveries: bool,
     loop_threshold: Option<usize>,
+
+    // Local caches
+    simulate_cache: Rc<RefCell<HashMap<Local, Vec<(Point, Toppings)>>>>,
+    simulate_tickwise_cache: Rc<RefCell<HashMap<Local, SimulateTickwiseResult>>>,
 }
 
 impl Global {
@@ -342,7 +344,7 @@ impl Local {
     #[tracing::instrument(skip(self, global), ret)]
     fn simulate_tickwise(&self, global: &Global) -> Result<SimulateTickwiseResult, String> {
         // Check the cache first
-        if let Some(cached) = SIMULATE_TICKWISE_CACHE.lock().unwrap().get(self) {
+        if let Some(cached) = global.simulate_tickwise_cache.borrow().get(self) {
             return Ok(cached.clone());
         }
 
@@ -791,9 +793,8 @@ Maps (belts, toppings, waiting times, splitters):
         let result = SimulateTickwiseResult { deliveries, extras };
 
         // Cache the result
-        SIMULATE_TICKWISE_CACHE
-            .lock()
-            .unwrap()
+        global.simulate_tickwise_cache
+            .borrow_mut()
             .insert(self.clone(), result.clone());
 
         Ok(result)
@@ -802,7 +803,7 @@ Maps (belts, toppings, waiting times, splitters):
     #[tracing::instrument(skip(self, global), ret)]
     fn simulate(&self, global: &Global) -> Result<Vec<(Point, Toppings)>, String> {
         // Check the cache first
-        if let Some(cached) = SIMULATE_CACHE.lock().unwrap().get(self) {
+        if let Some(cached) = global.simulate_cache.borrow().get(self) {
             return Ok(cached.clone());
         }
 
@@ -991,9 +992,8 @@ Maps (belts, toppings, waiting times, splitters):
         }
 
         // Cache the result
-        SIMULATE_CACHE
-            .lock()
-            .unwrap()
+        global.simulate_cache
+            .borrow_mut()
             .insert(self.clone(), complete_donuts.clone());
 
         Ok(complete_donuts)
