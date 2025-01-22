@@ -768,43 +768,6 @@ Maps (belts, toppings, waiting times, splitters):
                 }
             }
 
-            // Filter out any updates that are moving the wrong way into/through crossovers
-            tracing::debug!("Before filter: {}", updates.len());
-            let updates = updates
-                .into_iter()
-                .filter(|u| {
-                    if let Some(Entity {
-                        kind: EntityKind::Crossover,
-                        ..
-                    }) = global.entities[u.move_to.index(global.width)]
-                    {
-                        let d: Direction = match (u.move_to - u.move_from).try_into() {
-                            Ok(d) => d,
-                            Err(_) => return false,
-                        };
-
-                        match state_at!(u.move_to).crossover_state {
-                            // Open crossovers can always be moved into
-                            CrossoverState::Open => true,
-
-                            // Occupied can never be moved into
-                            CrossoverState::Occupied(_) => false,
-
-                            // Open horizontal/vertical must be moved into the correct way
-                            CrossoverState::OpenHorizontal => {
-                                d == Direction::Left || d == Direction::Right
-                            }
-                            CrossoverState::OpenVertical => {
-                                d == Direction::Up || d == Direction::Down
-                            }
-                        }
-                    } else {
-                        true
-                    }
-                })
-                .collect::<Vec<_>>();
-            tracing::debug!("After filter: {}", updates.len());
-
             // Okay, now for any update that has multiple choices, we have to choose one
             // Choose the one that has the largest waiting_time
             // Then we have to increment the waiting time for the rest and wind back any updates depending on those
@@ -819,19 +782,49 @@ Maps (belts, toppings, waiting times, splitters):
                         .filter(|(_, u)| u.move_to == p)
                         .collect::<Vec<_>>();
 
+                    // Special case: if we are moving onto a crossover at most one is valid
+                    // TODO: This assumes we don't have both up and down in when openvertical in the same tick
+                    if let Some(Entity { kind: EntityKind::Crossover, .. }) = global.entities[p.index(global.width)] {
+                        if updates.len() == 0 {
+                            continue;
+                        }
+
+                        for (index, update) in updates.iter() {
+                            let d: Direction = (p - update.move_from).try_into().expect("Moved onto a crossover with a non-adjacent move");
+
+                            let failed = match state_at!(p).crossover_state {
+                                CrossoverState::Occupied(_) => true,
+                                CrossoverState::OpenHorizontal => d == Direction::Up || d == Direction::Down,
+                                CrossoverState::OpenVertical => d == Direction::Left || d == Direction::Right,
+                                _ => false,
+                            };
+
+                            if failed {
+                                will_update[*index] = false;
+                            }
+                        }
+
+                        continue;
+                    }
+
+                    // Otherwise, if there are zero or 1 updates to this point, it's fine
                     if updates.len() <= 1 {
                         continue;
                     }
 
-                    // This is a kludge for 6/8; it requires that Bottom goes before Left
-                    // So we'll initially sort bottom up and then because they're tied, it will win
-                    updates.reverse();
-
                     // Sort, the longest waiting will end up first
+                    // On ties, the most frosted donut goes first
                     updates.sort_by(|(_, a), (_, b)| {
                         state_at!(b.move_from)
                             .waiting_time
                             .cmp(&state_at!(a.move_from).waiting_time)
+                            .then_with(|| {
+                                state_at!(b.move_from)
+                                    .toppings
+                                    .unwrap_or(Toppings::none())
+                                    .bits
+                                    .cmp(&state_at!(a.move_from).toppings.unwrap_or(Toppings::none()).bits)
+                            })
                     });
 
                     // The waiting time for the source of the one that moves is 0'ed
