@@ -23,6 +23,7 @@ enum EntityKind {
     Bumper(Toppings),
     TeleporterIn(usize),
     TeleporterOut(usize),
+    Crossover,
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -114,6 +115,12 @@ impl TryFrom<&str> for Entity {
                 facing: dir(facing)?,
             }),
 
+            // Crossovers
+            &['*'] => Ok(Entity {
+                kind: EntityKind::Crossover,
+                facing: Direction::default(),
+            }),
+
             // Something we don't know how to parse
             _ => Err(format!("Invalid entity: {value}")),
         }
@@ -136,6 +143,7 @@ impl Entity {
 
             // Can always enter 
             EntityKind::TeleporterIn(_) 
+            | EntityKind::Crossover => true,
         }
     }
 
@@ -155,6 +163,8 @@ impl Entity {
             // Splitters do their own thing
             EntityKind::Splitter => self.facing.turn_left() == dir || self.facing.turn_right() == dir,
 
+            // Can always exit
+            EntityKind::Crossover => true,
         }
     }
 }
@@ -358,12 +368,6 @@ impl Global {
     }
 }
 
-static SIMULATE_CACHE: LazyLock<Mutex<HashMap<Local, Vec<(Point, Toppings)>>>> =
-    LazyLock::new(|| Mutex::new(HashMap::new()));
-
-static SIMULATE_TICKWISE_CACHE: LazyLock<Mutex<HashMap<Local, SimulateTickwiseResult>>> =
-    LazyLock::new(|| Mutex::new(HashMap::new()));
-
 #[allow(dead_code)]
 #[derive(Debug, Clone)]
 struct SimulateTickwiseResult {
@@ -394,6 +398,7 @@ impl Local {
         struct TileState {
             toppings: Option<Toppings>,
             source: Option<Point>,
+            last_move: Direction,
             waiting_time: usize,
             split_next_right: bool,
         }
@@ -606,7 +611,7 @@ Maps (belts, toppings, waiting times, splitters):
                         // We have to be able to move onto the next entity
                         if let Some(entity) = global.entities[p2.index(global.width)] {
                             if !entity.can_enter(belt) {
-                                    return Err(format!(
+                                return Err(format!(
                                     "Donut at {p:?} tried to move {belt:?} onto a {entity:?} but couldn't",
                                 ));
                             }
@@ -680,6 +685,15 @@ Maps (belts, toppings, waiting times, splitters):
                                 updates.push(Update {
                                     move_from: p,
                                     move_to: p + entity.facing.into(),
+                                    toppings: state_at!(p).toppings.unwrap(),
+                                    source: state_at!(p).source.unwrap(),
+                                });
+                            }
+                            // Crossovers keep going in the same direction
+                            EntityKind::Crossover => {
+                                updates.push(Update {
+                                    move_from: p,
+                                    move_to: p + state_at!(p).last_move.into(),
                                     toppings: state_at!(p).toppings.unwrap(),
                                     source: state_at!(p).source.unwrap(),
                                 });
@@ -768,6 +782,13 @@ Maps (belts, toppings, waiting times, splitters):
                 if will_update[i] {
                     state_at!(u.move_to).toppings = Some(u.toppings);
                     state_at!(u.move_to).source = Some(u.source);
+
+                    match (u.move_to - u.move_from).try_into() {
+                        Ok(d) => state_at!(u.move_to).last_move = d,
+                        Err(e) => {
+                            tracing::warn!("Invalid last_move update: {u:?}, error: {e}");
+                        }
+                    }
 
                     // Moving to a splitter does *not* toggle it
                 }
@@ -880,6 +901,8 @@ Maps (belts, toppings, waiting times, splitters):
 
             visited[toppings.bits][p.index(global.width)] = true;
 
+            #[allow(unused_assignments)] // TODO: I don't think this is actually unused?
+            let mut last_move = initial_facing;
 
             'simulation_tick: while !matches!(
                 global.entities[p.index(global.width)],
@@ -941,6 +964,7 @@ Maps (belts, toppings, waiting times, splitters):
                     }) = global.entities[p2.index(global.width)]
                     {
                         if bump_d == facing && toppings == bump_toppings {
+                            last_move = facing;
                             p = p + bump_d.into();
                             continue 'simulation_tick;
                         }
@@ -948,14 +972,14 @@ Maps (belts, toppings, waiting times, splitters):
                 }
 
                 // Otherwise, apply entities we are on
-                    if let Some(entity) = global.entities[p.index(global.width)] {
-                        match entity.kind {
+                if let Some(entity) = global.entities[p.index(global.width)] {
+                    match entity.kind {
                         // Should never move out of any of these
                         EntityKind::Block | EntityKind::Source | EntityKind::Target(_) | EntityKind::Topper(_) | EntityKind::Bumper(_) => {
                             return Err(format!(
                                 "Donut at {p:?} tried to move from a {entity:?}",
                             ));
-                            }
+                        }
 
                         EntityKind::Splitter => {
                             // Queue the two new donuts
@@ -974,7 +998,8 @@ Maps (belts, toppings, waiting times, splitters):
                             last_move = entity.facing;
                             p = p + entity.facing.into();
                             continue 'simulation_tick;
-                            }
+                        }
+                        EntityKind::Crossover => {
                             // TODO: This doesn't check can_enter on the next space; assuming that's not a problem
                             p = p + last_move.into();
                             continue 'simulation_tick;
@@ -1395,6 +1420,7 @@ impl State<Global, ()> for Local {
                 }
             }
         };
+        println!("DEBUG simulation result: {donuts:?}");
         donuts.sort();
 
         // Find the first empty point
@@ -1511,6 +1537,7 @@ impl State<Global, ()> for Local {
                             Direction::Left => '◑',
                             Direction::Right => '◐',
                         },
+                        EntityKind::Crossover => '*',
                     };
                 }
 
@@ -1779,6 +1806,18 @@ mod freshly_frosted_tests {
         ",
         [
             ((1, 0), [Down, Right, Left]),
+        ]
+    }
+
+    test_next_states! {
+        crossover,
+        "
+        .   .   .   .
+        +>  *   .   .
+        .   .   .   .
+        ",
+        [
+            ((2, 1), [Up, Down, Left, Right]),
         ]
     }
 }

@@ -50,6 +50,20 @@ impl TryFrom<char> for Direction {
     }
 }
 
+impl TryFrom<Point> for Direction {
+    type Error = anyhow::Error;
+
+    fn try_from(value: Point) -> Result<Self> {
+        match value {
+            Point { x: 0, y: -1 } => Ok(Direction::Up),
+            Point { x: 0, y: 1 } => Ok(Direction::Down),
+            Point { x: -1, y: 0 } => Ok(Direction::Left),
+            Point { x: 1, y: 0 } => Ok(Direction::Right),
+            _ => Err(anyhow!("Invalid point for direction: {value:?}")),
+        }
+    }
+}
+
 impl Direction {
     pub fn all() -> Vec<Direction> {
         vec![
