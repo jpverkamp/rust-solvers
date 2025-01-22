@@ -6,6 +6,7 @@ use std::{
 };
 
 use bitmask_enum::bitmask;
+use itertools::Itertools;
 use solver::{Direction, Point, Solver, State};
 
 #[bitmask]
@@ -181,7 +182,7 @@ struct Global {
     // Map entities etc
     entities: Vec<Option<Entity>>,
     initial_belts: Vec<Option<Direction>>,
-    teleporter_outs: Vec<Point>,
+    teleporter_outs: Vec<Vec<Point>>,
 
     // Flags that change behavior for specific puzzles
     use_tickwise: bool,
@@ -307,32 +308,6 @@ impl From<&str> for Global {
             .collect::<Vec<_>>();
         teleporter_out_ids.sort();
 
-        // Teleporters must be defined in order (so no 1 without 0)
-        assert_eq!(
-            teleporter_in_ids,
-            (0..teleporter_in_ids.len()).collect::<Vec<_>>(),
-            "Teleporter in IDs not in order"
-        );
-
-        // There must be exactly one out for every in
-        assert_eq!(
-            teleporter_in_ids, teleporter_out_ids,
-            "Mismatched teleporters"
-        );
-
-        // There cannot be any duplicates in either list
-        // This seems like a silly way to do it :smile:
-        assert_eq!(
-            teleporter_in_ids.len(),
-            teleporter_in_ids.iter().collect::<HashSet<_>>().len(),
-            "Duplicate teleporter in"
-        );
-        assert_eq!(
-            teleporter_out_ids.len(),
-            teleporter_out_ids.iter().collect::<HashSet<_>>().len(),
-            "Duplicate teleporter out"
-        );
-
         // Store the teleporter outs by ID for easy access
         let mut teleporter_outs = global
             .entities
@@ -358,7 +333,15 @@ impl From<&str> for Global {
             .collect::<Vec<_>>();
         teleporter_outs.sort_by_key(|(id, _)| *id);
 
-        global.teleporter_outs = teleporter_outs.into_iter().map(|(_, p)| p).collect();
+        // Collapse that from (id, point) to vec<vec<point>>
+        global.teleporter_outs = teleporter_outs
+            .into_iter()
+            .chunk_by(|(id, _)| *id)
+            .into_iter()
+            .map(|(_id, group)| {
+                group.map(|(_, p)| p).collect::<Vec<_>>()
+            })
+            .collect::<Vec<_>>();
 
         global
     }
@@ -730,14 +713,18 @@ Maps (belts, toppings, waiting times, splitters):
                                     });
                                 }
                             }
-                            // Teleporter in tries to move to the teleporter out
+                            // Teleporter in tries to move to each of the teleporter outs
                             // If we have an in, we have an out (according to the loading function)
-                            EntityKind::TeleporterIn(id) => updates.push(Update {
-                                move_from: p,
-                                move_to: global.teleporter_outs[id],
-                                toppings: state_at!(p).toppings.unwrap(),
-                                source: state_at!(p).source.unwrap(),
-                            }),
+                            EntityKind::TeleporterIn(id) => {
+                                global.teleporter_outs[id].iter().for_each(|&p_out| {
+                                    updates.push(Update {
+                                        move_from: p,
+                                        move_to: p_out,
+                                        toppings: state_at!(p).toppings.unwrap(),
+                                        source: state_at!(p).source.unwrap(),
+                                    })
+                                })
+                            },
                             // Teleporter out basically acts like a source
                             EntityKind::TeleporterOut(_) => {
                                 updates.push(Update {
@@ -1112,8 +1099,23 @@ Maps (belts, toppings, waiting times, splitters):
                             continue 'each_donut;
                         }
                         EntityKind::TeleporterIn(id) => {
-                            p = global.teleporter_outs[id];
-                            continue 'simulation_tick;
+                            // Queue one new point for each teleporter out
+                            for &p_out in &global.teleporter_outs[id] {
+                                if let Some(Entity {
+                                    kind: EntityKind::TeleporterOut(_),
+                                    facing
+                                }) = global.entities[p_out.index(global.width)]
+                                {
+                                    donuts.push((p_out, toppings, facing, visited.clone()));
+                                } else {
+                                    return Err(format!(
+                                        "Teleporter in at {p:?} tried to move to a non-teleporter out",
+                                    ));
+                                }
+                            }
+
+                            // Do not follow this path any more
+                            continue 'each_donut;
                         }
                         EntityKind::TeleporterOut(_) => {
                             // TODO: This doesn't check can_enter on the next space; assuming that's not a problem
@@ -1181,7 +1183,7 @@ Maps (belts, toppings, waiting times, splitters):
                 if let Some(entity) = global.entities[p.index(global.width)] {
                     match entity.kind {
                         EntityKind::TeleporterIn(id) => {
-                            return vec![global.teleporter_outs[id]];
+                            return global.teleporter_outs[id].clone();
                         }
                         EntityKind::TeleporterOut(_) => {
                             return vec![*p + entity.facing.into()];
