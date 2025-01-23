@@ -1061,6 +1061,7 @@ Point: {p:?}
 Toppings: {toppings:?} 
 Facing: {crossover_direction:?}
 Queue: {donuts_queued:?}
+Delivered: {complete_donuts:?}
 ");
                 }
 
@@ -1196,10 +1197,11 @@ Queue: {donuts_queued:?}
                 }
 
                 if visited[toppings.bits][p.index(global.width)] {
-                    tracing::info!("Loop detected at {p:?}, but there are more donuts");
                     if donuts.is_empty() {
+                        tracing::info!("Loop detected at {p:?}, on the last donut");
                         break 'each_donut;
                     } else {
+                        tracing::info!("Loop detected at {p:?}, but there are more donuts");
                         continue 'each_donut;
                     }
                 } else {
