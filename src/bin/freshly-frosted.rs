@@ -5,38 +5,82 @@ use std::{
     rc::Rc,
 };
 
-use bitmask_enum::bitmask;
 use itertools::Itertools;
 use solver::{Direction, Point, Solver, State};
 
-#[bitmask]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, PartialOrd, Ord)]
 enum Toppings {
+    #[default]
+    None,
     Frosting,
     Sprinkles,
     WhippedCream,
     Cherries,
 }
 
-impl Default for Toppings {
-    fn default() -> Self {
-        Self::none()
+impl Toppings {
+    fn any_source_next(&self) -> Toppings {
+        match self {
+            Toppings::None => Toppings::Frosting,
+            Toppings::Frosting => Toppings::Sprinkles,
+            Toppings::Sprinkles => Toppings::WhippedCream,
+            Toppings::WhippedCream => Toppings::Cherries,
+            Toppings::Cherries => Toppings::None,
+        }
+    }
+}
+
+impl From<char> for Toppings {
+    fn from(c: char) -> Self {
+        match c {
+            '0' => Toppings::None,
+            '1' => Toppings::Frosting,
+            '2' | '3' => Toppings::Sprinkles,
+            '4' | '7' => Toppings::WhippedCream,
+            '8' | 'F' | 'f' => Toppings::Cherries,
+            _ => panic!("Invalid topping: {c}"),
+        }
     }
 }
 
 impl Toppings {
-    fn any_source_next(&self) -> Toppings {
-        if self.is_none() {
-            return Toppings::Frosting;
-        } else if self.contains(Toppings::Cherries) {
-            return Toppings::none();
-        } else if self.contains(Toppings::WhippedCream) {
-            return Toppings::Frosting | Toppings::Sprinkles | Toppings::WhippedCream | Toppings::Cherries;
-        } else if self.contains(Toppings::Sprinkles) {
-            return Toppings::Frosting | Toppings::Sprinkles | Toppings::WhippedCream;
-        } else if self.contains(Toppings::Frosting) {
-            return Toppings::Frosting | Toppings::Sprinkles;
-        } else {
-            unreachable!("Invalid state");
+    fn can_apply(&self, other: Toppings) -> bool {
+        matches!(
+            (self, other),
+            (Toppings::None, Toppings::Frosting)
+            | (Toppings::Frosting, Toppings::Sprinkles)
+            | (Toppings::Sprinkles, Toppings::WhippedCream)
+            | (Toppings::WhippedCream, Toppings::Cherries)
+        )
+    }
+
+    fn to_char(&self) -> char {
+        match self {
+            Toppings::None => '0',
+            Toppings::Frosting => '1',
+            Toppings::Sprinkles => '2',
+            Toppings::WhippedCream => '4',
+            Toppings::Cherries => '8',
+        }
+    }
+
+    fn all() -> Vec<Toppings> {
+        vec![
+            Toppings::None,
+            Toppings::Frosting,
+            Toppings::Sprinkles,
+            Toppings::WhippedCream,
+            Toppings::Cherries,
+        ]
+    }
+
+    fn index(&self) -> usize {
+        match self {
+            Toppings::None => 0,
+            Toppings::Frosting => 1,
+            Toppings::Sprinkles => 2,
+            Toppings::WhippedCream => 3,
+            Toppings::Cherries => 4,
         }
     }
 }
@@ -70,8 +114,7 @@ impl TryFrom<&str> for Entity {
         }
 
         fn top(c: char) -> Result<Toppings, String> {
-            let v = c.to_digit(16).ok_or(format!("Invalid topping: {c}"))? as usize;
-            Ok(v.into())
+            Ok(c.into())
         }
 
         fn dir(c: char) -> Result<Direction, String> {
@@ -97,7 +140,7 @@ impl TryFrom<&str> for Entity {
 
             // A target for donuts, first without any toppings
             &['-', facing] => Ok(Entity {
-                kind: EntityKind::Target(Some(Toppings::none())),
+                kind: EntityKind::Target(Some(Toppings::None)),
                 facing: dir(facing)?,
             }),
             // Doesn't matter what toppings
@@ -250,11 +293,22 @@ impl From<&str> for Global {
                         line.split_whitespace()
                             .skip(1)
                             .map(|t| {
-                                Some(
-                                    t.parse::<usize>()
-                                        .expect("Invalid target, must be numeric")
-                                        .into(),
-                                )
+                                if t == "F" || t == "f" {
+                                    return Some(Toppings::Cherries);
+                                }
+
+                                let v = t.parse::<usize>()
+                                    .expect("Invalid target, must be numeric")
+                                    .into();
+
+                                match v {
+                                    0 => Some(Toppings::None),
+                                    1 => Some(Toppings::Frosting),
+                                    3 => Some(Toppings::Sprinkles),
+                                    7 => Some(Toppings::WhippedCream),
+                                    15 => Some(Toppings::Cherries),
+                                    _ => panic!("Invalid target: {t}"),
+                                }
                             })
                             .collect::<Vec<_>>(),
                     );
@@ -512,8 +566,7 @@ impl Local {
                             // Map 2 shows the wait times (only for donuts)
                             let p = Point { x, y };
                             if let Some(toppings) = state_at!(p).toppings {
-                                maps[1][p.index(global.width + 1)] =
-                                    toppings.bits.to_string().chars().next().unwrap();
+                                maps[1][p.index(global.width + 1)] = toppings.to_char();
 
                                 maps[2][p.index(global.width + 1)] = state_at!(p)
                                     .waiting_time
@@ -633,7 +686,7 @@ Maps (belts, toppings, waiting times, splitters):
                         updates.push(Update {
                             move_from: p,
                             move_to: p + facing.into(),
-                            toppings: Toppings::none(),
+                            toppings: Toppings::None,
                             source: p,
                         });
                         continue 'next_point;
@@ -861,9 +914,8 @@ Maps (belts, toppings, waiting times, splitters):
                             .then_with(|| {
                                 state_at!(b.move_from)
                                     .toppings
-                                    .unwrap_or(Toppings::none())
-                                    .bits
-                                    .cmp(&state_at!(a.move_from).toppings.unwrap_or(Toppings::none()).bits)
+                                    .unwrap_or(Toppings::None)
+                                    .cmp(&state_at!(a.move_from).toppings.unwrap_or(Toppings::None))
                             })
                     });
 
@@ -961,7 +1013,7 @@ Maps (belts, toppings, waiting times, splitters):
                     let p = Point { x, y };
 
                     if let Some(Entity {
-                        kind: EntityKind::Topper(topping),
+                        kind: EntityKind::Topper(new_topping),
                         facing,
                     }) = global.entities[p.index(global.width)]
                     {
@@ -971,11 +1023,9 @@ Maps (belts, toppings, waiting times, splitters):
                         }
 
                         if let Some(state) = state.get_mut(p2.index(global.width)) {
-                            if let Some(toppings) = state.toppings {
-                                // We have to have exactly all previous toppings; if so apply the new one
-                                let must_have = Toppings::from(topping.bits() - 1);
-                                if toppings & must_have == must_have {
-                                    state.toppings = Some(toppings | topping);
+                            if let Some(current_toppings) = state.toppings {
+                                if current_toppings.can_apply(new_topping) {
+                                    state.toppings = Some(new_topping)
                                 }
                             }
                         }
@@ -1027,7 +1077,7 @@ Maps (belts, toppings, waiting times, splitters):
 
         // Now we actually have to simulate each source
         let mut visited = vec![];
-        for _ in 0..(Toppings::all_flags().bits + 1) {
+        for _ in Toppings::all() {
             visited.push(vec![false; global.width as usize * global.height as usize]);
         }
 
@@ -1036,7 +1086,7 @@ Maps (belts, toppings, waiting times, splitters):
             for y in 0..global.height {
                 let index = (y * global.width + x) as usize;
                 let p = Point { x, y };
-                let toppings = Toppings::none();
+                let toppings = Toppings::None;
 
                 // Start a source here
                 if let Some(Entity {
@@ -1053,14 +1103,8 @@ Maps (belts, toppings, waiting times, splitters):
                     facing,
                 }) = global.entities[index]
                 {
-                    let mut any_source_state = Toppings::none();
-
-                    loop {
-                        donuts.push((p, any_source_state, facing, visited.clone()));
-                        any_source_state = any_source_state.any_source_next();
-                        if any_source_state == Toppings::none() {
-                            break;
-                        }
+                    for topping in Toppings::all() {
+                        donuts.push((p, topping, facing, visited.clone()));
                     }
                 }
             }
@@ -1080,7 +1124,7 @@ Maps (belts, toppings, waiting times, splitters):
                 ));
             }
 
-            visited[toppings.bits][p.index(global.width)] = true;
+            visited[toppings.index()][p.index(global.width)] = true;
             let mut crossover_direction = initial_facing;
 
             'simulation_tick: while !matches!(
@@ -1100,12 +1144,12 @@ Maps (belts, toppings, waiting times, splitters):
                     let mut maps = vec![inital_map.clone()];
 
                     // The active donut
-                    maps[0][p.index(global.width + 1)] = toppings.bits.to_string().chars().next().unwrap();
+                    maps[0][p.index(global.width + 1)] = toppings.to_char();
 
                     // All queued donuts
                     for donut in donuts.iter() {
                         maps.push(inital_map.clone());
-                        maps.last_mut().unwrap()[donut.0.index(global.width + 1)] = donut.1.bits().to_string().chars().next().unwrap();
+                        maps.last_mut().unwrap()[donut.0.index(global.width + 1)] = donut.1.to_char();
                     }
 
                     // Convert each map into a string
@@ -1151,25 +1195,11 @@ Delivered: {complete_donuts:?}
                         facing,
                     }) = global.entities[p2.index(global.width)]
                     {
-                        if top_d == facing {
-                            // Only add the toppings if we have all previous stoppings, otherwise ignore it
-                            // I feel like this was frowned upon before 4/6, but so it goess bits set to add a new one
-                            assert!(new_toppings.bits().count_ones() == 1);
-                            let must_have = Toppings::from(new_toppings.bits() - 1);
-                            if toppings & must_have != must_have {
-                                continue;
-                            }
-
-                            // Already applied, not an error but we don't want to trace it
-                            if toppings | new_toppings == toppings {
-                                continue;
-                            }
-
-                            // Add the new topping!
+                        if top_d == facing && toppings.can_apply(new_toppings) {
                             tracing::debug!(
                                 "Adding topping {new_toppings:?} from {p2:?} / {facing:?}"
                             );
-                            toppings |= new_toppings;
+                            toppings = new_toppings;
                         }
                     }
                 }
@@ -1267,7 +1297,7 @@ Delivered: {complete_donuts:?}
                     break; // Ran off the end of a belt
                 }
 
-                if visited[toppings.bits][p.index(global.width)] {
+                if visited[toppings.index()][p.index(global.width)] {
                     if donuts.is_empty() {
                         tracing::info!("Loop detected at {p:?}, on the last donut");
                         break 'each_donut;
@@ -1276,7 +1306,7 @@ Delivered: {complete_donuts:?}
                         continue 'each_donut;
                     }
                 } else {
-                    visited[toppings.bits][p.index(global.width)] = true;
+                    visited[toppings.index()][p.index(global.width)] = true;
                 }
             }
 
