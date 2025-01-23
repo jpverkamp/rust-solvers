@@ -1150,7 +1150,12 @@ Maps (belts, toppings, waiting times, splitters):
                 }
 
                 if visited[toppings.bits][p.index(global.width)] {
-                    return Err(format!("Loop detected at {p:?}"));
+                    if donuts.is_empty() {
+                        return Err(format!("Loop detected at {p:?}"));
+                    } else {
+                        tracing::warn!("Loop detected at {p:?}, but there are more donuts");
+                        continue 'each_donut;
+                    }
                 } else {
                     visited[toppings.bits][p.index(global.width)] = true;
                 }
