@@ -17,10 +17,35 @@ enum Toppings {
     Cherries,
 }
 
+impl Default for Toppings {
+    fn default() -> Self {
+        Self::none()
+    }
+}
+
+impl Toppings {
+    fn any_source_next(&self) -> Toppings {
+        if self.is_none() {
+            return Toppings::Frosting;
+        } else if self.contains(Toppings::Cherries) {
+            return Toppings::none();
+        } else if self.contains(Toppings::WhippedCream) {
+            return Toppings::Frosting | Toppings::Sprinkles | Toppings::WhippedCream | Toppings::Cherries;
+        } else if self.contains(Toppings::Sprinkles) {
+            return Toppings::Frosting | Toppings::Sprinkles | Toppings::WhippedCream;
+        } else if self.contains(Toppings::Frosting) {
+            return Toppings::Frosting | Toppings::Sprinkles;
+        } else {
+            unreachable!("Invalid state");
+        }
+    }
+}
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum EntityKind {
     Block,
     Source,
+    AnySource,
     Target(Option<Toppings>),
     Topper(Toppings),
     Splitter,
@@ -63,6 +88,10 @@ impl TryFrom<&str> for Entity {
             // A source of new donuts
             &['+', facing] => Ok(Entity {
                 kind: EntityKind::Source,
+                facing: dir(facing)?,
+            }),
+            &['+', facing, '?'] => Ok(Entity {
+                kind: EntityKind::AnySource,
                 facing: dir(facing)?,
             }),
 
@@ -137,6 +166,7 @@ impl Entity {
             // Can never enter
             EntityKind::Block
             | EntityKind::Source
+            | EntityKind::AnySource
             | EntityKind::Topper(_)
             | EntityKind::Bumper(_)
             | EntityKind::TeleporterOut(_) => false,
@@ -159,7 +189,9 @@ impl Entity {
             | EntityKind::Target(_) => false,
 
             // Can only exit if we're going the right direction
-            EntityKind::TeleporterOut(_) | EntityKind::Source => self.facing == dir,
+            EntityKind::TeleporterOut(_) 
+            | EntityKind::Source
+            | EntityKind::AnySource => self.facing == dir,
 
             // Splitters do their own thing
             EntityKind::Splitter => {
@@ -424,6 +456,7 @@ impl Local {
             waiting_time: usize,
             split_next_right: bool,
             crossover_state: CrossoverState,
+            any_source_state: Toppings,
         }
 
         #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -606,6 +639,26 @@ Maps (belts, toppings, waiting times, splitters):
                         continue 'next_point;
                     }
 
+                    // AnySources update sequentially 
+                    if let Some(Entity {
+                        kind: EntityKind::AnySource,
+                        facing,
+                    }) = global.entities[p.index(global.width)]
+                    {
+                        let next_toppings = state_at!(p).any_source_state;
+
+                        updates.push(Update {
+                            move_from: p,
+                            move_to: p + facing.into(),
+                            toppings: next_toppings,
+                            source: p,
+                        });
+
+                        state_at!(p).any_source_state = next_toppings.any_source_next();
+
+                        continue 'next_point;
+                    }
+
                     // No updates for spaces that do not have a donut
                     if state_at!(p).toppings.is_none() {
                         continue;
@@ -678,7 +731,7 @@ Maps (belts, toppings, waiting times, splitters):
                                 unreachable!("Donut at {p:?} is on a {:?}", entity.kind);
                             }
                             // Try to create a (potential) new donut
-                            EntityKind::Source => unreachable!("Sources are handled earlier"),
+                            EntityKind::Source | EntityKind::AnySource => unreachable!("Sources are handled earlier"),
                             // If we're on a target, matching done/not error
                             EntityKind::Target(toppings) => {
                                 if toppings.is_none()
@@ -993,6 +1046,23 @@ Maps (belts, toppings, waiting times, splitters):
                 {
                     donuts.push((p, toppings, facing, visited.clone()));
                 }
+
+                // AnySource starts one for each type
+                if let Some(Entity {
+                    kind: EntityKind::AnySource,
+                    facing,
+                }) = global.entities[index]
+                {
+                    let mut any_source_state = Toppings::none();
+
+                    loop {
+                        donuts.push((p, any_source_state, facing, visited.clone()));
+                        any_source_state = any_source_state.any_source_next();
+                        if any_source_state == Toppings::none() {
+                            break;
+                        }
+                    }
+                }
             }
         }
 
@@ -1131,6 +1201,7 @@ Delivered: {complete_donuts:?}
                         // Should never move out of any of these
                         EntityKind::Block
                         | EntityKind::Source
+                        | EntityKind::AnySource
                         | EntityKind::Target(_)
                         | EntityKind::Topper(_)
                         | EntityKind::Bumper(_) => {
@@ -1459,7 +1530,7 @@ impl State<Global, ()> for Local {
 
             for (index, entity) in global.entities.iter().enumerate() {
                 if let Some(Entity {
-                    kind: EntityKind::Source,
+                    kind: EntityKind::Source | EntityKind::AnySource,
                     ..
                 }) = entity
                 {
@@ -1696,6 +1767,7 @@ impl State<Global, ()> for Local {
                     chars[y as usize][x as usize] = match entity.kind {
                         EntityKind::Block => '#',
                         EntityKind::Source => '+',
+                        EntityKind::AnySource => '⧺',
                         EntityKind::Target(_) => '-',
                         EntityKind::Topper(_) => match entity.facing {
                             Direction::Up => '╩',
