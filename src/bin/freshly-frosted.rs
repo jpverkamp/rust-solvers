@@ -967,6 +967,8 @@ Maps (belts, toppings, waiting times, splitters):
             return Ok(cached.clone());
         }
 
+        let step_tracing_enabled = std::env::var("FRESHLY_FROSTED_STEP_TRACE").is_ok();
+
         let mut donuts = vec![];
         let mut complete_donuts = vec![];
 
@@ -1018,6 +1020,50 @@ Maps (belts, toppings, waiting times, splitters):
                     ..
                 })
             ) {
+                if step_tracing_enabled {
+                    let donuts_queued = donuts
+                        .iter()
+                        .map(|(p, t, f, _)| (p, t, f))
+                        .collect::<Vec<_>>();
+
+                    let inital_map = self.stringify(global).chars().collect::<Vec<_>>();
+                    let mut maps = vec![inital_map.clone()];
+
+                    // The active donut
+                    maps[0][p.index(global.width + 1)] = toppings.bits.to_string().chars().next().unwrap();
+
+                    // All queued donuts
+                    for donut in donuts.iter() {
+                        maps.push(inital_map.clone());
+                        maps.last_mut().unwrap()[donut.0.index(global.width + 1)] = donut.1.bits().to_string().chars().next().unwrap();
+                    }
+
+                    // Convert each map into a string
+                    let maps = maps.iter().map(|m| m.iter().collect::<String>()).collect::<Vec<_>>();
+
+                    // Split by lines
+                    let maps = maps.iter().map(|m| m.split("\n").collect::<Vec<_>>()).collect::<Vec<_>>();
+
+                    // Combine lines across each row
+                    let mut final_map = String::new();
+                    for y in 0..global.height {
+                        for map in maps.iter() {
+                            final_map.push_str(map[y as usize]);
+                            final_map.push_str("   ");
+                        }
+                        final_map.push('\n');
+                    }
+
+                    tracing::debug!("\
+=== Tick ===
+{final_map}
+Point: {p:?}
+Toppings: {toppings:?} 
+Facing: {crossover_direction:?}
+Queue: {donuts_queued:?}
+");
+                }
+
                 if !global.in_bounds(p) {
                     return Err(format!("Attempted to move out of bounds at {p:?}"));
                 }
@@ -1150,10 +1196,10 @@ Maps (belts, toppings, waiting times, splitters):
                 }
 
                 if visited[toppings.bits][p.index(global.width)] {
+                    tracing::info!("Loop detected at {p:?}, but there are more donuts");
                     if donuts.is_empty() {
-                        return Err(format!("Loop detected at {p:?}"));
+                        break 'each_donut;
                     } else {
-                        tracing::warn!("Loop detected at {p:?}, but there are more donuts");
                         continue 'each_donut;
                     }
                 } else {

@@ -155,7 +155,8 @@
       "→→→↓..\n+..↓←←\n#→-↓╣↑\n+↑←←→↑\n→→→→↑.\n\n",
       "→→→→↓.\n+↓←←→↓\n#→-↑╣↓\n+→→↑←←\n→↑....\n\n",
       "→↓....\n+→→↓..\n#↑-←╣.\n+↑....\n→↑....\n\n",
-      "→→→→↓.\n+↓←←→↓\n#→-↑╣↓\n+..↑←←\n→→→↑..\n\n"
+      "→→→→↓.\n+↓←←→↓\n#→-↑╣↓\n+..↑←←\n→→→↑..\n\n",
+      "→↓....\n+→→↓←←\n#→-↓╣↑\n+↑←←.↑\n→→→→→↑\n\n"
     ],
     "data/freshly-frosted/04-romantic-twilight/04-solved.txt": [
       "+→→↓+\n→→↓→↓\n↑╣→-↓\n↑←←←←\n+..↑+\n\n"
@@ -244,7 +245,8 @@
       ".╠↓←←\n..→↓↑\n→-+↓↑\n↑←↓←↑\n.↑X→↑\n\n",
       ".╠↓←←\n↓←←.↑\n→-+↓↑\n↑←↓←↑\n.↑X→↑\n\n",
       ".╠↓←.\n↓←←↑←\n→-+↓↑\n↑←↓←↑\n.↑X→↑\n\n",
-      "DEBUG simulation result: [(Point { x: 3, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 4 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 4 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 4 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 4 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 4 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 4 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 4 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 0 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 1 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 0 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 1, y: 1 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 1 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 4 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 1, y: 1 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 0 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 1 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 0, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 0, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 0 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 1 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 1, y: 1 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 1, y: 1 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 0, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 0, y: 1 }, Toppings { bits: 1 })]\n.╠↓←.\n↓←←↑←\n→-+↓↑\n↑←↓←↑\n.↑X→↑\n\n"
+      "DEBUG simulation result: [(Point { x: 3, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 4 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 4 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 4 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 4 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 4 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 4 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 4 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 0 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 1 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 0 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 1, y: 1 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 1 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 4 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 1, y: 1 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 0 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 1 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 0, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 0, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 0 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 1 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 1, y: 1 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 1, y: 1 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 4, y: 4 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 0, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 }), (Point { x: 0, y: 1 }, Toppings { bits: 1 })]\n.╠↓←.\n↓←←↑←\n→-+↓↑\n↑←↓←↑\n.↑X→↑\n\n",
+      ".╠↓←←\n..→↓↑\n→-+↓↑\n↑.↓←↑\n↑←X→↑\n\n"
     ],
     "data/freshly-frosted/06-summer-morning/03 copy.txt": [
       "→→↓+╦╦-\nX←X→→→X\n-↑←←←←←\n\n"
@@ -260,7 +262,8 @@
       "↓←←+↓←←\n↓╠↑←→-↑\n↓↓←←←←↑\n↓↓→→→↑↑\n↓-↑X↓╩↑\n→→→↑→→↑\n\n"
     ],
     "data/freshly-frosted/06-summer-morning/05.txt": [
-      "+↓→→↓╣\n.↓↑.↓.\n↓X↑↓X↓\n→↓←←↓←\n-←.↑←╣\n\n"
+      "+↓→→↓╣\n.↓↑.↓.\n↓X↑↓X↓\n→↓←←↓←\n-←.↑←╣\n\n",
+      "+↓←←←╣\n.↓..↑←\n↓X↓.X↑\n→↓↓.→↑\n-←→→↑╣\n\n"
     ],
     "data/freshly-frosted/06-summer-morning/06.txt": [
       "+.╦.╦.╦\n↓→↓→↓→↓\n→X→X→X↓\n-←←←←←←\n\n",
@@ -337,7 +340,8 @@
       "↓←←+→→↓\n↓╦↑←↑╦↓\n→→→↓↑←↓\n...→→↑↓\n.↓←←←↓←\n.→→↓↑←.\n.╩.-.╩.\n\n"
     ],
     "data/freshly-frosted/08-hot-summer/05.txt": [
-      "+→↓←←←←→→↓╣\n↓↑↓←←↑↓↑←→↓\n↓←←↑→→↓↑↑←↓\n↓↑←→↑↓→↑↓←←\n→↓↑↑↑↓↓←←→↓\n↓→→↑↓←←→→↑↓\n→↓←←←↑→↑↓←←\n╠→→→→→↑←→→-\n\n"
+      "+→↓←←←←→→↓╣\n↓↑↓←←↑↓↑←→↓\n↓←←↑→→↓↑↑←↓\n↓↑←→↑↓→↑↓←←\n→↓↑↑↑↓↓←←→↓\n↓→→↑↓←←→→↑↓\n→↓←←←↑→↑↓←←\n╠→→→→→↑←→→-\n\n",
+      "+→↓←←←←→→↓╣\n↓↑↓←←↑↓↑←→↓\n↓←←↑→→↓→↑←↓\n↓↑←→↑↓→↑↓←←\n→↓↑↑↑↓↓←←→↓\n↓→→↑↓←←→→↑↓\n→↓←←←↑→↑↓←←\n╠→→→→→↑←→→-\n\n"
     ],
     "data/freshly-frosted/08-hot-summer/06.txt": [
       "+╦.╦.╦.╦.╦.╦.╦-\n→→↓→..→→→→↓→..↑\n.╦↓╦.╦↑╦.╦↓╦.╦↑\n.←↓..←↑→↓←←..←↑\n.╦↓╦.╦↑╦↓╦.╦.╦↑\n..→→→→↑→→→→→→→↑\n\n"
@@ -349,7 +353,8 @@
       "↓←←←←←←←←\n↓╣→→→→↓╠↑\n→↓↑┬↑┬→→↑\n+→→→→→→→-\n→↑┴↓┴→→→↓\n↑╣.→→↑.╠↓\n↑←←←←←←←←\n\n"
     ],
     "data/freshly-frosted/08-hot-summer/11.txt": [
-      "...→→→→↓╣\n.→→↑..├↓↓\n.+↑┴├..↓↓\n..↑╣╦↓←←↓\n├.↑←←←.╩↓\n.......-←\n\n"
+      "...→→→→↓╣\n.→→↑..├↓↓\n.+↑┴├..↓↓\n..↑╣╦↓←←↓\n├.↑←←←.╩↓\n.......-←\n\n",
+      "...→→→→↓╣\n.→→↑..├↓↓\n.+↑┴├..↓↓\n..↑╣╦.↓←↓\n├.↑←←←←╩↓\n.......-←\n\n"
     ],
     "data/freshly-frosted/08-hot-summer/12.txt": [
       "..↓←←←←..\n..↓╦+╦↑..\n..→→→↓↑..\n.┬↑.↓←↑┬.\n-←←←X→→→-\n╠↑┴↑X↑┴↓╣\n....↑←←←.\n\n"
@@ -411,10 +416,17 @@
       "◐→→→-\n.....\n+↓○←╣\n.→→↑.\n◐→→→-\n\n"
     ],
     "data/freshly-frosted/11-winter-snow/01.txt": [
-      "◐→→→-\n.....\n+↓○←╣\n.→→↑.\n◐→→→-\n\n"
+      "◐→→→-\n.....\n+↓○←╣\n.→→↑.\n◐→→→-\n\n",
+      "◐→→→-\n.→→↓.\n+↑○←╣\n.....\n◐→→→-\n\n"
     ],
     "data/freshly-frosted/11-winter-snow/03-solved.txt": [
       "→→→→→→→→↓\n↑→→→→→→↓↓\n◒+◒╩╩╩╩↓↓\n-○←←←←←←↓\n↑←←←←←←←←\n\n"
+    ],
+    "data/freshly-frosted/11-winter-snow/04-solved.txt": [
+      "↓+◐↓..\n↓←←←↓←\n↓╩○◓-↑\n→→↑→→↑\n\n"
+    ],
+    "data/freshly-frosted/11-winter-snow/04.txt": [
+      "↓+◐↓..\n↓←←←↓←\n↓╩○◓-↑\n→→↑→→↑\n\n"
     ]
   },
   "metadata": {
@@ -432,47 +444,47 @@
   "timing": {
     "data/freshly-frosted/01-spring-day/01-solved.txt": {
       "fastest": 179,
-      "most_recent": 192
+      "most_recent": 179
     },
     "data/freshly-frosted/01-spring-day/01.txt": {
       "fastest": 7,
-      "most_recent": 9
+      "most_recent": 7
     },
     "data/freshly-frosted/01-spring-day/02.txt": {
       "fastest": 7,
-      "most_recent": 10
+      "most_recent": 179
     },
     "data/freshly-frosted/01-spring-day/03.txt": {
       "fastest": 7,
-      "most_recent": 28
+      "most_recent": 10
     },
     "data/freshly-frosted/01-spring-day/04.txt": {
       "fastest": 8,
-      "most_recent": 195
+      "most_recent": 183
     },
     "data/freshly-frosted/01-spring-day/05.txt": {
       "fastest": 43,
-      "most_recent": 70
+      "most_recent": 244
     },
     "data/freshly-frosted/01-spring-day/06.txt": {
       "fastest": 36,
-      "most_recent": 256
+      "most_recent": 240
     },
     "data/freshly-frosted/01-spring-day/07.txt": {
       "fastest": 5,
-      "most_recent": 23
+      "most_recent": 20
     },
     "data/freshly-frosted/01-spring-day/08.txt": {
       "fastest": 14,
-      "most_recent": 17
+      "most_recent": 27
     },
     "data/freshly-frosted/01-spring-day/09.txt": {
       "fastest": 59,
-      "most_recent": 303
+      "most_recent": 296
     },
     "data/freshly-frosted/01-spring-day/10.txt": {
       "fastest": 14,
-      "most_recent": 92
+      "most_recent": 128
     },
     "data/freshly-frosted/01-spring-day/11.txt": {
       "fastest": 3148,
@@ -484,7 +496,7 @@
     },
     "data/freshly-frosted/02-summer/01.txt": {
       "fastest": 6,
-      "most_recent": 201
+      "most_recent": 34
     },
     "data/freshly-frosted/02-summer/02.txt": {
       "fastest": 9,
@@ -492,7 +504,7 @@
     },
     "data/freshly-frosted/02-summer/03.txt": {
       "fastest": 5,
-      "most_recent": 15
+      "most_recent": 54
     },
     "data/freshly-frosted/02-summer/04.txt": {
       "fastest": 93,
@@ -516,11 +528,11 @@
     },
     "data/freshly-frosted/03-autumn-sunset/01.txt": {
       "fastest": 11,
-      "most_recent": 45
+      "most_recent": 60
     },
     "data/freshly-frosted/03-autumn-sunset/02.txt": {
       "fastest": 20,
-      "most_recent": 399
+      "most_recent": 931
     },
     "data/freshly-frosted/03-autumn-sunset/04.txt": {
       "fastest": 12275,
@@ -548,31 +560,31 @@
     },
     "data/freshly-frosted/04-romantic-twilight/01.txt": {
       "fastest": 12,
-      "most_recent": 25
+      "most_recent": 333
     },
     "data/freshly-frosted/04-romantic-twilight/02-solved.txt": {
       "fastest": 3,
-      "most_recent": 17
+      "most_recent": 10
     },
     "data/freshly-frosted/04-romantic-twilight/02.txt": {
       "fastest": 4,
-      "most_recent": 16
+      "most_recent": 24
     },
     "data/freshly-frosted/04-romantic-twilight/03.txt": {
       "fastest": 10,
-      "most_recent": 138
+      "most_recent": 263
     },
     "data/freshly-frosted/04-romantic-twilight/04-solved.txt": {
       "fastest": 3,
-      "most_recent": 13
+      "most_recent": 180
     },
     "data/freshly-frosted/04-romantic-twilight/04.txt": {
       "fastest": 12,
-      "most_recent": 125
+      "most_recent": 436
     },
     "data/freshly-frosted/04-romantic-twilight/05.txt": {
       "fastest": 6,
-      "most_recent": 20
+      "most_recent": 58
     },
     "data/freshly-frosted/04-romantic-twilight/05b.txt": {
       "fastest": 28,
@@ -584,11 +596,11 @@
     },
     "data/freshly-frosted/04-romantic-twilight/08.txt": {
       "fastest": 29,
-      "most_recent": 74
+      "most_recent": 378
     },
     "data/freshly-frosted/04-romantic-twilight/09.txt": {
       "fastest": 38,
-      "most_recent": 412
+      "most_recent": 751
     },
     "data/freshly-frosted/04-romantic-twilight/12-hint.txt": {
       "fastest": 259797,
@@ -596,11 +608,11 @@
     },
     "data/freshly-frosted/05-spring-dreams/01.txt": {
       "fastest": 9,
-      "most_recent": 13
+      "most_recent": 18
     },
     "data/freshly-frosted/05-spring-dreams/02.txt": {
       "fastest": 9,
-      "most_recent": 16
+      "most_recent": 25
     },
     "data/freshly-frosted/05-spring-dreams/03.txt": {
       "fastest": 11,
@@ -612,7 +624,7 @@
     },
     "data/freshly-frosted/05-spring-dreams/05.txt": {
       "fastest": 11,
-      "most_recent": 41
+      "most_recent": 103
     },
     "data/freshly-frosted/05-spring-dreams/06.txt": {
       "fastest": 1223,
@@ -620,7 +632,7 @@
     },
     "data/freshly-frosted/05-spring-dreams/08.txt": {
       "fastest": 18,
-      "most_recent": 90
+      "most_recent": 274
     },
     "data/freshly-frosted/05-spring-dreams/09-hint.txt": {
       "fastest": 49794,
@@ -636,11 +648,11 @@
     },
     "data/freshly-frosted/06-summer-morning/01.txt": {
       "fastest": 8,
-      "most_recent": 11
+      "most_recent": 26
     },
     "data/freshly-frosted/06-summer-morning/02.txt": {
       "fastest": 7,
-      "most_recent": 31
+      "most_recent": 19
     },
     "data/freshly-frosted/06-summer-morning/03 copy.txt": {
       "fastest": 48,
@@ -648,11 +660,11 @@
     },
     "data/freshly-frosted/06-summer-morning/03-solved.txt": {
       "fastest": 3,
-      "most_recent": 14
+      "most_recent": 21
     },
     "data/freshly-frosted/06-summer-morning/03.txt": {
       "fastest": 10,
-      "most_recent": 28
+      "most_recent": 26
     },
     "data/freshly-frosted/06-summer-morning/04.txt": {
       "fastest": 565,
@@ -660,19 +672,19 @@
     },
     "data/freshly-frosted/06-summer-morning/05.txt": {
       "fastest": 61,
-      "most_recent": 198
+      "most_recent": 236
     },
     "data/freshly-frosted/06-summer-morning/06.txt": {
       "fastest": 4,
-      "most_recent": 193
+      "most_recent": 24
     },
     "data/freshly-frosted/06-summer-morning/07-solved.txt": {
       "fastest": 4,
-      "most_recent": 10
+      "most_recent": 182
     },
     "data/freshly-frosted/06-summer-morning/08-solved.txt": {
       "fastest": 6,
-      "most_recent": 17
+      "most_recent": 19
     },
     "data/freshly-frosted/06-summer-morning/08.txt": {
       "fastest": 3898,
@@ -684,39 +696,39 @@
     },
     "data/freshly-frosted/07-lunar-night/01-solved.txt": {
       "fastest": 9,
-      "most_recent": 17
+      "most_recent": 22
     },
     "data/freshly-frosted/07-lunar-night/01.txt": {
       "fastest": 8,
-      "most_recent": 19
+      "most_recent": 16
     },
     "data/freshly-frosted/07-lunar-night/02-solved.txt": {
       "fastest": 5,
-      "most_recent": 7
+      "most_recent": 14
     },
     "data/freshly-frosted/07-lunar-night/02.txt": {
       "fastest": 196,
-      "most_recent": 217
+      "most_recent": 248
     },
     "data/freshly-frosted/07-lunar-night/03.txt": {
       "fastest": 5,
-      "most_recent": 10
+      "most_recent": 33
     },
     "data/freshly-frosted/07-lunar-night/04-solved.txt": {
       "fastest": 4,
-      "most_recent": 15
+      "most_recent": 17
     },
     "data/freshly-frosted/07-lunar-night/04.txt": {
       "fastest": 38,
-      "most_recent": 51
+      "most_recent": 181
     },
     "data/freshly-frosted/07-lunar-night/05.txt": {
       "fastest": 53,
-      "most_recent": 102
+      "most_recent": 115
     },
     "data/freshly-frosted/07-lunar-night/06.txt": {
       "fastest": 78,
-      "most_recent": 122
+      "most_recent": 156
     },
     "data/freshly-frosted/07-lunar-night/07.txt": {
       "fastest": 16325,
@@ -724,7 +736,7 @@
     },
     "data/freshly-frosted/07-lunar-night/08.txt": {
       "fastest": 76,
-      "most_recent": 107
+      "most_recent": 175
     },
     "data/freshly-frosted/07-lunar-night/10-solved.txt": {
       "fastest": 9,
@@ -736,11 +748,11 @@
     },
     "data/freshly-frosted/08-hot-summer/02.txt": {
       "fastest": 239,
-      "most_recent": 283
+      "most_recent": 306
     },
     "data/freshly-frosted/08-hot-summer/03.txt": {
       "fastest": 80,
-      "most_recent": 128
+      "most_recent": 155
     },
     "data/freshly-frosted/08-hot-summer/04.txt": {
       "fastest": 1556,
@@ -748,23 +760,23 @@
     },
     "data/freshly-frosted/08-hot-summer/05.txt": {
       "fastest": 100,
-      "most_recent": 114
+      "most_recent": 160
     },
     "data/freshly-frosted/08-hot-summer/06.txt": {
       "fastest": 145,
-      "most_recent": 181
+      "most_recent": 250
     },
     "data/freshly-frosted/08-hot-summer/09.txt": {
       "fastest": 37,
-      "most_recent": 67
+      "most_recent": 73
     },
     "data/freshly-frosted/08-hot-summer/10.txt": {
       "fastest": 438,
-      "most_recent": 460
+      "most_recent": 652
     },
     "data/freshly-frosted/08-hot-summer/11.txt": {
       "fastest": 49,
-      "most_recent": 253
+      "most_recent": 91
     },
     "data/freshly-frosted/08-hot-summer/12.txt": {
       "fastest": 40824,
@@ -772,11 +784,11 @@
     },
     "data/freshly-frosted/09-tropical-rain/01-solved.txt": {
       "fastest": 3,
-      "most_recent": 23
+      "most_recent": 12
     },
     "data/freshly-frosted/09-tropical-rain/01.txt": {
       "fastest": 4,
-      "most_recent": 16
+      "most_recent": 14
     },
     "data/freshly-frosted/09-tropical-rain/02.txt": {
       "fastest": 2114,
@@ -788,11 +800,11 @@
     },
     "data/freshly-frosted/09-tropical-rain/04-solved.txt": {
       "fastest": 3,
-      "most_recent": 14
+      "most_recent": 32
     },
     "data/freshly-frosted/09-tropical-rain/05.txt": {
       "fastest": 11,
-      "most_recent": 42
+      "most_recent": 51
     },
     "data/freshly-frosted/09-tropical-rain/09.txt": {
       "fastest": 52596,
@@ -804,47 +816,55 @@
     },
     "data/freshly-frosted/10-autumn-festivities/01.txt": {
       "fastest": 4,
-      "most_recent": 12
+      "most_recent": 36
     },
     "data/freshly-frosted/10-autumn-festivities/02.txt": {
       "fastest": 10,
-      "most_recent": 10
+      "most_recent": 13
     },
     "data/freshly-frosted/10-autumn-festivities/03.txt": {
       "fastest": 2060,
       "most_recent": 2173
     },
     "data/freshly-frosted/10-autumn-festivities/04-solved.txt": {
-      "fastest": 29,
-      "most_recent": 29
+      "fastest": 22,
+      "most_recent": 22
     },
     "data/freshly-frosted/10-autumn-festivities/04.txt": {
       "fastest": 20,
-      "most_recent": 30
+      "most_recent": 37
     },
     "data/freshly-frosted/10-autumn-festivities/05.txt": {
       "fastest": 13,
-      "most_recent": 16
+      "most_recent": 34
     },
     "data/freshly-frosted/10-autumn-festivities/06-solved.txt": {
-      "fastest": 12,
-      "most_recent": 12
+      "fastest": 11,
+      "most_recent": 11
     },
     "data/freshly-frosted/10-autumn-festivities/06.txt": {
       "fastest": 509,
-      "most_recent": 537
+      "most_recent": 526
     },
     "data/freshly-frosted/11-winter-snow/01-solved.txt": {
       "fastest": 9,
-      "most_recent": 9
+      "most_recent": 20
     },
     "data/freshly-frosted/11-winter-snow/01.txt": {
       "fastest": 25,
-      "most_recent": 25
+      "most_recent": 53
     },
     "data/freshly-frosted/11-winter-snow/03-solved.txt": {
       "fastest": 10,
-      "most_recent": 10
+      "most_recent": 18
+    },
+    "data/freshly-frosted/11-winter-snow/04-solved.txt": {
+      "fastest": 23,
+      "most_recent": 23
+    },
+    "data/freshly-frosted/11-winter-snow/04.txt": {
+      "fastest": 13,
+      "most_recent": 13
     }
   }
 }
