@@ -1,0 +1,8 @@
+:targets 0 1 15
+:comments I don't know if I actually completely understand the teleporters... 
+:comments This doesn't return quite the right answer, but just a slight re-route is correct
+T+> .   .   .   .   .   .
+2>  .   T+^ 4^  .   .   .
++>  .   .   .   .   T-  .
+1>  .   -^? 8v  .   .   .
+T+> .   .   .   .   .   .
