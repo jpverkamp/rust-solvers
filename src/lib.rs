@@ -235,6 +235,6 @@ impl<GlobalState, LocalState: State<GlobalState, Step> + Debug, Step> Iterator
 
         // Now update debugger and return the state we checked
         self.time_spent += start.elapsed().as_secs_f32();
-        return Some(current_state.clone());
+        Some(current_state.clone())
     }
 }

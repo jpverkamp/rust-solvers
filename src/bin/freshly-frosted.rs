@@ -54,7 +54,7 @@ impl Toppings {
         )
     }
 
-    fn to_char(&self) -> char {
+    fn to_char(self) -> char {
         match self {
             Toppings::None => '0',
             Toppings::Frosting => '1',
@@ -118,7 +118,7 @@ impl TryFrom<&str> for Entity {
         }
 
         fn dir(c: char) -> Result<Direction, String> {
-            Ok(Direction::try_from(c).map_err(|_| format!("Invalid direction: {c}"))?)
+            Direction::try_from(c).map_err(|_| format!("Invalid direction: {c}"))
         }
 
         match value.chars().collect::<Vec<_>>().as_slice() {
@@ -247,6 +247,7 @@ impl Entity {
     }
 }
 
+#[allow(clippy::type_complexity)]
 #[derive(Debug, Clone, Default)]
 struct Global {
     // Map settings
@@ -297,10 +298,8 @@ impl From<&str> for Global {
                                     return Some(Toppings::Cherries);
                                 }
 
-                                let v = t
-                                    .parse::<usize>()
-                                    .expect("Invalid target, must be numeric")
-                                    .into();
+                                let v =
+                                    t.parse::<usize>().expect("Invalid target, must be numeric");
 
                                 match v {
                                     0 => Some(Toppings::None),
@@ -322,8 +321,7 @@ impl From<&str> for Global {
                 } else if line.starts_with(":loop-threshold") {
                     global.loop_threshold = Some(
                         line.split_whitespace()
-                            .skip(1)
-                            .next()
+                            .nth(1)
                             .expect("Missing loop threshold")
                             .parse()
                             .expect("Invalid loop threshold"),
@@ -546,105 +544,104 @@ impl Local {
             }
 
             // Debugging ticking
-            if tracing_enabled {
-                if step_tracing_enabled {
-                    let initial_map = self.stringify(global).chars().collect::<Vec<_>>();
-                    let mut maps = [
-                        initial_map.clone(), // Map 0: Default
-                        initial_map.clone(), // Map 1: Current toppings
-                        initial_map.clone(), // Map 2: Waiting times
-                        initial_map.clone(), // Map 3: Splitters
-                        initial_map.clone(), // Map 4: Crossovers
-                    ];
+            if tracing_enabled && step_tracing_enabled {
+                let initial_map = self.stringify(global).chars().collect::<Vec<_>>();
+                let mut maps = [
+                    initial_map.clone(), // Map 0: Default
+                    initial_map.clone(), // Map 1: Current toppings
+                    initial_map.clone(), // Map 2: Waiting times
+                    initial_map.clone(), // Map 3: Splitters
+                    initial_map.clone(), // Map 4: Crossovers
+                ];
 
-                    for y in 0..global.height {
-                        for x in 0..global.width {
-                            // Map 0 does nothing
+                for y in 0..global.height {
+                    for x in 0..global.width {
+                        // Map 0 does nothing
 
-                            // Map 1 shows the toppings
-                            // Map 2 shows the wait times (only for donuts)
-                            let p = Point { x, y };
-                            if let Some(toppings) = state_at!(p).toppings {
-                                maps[1][p.index(global.width + 1)] = toppings.to_char();
+                        // Map 1 shows the toppings
+                        // Map 2 shows the wait times (only for donuts)
+                        let p = Point { x, y };
+                        if let Some(toppings) = state_at!(p).toppings {
+                            maps[1][p.index(global.width + 1)] = toppings.to_char();
 
-                                maps[2][p.index(global.width + 1)] = state_at!(p)
-                                    .waiting_time
-                                    .to_string()
-                                    .chars()
-                                    .next()
-                                    .unwrap();
+                            maps[2][p.index(global.width + 1)] = state_at!(p)
+                                .waiting_time
+                                .to_string()
+                                .chars()
+                                .next()
+                                .unwrap();
+                        } else {
+                            maps[1][p.index(global.width + 1)] = '.';
+                            maps[2][p.index(global.width + 1)] = '.';
+                        }
+
+                        // Map 3 shows current splitter state
+                        if let Some(Entity {
+                            kind: EntityKind::Splitter,
+                            ..
+                        }) = global.entities[p.index(global.width)]
+                        {
+                            if state_at!(p).split_next_right {
+                                maps[3][p.index(global.width + 1)] = 'R';
                             } else {
-                                maps[1][p.index(global.width + 1)] = '.';
-                                maps[2][p.index(global.width + 1)] = '.';
+                                maps[3][p.index(global.width + 1)] = 'L';
                             }
+                        } else {
+                            maps[3][p.index(global.width + 1)] = '.';
+                        }
 
-                            // Map 3 shows current splitter state
-                            if let Some(Entity {
-                                kind: EntityKind::Splitter,
-                                ..
-                            }) = global.entities[p.index(global.width)]
+                        // Map 4 shows current crossover state
+                        if let Some(Entity {
+                            kind: EntityKind::Crossover,
+                            ..
+                        }) = global.entities[p.index(global.width)]
+                        {
+                            maps[4][p.index(global.width + 1)] = match state_at!(p).crossover_state
                             {
-                                if state_at!(p).split_next_right {
-                                    maps[3][p.index(global.width + 1)] = 'R';
-                                } else {
-                                    maps[3][p.index(global.width + 1)] = 'L';
-                                }
-                            } else {
-                                maps[3][p.index(global.width + 1)] = '.';
-                            }
-
-                            // Map 4 shows current crossover state
-                            if let Some(Entity {
-                                kind: EntityKind::Crossover,
-                                ..
-                            }) = global.entities[p.index(global.width)]
-                            {
-                                maps[4][p.index(global.width + 1)] =
-                                    match state_at!(p).crossover_state {
-                                        CrossoverState::Open => '*',
-                                        CrossoverState::Occupied(Direction::Up) => '^',
-                                        CrossoverState::Occupied(Direction::Down) => 'v',
-                                        CrossoverState::Occupied(Direction::Left) => '<',
-                                        CrossoverState::Occupied(Direction::Right) => '>',
-                                        CrossoverState::OpenHorizontal => '-',
-                                        CrossoverState::OpenVertical => '|',
-                                    };
-                            } else {
-                                maps[4][p.index(global.width + 1)] = '.';
-                            }
+                                CrossoverState::Open => '*',
+                                CrossoverState::Occupied(Direction::Up) => '^',
+                                CrossoverState::Occupied(Direction::Down) => 'v',
+                                CrossoverState::Occupied(Direction::Left) => '<',
+                                CrossoverState::Occupied(Direction::Right) => '>',
+                                CrossoverState::OpenHorizontal => '-',
+                                CrossoverState::OpenVertical => '|',
+                            };
+                        } else {
+                            maps[4][p.index(global.width + 1)] = '.';
                         }
                     }
+                }
 
-                    // We want to render them side by side
+                // We want to render them side by side
 
-                    // Convert into a string
-                    let maps = maps
-                        .iter()
-                        .map(|m| m.iter().collect::<String>())
-                        .collect::<Vec<_>>();
+                // Convert into a string
+                let maps = maps
+                    .iter()
+                    .map(|m| m.iter().collect::<String>())
+                    .collect::<Vec<_>>();
 
-                    // Convert into a list of lines
-                    let maps = maps
-                        .iter()
-                        .map(|m| m.split("\n").collect::<Vec<_>>())
-                        .collect::<Vec<_>>();
+                // Convert into a list of lines
+                let maps = maps
+                    .iter()
+                    .map(|m| m.split("\n").collect::<Vec<_>>())
+                    .collect::<Vec<_>>();
 
-                    // Combine them line by line
-                    let mut final_map = String::new();
-                    for y in 0..global.height {
-                        for map in maps.iter() {
-                            final_map.push_str(map[y as usize]);
-                            final_map.push_str("   ");
-                        }
-                        final_map.push('\n');
+                // Combine them line by line
+                let mut final_map = String::new();
+                for y in 0..global.height {
+                    for map in maps.iter() {
+                        final_map.push_str(map[y as usize]);
+                        final_map.push_str("   ");
                     }
+                    final_map.push('\n');
+                }
 
-                    let cache_size = states_seen.len();
+                let cache_size = states_seen.len();
 
-                    let max_cache_value = states_seen.iter().map(|(_, v)| *v).max().unwrap_or(0);
+                let max_cache_value = states_seen.values().max().unwrap_or(&0);
 
-                    tracing::debug!(
-                        "\
+                tracing::debug!(
+                    "\
 === Starting tick ===
 Deliveries: {deliveries:?}
 States seen: {cache_size} (max: {max_cache_value})
@@ -653,8 +650,7 @@ Max waiting time: {max_waiting_time}
 Maps (belts, toppings, waiting times, splitters):
 {final_map}
 ",
-                    );
-                }
+                );
             }
 
             // Cache which exact states we've seen; break once we see the same more than once (or a set threshold of times)
@@ -883,7 +879,7 @@ Maps (belts, toppings, waiting times, splitters):
                         ..
                     }) = global.entities[p.index(global.width)]
                     {
-                        if updates.len() == 0 {
+                        if updates.is_empty() {
                             continue;
                         }
 
@@ -1623,7 +1619,6 @@ impl State<Global, ()> for Local {
                     .deliveries
                     .values()
                     .flatten()
-                    .map(|pt| pt)
                     .collect::<HashSet<_>>()
                     .into_iter()
                     .map(|(_, t)| Some(*t))
