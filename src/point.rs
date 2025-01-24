@@ -40,6 +40,11 @@ impl Point {
         self.x == other.x && (self.y - other.y).abs() == 1
             || self.y == other.y && (self.x - other.x).abs() == 1
     }
+
+    pub fn index(&self, width: isize) -> usize {
+        assert!(width > 0 && self.x <= width);
+        (self.y as usize) * width as usize + (self.x as usize)
+    }
 }
 
 impl From<(isize, isize)> for Point {

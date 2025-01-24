@@ -1,0 +1,6 @@
+:targets 1 3
+:tickwise
+:comment Tickwise allows splitter loops to work correctly
+.   .   .   +v  2v  1v  -^?
+x<  .   xv  .   .   .   x>
+-v? .   .   .   .   .   .

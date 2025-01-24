@@ -1,0 +1,10 @@
+:targets 0 1 3 7 15
+:tickwise
+:comments There's a timing issue with this one currently
+.   .   .   .   .   .   .   .   .
+.   .   .   4v  +v  2v  .   .   .
+.   .   .   .   .   .   .   .   .
+.   bv7 .   .   .   .   .   bv0 .
+-<? <   <   <   xv  >   >   >   ->?
+8>  .   b^1 .   x^  .   b^3 .   1<
+.   .   .   .   .   .   .   .   .

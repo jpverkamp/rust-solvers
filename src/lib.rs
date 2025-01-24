@@ -225,7 +225,7 @@ impl<GlobalState, LocalState: State<GlobalState, Step> + Debug, Step> Iterator
 
                 // Insert the next state with estimated distance
                 // Or if was already queued, updated to lower priority
-                // 'Biggest' priority will be popped first, so we negate the estimated distance 
+                // 'Biggest' priority will be popped first, so we negate the estimated distance
                 let old_priority = self.to_check.get_priority(&next_state);
                 if old_priority.is_none() || -estimated_distance < *old_priority.unwrap() {
                     self.to_check.push(next_state, -estimated_distance);
@@ -235,6 +235,6 @@ impl<GlobalState, LocalState: State<GlobalState, Step> + Debug, Step> Iterator
 
         // Now update debugger and return the state we checked
         self.time_spent += start.elapsed().as_secs_f32();
-        return Some(current_state.clone());
+        Some(current_state.clone())
     }
 }

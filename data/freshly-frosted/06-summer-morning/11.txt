@@ -1,0 +1,10 @@
+:targets 0 1 3 7 15
+:comment Requires per tick timing simulation
+:comment The 7 requires a specific length loop to alternate
+1v  +>  .   .   .   .   .   2v
+.   .   .   xv  .   .   .   .
+.   .   .   .   .   .   .   .
+.   xv  .   .   .   .   xv  .
+.   .   .   .   .   .   .   .
+.   .   .   .   xv  .   .   .
+8^  .   .   .   .   .   ->? 4^

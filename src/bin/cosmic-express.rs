@@ -143,10 +143,7 @@ impl State<CosmicExpressGlobal, ()> for CosmicExpressLocal {
                 }
 
                 // Don't add points out of bounds (remember there's a border)
-                if neighbor.x < 1
-                    || neighbor.y < 1
-                    || neighbor.x > g.width
-                    || neighbor.y > g.height
+                if neighbor.x < 1 || neighbor.y < 1 || neighbor.x > g.width || neighbor.y > g.height
                 {
                     continue;
                 }
@@ -514,7 +511,7 @@ fn main() {
     let mut solver = Solver::new(global.clone(), local.clone());
 
     log::debug!("{}", solver.stringify(&local));
-    
+
     while let Some(state) = solver.next() {
         if solver.states_checked() % 100000 == 0 {
             log::debug!("{}", state.stringify(&global));
