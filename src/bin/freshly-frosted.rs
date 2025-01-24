@@ -48,9 +48,9 @@ impl Toppings {
         matches!(
             (self, other),
             (Toppings::None, Toppings::Frosting)
-            | (Toppings::Frosting, Toppings::Sprinkles)
-            | (Toppings::Sprinkles, Toppings::WhippedCream)
-            | (Toppings::WhippedCream, Toppings::Cherries)
+                | (Toppings::Frosting, Toppings::Sprinkles)
+                | (Toppings::Sprinkles, Toppings::WhippedCream)
+                | (Toppings::WhippedCream, Toppings::Cherries)
         )
     }
 
@@ -232,9 +232,9 @@ impl Entity {
             | EntityKind::Target(_) => false,
 
             // Can only exit if we're going the right direction
-            EntityKind::TeleporterOut(_) 
-            | EntityKind::Source
-            | EntityKind::AnySource => self.facing == dir,
+            EntityKind::TeleporterOut(_) | EntityKind::Source | EntityKind::AnySource => {
+                self.facing == dir
+            }
 
             // Splitters do their own thing
             EntityKind::Splitter => {
@@ -297,7 +297,8 @@ impl From<&str> for Global {
                                     return Some(Toppings::Cherries);
                                 }
 
-                                let v = t.parse::<usize>()
+                                let v = t
+                                    .parse::<usize>()
                                     .expect("Invalid target, must be numeric")
                                     .into();
 
@@ -424,9 +425,7 @@ impl From<&str> for Global {
             .into_iter()
             .chunk_by(|(id, _)| *id)
             .into_iter()
-            .map(|(_id, group)| {
-                group.map(|(_, p)| p).collect::<Vec<_>>()
-            })
+            .map(|(_id, group)| group.map(|(_, p)| p).collect::<Vec<_>>())
             .collect::<Vec<_>>();
 
         global
@@ -692,7 +691,7 @@ Maps (belts, toppings, waiting times, splitters):
                         continue 'next_point;
                     }
 
-                    // AnySources update sequentially 
+                    // AnySources update sequentially
                     if let Some(Entity {
                         kind: EntityKind::AnySource,
                         facing,
@@ -784,7 +783,9 @@ Maps (belts, toppings, waiting times, splitters):
                                 unreachable!("Donut at {p:?} is on a {:?}", entity.kind);
                             }
                             // Try to create a (potential) new donut
-                            EntityKind::Source | EntityKind::AnySource => unreachable!("Sources are handled earlier"),
+                            EntityKind::Source | EntityKind::AnySource => {
+                                unreachable!("Sources are handled earlier")
+                            }
                             // If we're on a target, matching done/not error
                             EntityKind::Target(toppings) => {
                                 if toppings.is_none()
@@ -830,7 +831,7 @@ Maps (belts, toppings, waiting times, splitters):
                                         source: state_at!(p).source.unwrap(),
                                     })
                                 })
-                            },
+                            }
                             // Teleporter out basically acts like a source
                             EntityKind::TeleporterOut(_) => {
                                 updates.push(Update {
@@ -877,18 +878,28 @@ Maps (belts, toppings, waiting times, splitters):
 
                     // Special case: if we are moving onto a crossover at most one is valid
                     // TODO: This assumes we don't have both up and down in when openvertical in the same tick
-                    if let Some(Entity { kind: EntityKind::Crossover, .. }) = global.entities[p.index(global.width)] {
+                    if let Some(Entity {
+                        kind: EntityKind::Crossover,
+                        ..
+                    }) = global.entities[p.index(global.width)]
+                    {
                         if updates.len() == 0 {
                             continue;
                         }
 
                         for (index, update) in updates.iter() {
-                            let d: Direction = (p - update.move_from).try_into().expect("Moved onto a crossover with a non-adjacent move");
+                            let d: Direction = (p - update.move_from)
+                                .try_into()
+                                .expect("Moved onto a crossover with a non-adjacent move");
 
                             let failed = match state_at!(p).crossover_state {
                                 CrossoverState::Occupied(_) => true,
-                                CrossoverState::OpenHorizontal => d == Direction::Up || d == Direction::Down,
-                                CrossoverState::OpenVertical => d == Direction::Left || d == Direction::Right,
+                                CrossoverState::OpenHorizontal => {
+                                    d == Direction::Up || d == Direction::Down
+                                }
+                                CrossoverState::OpenVertical => {
+                                    d == Direction::Left || d == Direction::Right
+                                }
                                 _ => false,
                             };
 
@@ -1149,14 +1160,21 @@ Maps (belts, toppings, waiting times, splitters):
                     // All queued donuts
                     for donut in donuts.iter() {
                         maps.push(inital_map.clone());
-                        maps.last_mut().unwrap()[donut.0.index(global.width + 1)] = donut.1.to_char();
+                        maps.last_mut().unwrap()[donut.0.index(global.width + 1)] =
+                            donut.1.to_char();
                     }
 
                     // Convert each map into a string
-                    let maps = maps.iter().map(|m| m.iter().collect::<String>()).collect::<Vec<_>>();
+                    let maps = maps
+                        .iter()
+                        .map(|m| m.iter().collect::<String>())
+                        .collect::<Vec<_>>();
 
                     // Split by lines
-                    let maps = maps.iter().map(|m| m.split("\n").collect::<Vec<_>>()).collect::<Vec<_>>();
+                    let maps = maps
+                        .iter()
+                        .map(|m| m.split("\n").collect::<Vec<_>>())
+                        .collect::<Vec<_>>();
 
                     // Combine lines across each row
                     let mut final_map = String::new();
@@ -1168,7 +1186,8 @@ Maps (belts, toppings, waiting times, splitters):
                         final_map.push('\n');
                     }
 
-                    tracing::debug!("\
+                    tracing::debug!(
+                        "\
 === Tick ===
 {final_map}
 Point: {p:?}
@@ -1176,7 +1195,8 @@ Toppings: {toppings:?}
 Facing: {crossover_direction:?}
 Queue: {donuts_queued:?}
 Delivered: {complete_donuts:?}
-");
+"
+                    );
                 }
 
                 if !global.in_bounds(p) {
@@ -1251,7 +1271,7 @@ Delivered: {complete_donuts:?}
                             for &p_out in &global.teleporter_outs[id] {
                                 if let Some(Entity {
                                     kind: EntityKind::TeleporterOut(_),
-                                    facing
+                                    facing,
                                 }) = global.entities[p_out.index(global.width)]
                                 {
                                     donuts.push((p_out, toppings, facing, visited.clone()));
@@ -1734,7 +1754,7 @@ impl State<Global, ()> for Local {
                                 return None;
                             }
                         }
-                        
+
                         tracing::debug!("^ Expanding {d:?}");
 
                         let mut new_state = self.clone();
