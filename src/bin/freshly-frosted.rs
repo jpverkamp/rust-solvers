@@ -1719,9 +1719,22 @@ impl State<Global, ()> for Local {
             let maybe_next_states = Direction::all()
                 .iter()
                 .flat_map(|&d| {
-                    if global.in_bounds(p + d.into()) {
-                        // TODO: Consider adding a check against the entity
-                        // TODO: These should be impl Entity...
+                    if let Some(entity) = global.entities[p.index(global.width)] {
+                        if !entity.can_exit(d) {
+                            tracing::debug!("^ Cannot exit {entity:?} going {d:?}");
+                            return None;
+                        }
+                    }
+
+                    let p2 = p + d.into();
+                    if global.in_bounds(p2) {
+                        if let Some(entity) = global.entities[p2.index(global.width)] {
+                            if !entity.can_enter(d) {
+                                tracing::debug!("^ Cannot enter {entity:?} going {d:?}");
+                                return None;
+                            }
+                        }
+                        
                         tracing::debug!("^ Expanding {d:?}");
 
                         let mut new_state = self.clone();
@@ -1984,7 +1997,7 @@ mod freshly_frosted_tests {
         .   .   .
         ",
         [
-            ((1, 1), [Up, Down, Left, Right]),
+            ((1, 1), [Up, Down, Right]),
         ]
     }
 
@@ -2010,7 +2023,7 @@ mod freshly_frosted_tests {
         .   .   .
         ",
         [
-            ((1, 1), [Up, Down, Left, Right]),
+            ((1, 1), [Up, Left, Right]),
         ]
     }
 
@@ -2024,7 +2037,7 @@ mod freshly_frosted_tests {
         .   .   .
         ",
         [
-            ((1, 3), [Up, Down, Left, Right]),
+            ((1, 3), [Down, Left, Right]),
         ]
     }
 
@@ -2088,7 +2101,7 @@ mod freshly_frosted_tests {
         +>  >   T-
         ",
         [
-            ((1, 0), [Down, Right, Left]),
+            ((1, 0), [Down, Right]),
         ]
     }
 

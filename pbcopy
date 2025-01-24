@@ -1,0 +1,945 @@
+commit 24ae2b85830fe672ed296e3b979bf9fc709e7717
+Author: JP Verkamp <me@jverkamp.com>
+Date:   Thu Jan 23 13:47:55 2025 -0500
+
+    Completely rewrite toppings from bitmask to enum
+    
+    I assumed right at the beginning that we could mix and match toppings, but this isn't true, we always go in order, so an enum makes more sense.
+    
+    Mostly funny it took this long to do this.
+
+diff --git a/src/bin/freshly-frosted.rs b/src/bin/freshly-frosted.rs
+index 1ff1907..8c7d7ce 100644
+--- a/src/bin/freshly-frosted.rs
++++ b/src/bin/freshly-frosted.rs
+@@ -5,38 +5,82 @@ use std::{
+     rc::Rc,
+ };
+ 
+-use bitmask_enum::bitmask;
+ use itertools::Itertools;
+ use solver::{Direction, Point, Solver, State};
+ 
+-#[bitmask]
++#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, PartialOrd, Ord)]
+ enum Toppings {
++    #[default]
++    None,
+     Frosting,
+     Sprinkles,
+     WhippedCream,
+     Cherries,
+ }
+ 
+-impl Default for Toppings {
+-    fn default() -> Self {
+-        Self::none()
++impl Toppings {
++    fn any_source_next(&self) -> Toppings {
++        match self {
++            Toppings::None => Toppings::Frosting,
++            Toppings::Frosting => Toppings::Sprinkles,
++            Toppings::Sprinkles => Toppings::WhippedCream,
++            Toppings::WhippedCream => Toppings::Cherries,
++            Toppings::Cherries => Toppings::None,
++        }
++    }
++}
++
++impl From<char> for Toppings {
++    fn from(c: char) -> Self {
++        match c {
++            '0' => Toppings::None,
++            '1' => Toppings::Frosting,
++            '2' | '3' => Toppings::Sprinkles,
++            '4' | '7' => Toppings::WhippedCream,
++            '8' | 'F' | 'f' => Toppings::Cherries,
++            _ => panic!("Invalid topping: {c}"),
++        }
+     }
+ }
+ 
+ impl Toppings {
+-    fn any_source_next(&self) -> Toppings {
+-        if self.is_none() {
+-            return Toppings::Frosting;
+-        } else if self.contains(Toppings::Cherries) {
+-            return Toppings::none();
+-        } else if self.contains(Toppings::WhippedCream) {
+-            return Toppings::Frosting | Toppings::Sprinkles | Toppings::WhippedCream | Toppings::Cherries;
+-        } else if self.contains(Toppings::Sprinkles) {
+-            return Toppings::Frosting | Toppings::Sprinkles | Toppings::WhippedCream;
+-        } else if self.contains(Toppings::Frosting) {
+-            return Toppings::Frosting | Toppings::Sprinkles;
+-        } else {
+-            unreachable!("Invalid state");
++    fn can_apply(&self, other: Toppings) -> bool {
++        matches!(
++            (self, other),
++            (Toppings::None, Toppings::Frosting)
++            | (Toppings::Frosting, Toppings::Sprinkles)
++            | (Toppings::Sprinkles, Toppings::WhippedCream)
++            | (Toppings::WhippedCream, Toppings::Cherries)
++        )
++    }
++
++    fn to_char(&self) -> char {
++        match self {
++            Toppings::None => '0',
++            Toppings::Frosting => '1',
++            Toppings::Sprinkles => '2',
++            Toppings::WhippedCream => '4',
++            Toppings::Cherries => '8',
++        }
++    }
++
++    fn all() -> Vec<Toppings> {
++        vec![
++            Toppings::None,
++            Toppings::Frosting,
++            Toppings::Sprinkles,
++            Toppings::WhippedCream,
++            Toppings::Cherries,
++        ]
++    }
++
++    fn index(&self) -> usize {
++        match self {
++            Toppings::None => 0,
++            Toppings::Frosting => 1,
++            Toppings::Sprinkles => 2,
++            Toppings::WhippedCream => 3,
++            Toppings::Cherries => 4,
+         }
+     }
+ }
+@@ -70,8 +114,7 @@ impl TryFrom<&str> for Entity {
+         }
+ 
+         fn top(c: char) -> Result<Toppings, String> {
+-            let v = c.to_digit(16).ok_or(format!("Invalid topping: {c}"))? as usize;
+-            Ok(v.into())
++            Ok(c.into())
+         }
+ 
+         fn dir(c: char) -> Result<Direction, String> {
+@@ -97,7 +140,7 @@ impl TryFrom<&str> for Entity {
+ 
+             // A target for donuts, first without any toppings
+             &['-', facing] => Ok(Entity {
+-                kind: EntityKind::Target(Some(Toppings::none())),
++                kind: EntityKind::Target(Some(Toppings::None)),
+                 facing: dir(facing)?,
+             }),
+             // Doesn't matter what toppings
+@@ -250,11 +293,22 @@ impl From<&str> for Global {
+                         line.split_whitespace()
+                             .skip(1)
+                             .map(|t| {
+-                                Some(
+-                                    t.parse::<usize>()
+-                                        .expect("Invalid target, must be numeric")
+-                                        .into(),
+-                                )
++                                if t == "F" || t == "f" {
++                                    return Some(Toppings::Cherries);
++                                }
++
++                                let v = t.parse::<usize>()
++                                    .expect("Invalid target, must be numeric")
++                                    .into();
++
++                                match v {
++                                    0 => Some(Toppings::None),
++                                    1 => Some(Toppings::Frosting),
++                                    3 => Some(Toppings::Sprinkles),
++                                    7 => Some(Toppings::WhippedCream),
++                                    15 => Some(Toppings::Cherries),
++                                    _ => panic!("Invalid target: {t}"),
++                                }
+                             })
+                             .collect::<Vec<_>>(),
+                     );
+@@ -512,8 +566,7 @@ impl Local {
+                             // Map 2 shows the wait times (only for donuts)
+                             let p = Point { x, y };
+                             if let Some(toppings) = state_at!(p).toppings {
+-                                maps[1][p.index(global.width + 1)] =
+-                                    toppings.bits.to_string().chars().next().unwrap();
++                                maps[1][p.index(global.width + 1)] = toppings.to_char();
+ 
+                                 maps[2][p.index(global.width + 1)] = state_at!(p)
+                                     .waiting_time
+@@ -633,7 +686,7 @@ Maps (belts, toppings, waiting times, splitters):
+                         updates.push(Update {
+                             move_from: p,
+                             move_to: p + facing.into(),
+-                            toppings: Toppings::none(),
++                            toppings: Toppings::None,
+                             source: p,
+                         });
+                         continue 'next_point;
+@@ -861,9 +914,8 @@ Maps (belts, toppings, waiting times, splitters):
+                             .then_with(|| {
+                                 state_at!(b.move_from)
+                                     .toppings
+-                                    .unwrap_or(Toppings::none())
+-                                    .bits
+-                                    .cmp(&state_at!(a.move_from).toppings.unwrap_or(Toppings::none()).bits)
++                                    .unwrap_or(Toppings::None)
++                                    .cmp(&state_at!(a.move_from).toppings.unwrap_or(Toppings::None))
+                             })
+                     });
+ 
+@@ -961,7 +1013,7 @@ Maps (belts, toppings, waiting times, splitters):
+                     let p = Point { x, y };
+ 
+                     if let Some(Entity {
+-                        kind: EntityKind::Topper(topping),
++                        kind: EntityKind::Topper(new_topping),
+                         facing,
+                     }) = global.entities[p.index(global.width)]
+                     {
+@@ -971,11 +1023,9 @@ Maps (belts, toppings, waiting times, splitters):
+                         }
+ 
+                         if let Some(state) = state.get_mut(p2.index(global.width)) {
+-                            if let Some(toppings) = state.toppings {
+-                                // We have to have exactly all previous toppings; if so apply the new one
+-                                let must_have = Toppings::from(topping.bits() - 1);
+-                                if toppings & must_have == must_have {
+-                                    state.toppings = Some(toppings | topping);
++                            if let Some(current_toppings) = state.toppings {
++                                if current_toppings.can_apply(new_topping) {
++                                    state.toppings = Some(new_topping)
+                                 }
+                             }
+                         }
+@@ -1027,7 +1077,7 @@ Maps (belts, toppings, waiting times, splitters):
+ 
+         // Now we actually have to simulate each source
+         let mut visited = vec![];
+-        for _ in 0..(Toppings::all_flags().bits + 1) {
++        for _ in Toppings::all() {
+             visited.push(vec![false; global.width as usize * global.height as usize]);
+         }
+ 
+@@ -1036,7 +1086,7 @@ Maps (belts, toppings, waiting times, splitters):
+             for y in 0..global.height {
+                 let index = (y * global.width + x) as usize;
+                 let p = Point { x, y };
+-                let toppings = Toppings::none();
++                let toppings = Toppings::None;
+ 
+                 // Start a source here
+                 if let Some(Entity {
+@@ -1053,14 +1103,8 @@ Maps (belts, toppings, waiting times, splitters):
+                     facing,
+                 }) = global.entities[index]
+                 {
+-                    let mut any_source_state = Toppings::none();
+-
+-                    loop {
+-                        donuts.push((p, any_source_state, facing, visited.clone()));
+-                        any_source_state = any_source_state.any_source_next();
+-                        if any_source_state == Toppings::none() {
+-                            break;
+-                        }
++                    for topping in Toppings::all() {
++                        donuts.push((p, topping, facing, visited.clone()));
+                     }
+                 }
+             }
+@@ -1080,7 +1124,7 @@ Maps (belts, toppings, waiting times, splitters):
+                 ));
+             }
+ 
+-            visited[toppings.bits][p.index(global.width)] = true;
++            visited[toppings.index()][p.index(global.width)] = true;
+             let mut crossover_direction = initial_facing;
+ 
+             'simulation_tick: while !matches!(
+@@ -1100,12 +1144,12 @@ Maps (belts, toppings, waiting times, splitters):
+                     let mut maps = vec![inital_map.clone()];
+ 
+                     // The active donut
+-                    maps[0][p.index(global.width + 1)] = toppings.bits.to_string().chars().next().unwrap();
++                    maps[0][p.index(global.width + 1)] = toppings.to_char();
+ 
+                     // All queued donuts
+                     for donut in donuts.iter() {
+                         maps.push(inital_map.clone());
+-                        maps.last_mut().unwrap()[donut.0.index(global.width + 1)] = donut.1.bits().to_string().chars().next().unwrap();
++                        maps.last_mut().unwrap()[donut.0.index(global.width + 1)] = donut.1.to_char();
+                     }
+ 
+                     // Convert each map into a string
+@@ -1151,25 +1195,11 @@ Delivered: {complete_donuts:?}
+                         facing,
+                     }) = global.entities[p2.index(global.width)]
+                     {
+-                        if top_d == facing {
+-                            // Only add the toppings if we have all previous stoppings, otherwise ignore it
+-                            // I feel like this was frowned upon before 4/6, but so it goess bits set to add a new one
+-                            assert!(new_toppings.bits().count_ones() == 1);
+-                            let must_have = Toppings::from(new_toppings.bits() - 1);
+-                            if toppings & must_have != must_have {
+-                                continue;
+-                            }
+-
+-                            // Already applied, not an error but we don't want to trace it
+-                            if toppings | new_toppings == toppings {
+-                                continue;
+-                            }
+-
+-                            // Add the new topping!
++                        if top_d == facing && toppings.can_apply(new_toppings) {
+                             tracing::debug!(
+                                 "Adding topping {new_toppings:?} from {p2:?} / {facing:?}"
+                             );
+-                            toppings |= new_toppings;
++                            toppings = new_toppings;
+                         }
+                     }
+                 }
+@@ -1267,7 +1297,7 @@ Delivered: {complete_donuts:?}
+                     break; // Ran off the end of a belt
+                 }
+ 
+-                if visited[toppings.bits][p.index(global.width)] {
++                if visited[toppings.index()][p.index(global.width)] {
+                     if donuts.is_empty() {
+                         tracing::info!("Loop detected at {p:?}, on the last donut");
+                         break 'each_donut;
+@@ -1276,7 +1306,7 @@ Delivered: {complete_donuts:?}
+                         continue 'each_donut;
+                     }
+                 } else {
+-                    visited[toppings.bits][p.index(global.width)] = true;
++                    visited[toppings.index()][p.index(global.width)] = true;
+                 }
+             }
+ 
+diff --git a/testit/freshly-frosted.json b/testit/freshly-frosted.json
+index 6168803..4eae4ef 100644
+--- a/testit/freshly-frosted.json
++++ b/testit/freshly-frosted.json
+@@ -41,17 +41,21 @@
+     "data/freshly-frosted/01-spring-day/09.txt": [
+       ".↓←←←╣\n↓←→→↑.\n↓→↑╣↓←\n↓↑←+-↑\n↓╩↑←╦↑\n→→→→→↑\n\n",
+       "↓←←←←╣\n↓.→→↑.\n↓→↑╣↓←\n↓↑←+-↑\n↓╩↑←╦↑\n→→→→→↑\n\n",
+-      ".↓←←←╣\n↓←→→↑.\n↓→↑╣..\n↓↑←+-←\n↓╩↑←╦↑\n→→→→→↑\n\n"
++      ".↓←←←╣\n↓←→→↑.\n↓→↑╣..\n↓↑←+-←\n↓╩↑←╦↑\n→→→→→↑\n\n",
++      ".....╣\n.→→→↓.\n.↑.╣↓.\n.↑←+-.\n.╩↑←╦.\n......\n\n"
+     ],
+     "data/freshly-frosted/01-spring-day/10.txt": [
+       "↓←←←←...\n↓+↓╠↑╠↓←\n→↓→↓↑←↓↑\n-←╠↓╠↑←↑\n...→→→→↑\n\n",
+-      "↓←←←←...\n↓+↓╠↑╠↓←\n↓.→↓↑←↓↑\n-.╠↓╠↑←↑\n...→→→→↑\n\n"
++      "↓←←←←...\n↓+↓╠↑╠↓←\n↓.→↓↑←↓↑\n-.╠↓╠↑←↑\n...→→→→↑\n\n",
++      "........\n.+↓╠.╠..\n..→↓....\n-←╠↓╠...\n.↑←←....\n\n"
+     ],
+     "data/freshly-frosted/01-spring-day/11.txt": [
+-      "→→↓→→↓→→↓\n↑╩↓↑+→↑╣↓\n↑.↓↑←↓←←↓\n↑.→→↓-→↑↓\n↑╠↓←→→↑╩↓\n↑←←↑←←←←←\n\n"
++      "→→↓→→↓→→↓\n↑╩↓↑+→↑╣↓\n↑.↓↑←↓←←↓\n↑.→→↓-→↑↓\n↑╠↓←→→↑╩↓\n↑←←↑←←←←←\n\n",
++      "...→→↓...\n.╩.↑+→↓╣.\n...↑←↓←..\n.....-...\n.╠.....╩.\n.........\n\n"
+     ],
+     "data/freshly-frosted/01-spring-day/12.txt": [
+-      ".↓←←←←←←.\n↓←→→→→↓↑╦\n↓╩↑→→↓↓↑←\n↓+↑↑←↓→→↑\n↓→↑╩↑↓╣→↓\n→→→→↑→→↑-\n\n"
++      ".↓←←←←←←.\n↓←→→→→↓↑╦\n↓╩↑→→↓↓↑←\n↓+↑↑←↓→→↑\n↓→↑╩↑↓╣→↓\n→→→→↑→→↑-\n\n",
++      ".........\n........╦\n.╩→→→→→→↓\n.+↑.....↓\n.→↑╩..╣.↓\n........-\n\n"
+     ],
+     "data/freshly-frosted/02-summer/01.txt": [
+       "...╦...\n+→→→→→-\n-←←←←←+\n...╩...\n\n",
+@@ -215,7 +219,8 @@
+       "╠.→→→↓.╣\n╠→↑-╠→↓+\n+↑.╣-←←╣\n╠......╣\n\n"
+     ],
+     "data/freshly-frosted/05-spring-dreams/06.txt": [
+-      "↓←←←←←←←↓←←\n↓+╩╠→→↓↑↓╣↑\n↓→→→↑╠↓↑→↓↑\n↓╣→→↓╣→↑╣-↑\n→→↑╣→→→→→→↑\n\n"
++      "↓←←←←←←←↓←←\n↓+╩╠→→↓↑↓╣↑\n↓→→→↑╠↓↑→↓↑\n↓╣→→↓╣→↑╣-↑\n→→↑╣→→→→→→↑\n\n",
++      "...........\n.+╩╠.....╣.\n.→→↓.╠.→→↓.\n.╣.→↓╣.↑╣-.\n...╣→→→↑...\n\n"
+     ],
+     "data/freshly-frosted/05-spring-dreams/08.txt": [
+       "+→↓╣╦╠..-\n+→→↓.→→→↑\n+╩.↓.↑.╩↑\n→↓╩↓╩↑╩→↑\n╠↓.→→↑→↑╣\n.→→→→→↑..\n\n",
+@@ -330,21 +335,24 @@
+       ".→→→→→→→↓...\n→↑↓←....↓→→↓\n↑╠↓↑←+-←↓↑╣↓\n↑←←↑...↑→↑.↓\n...↑...↑←←←←\n\n"
+     ],
+     "data/freshly-frosted/08-hot-summer/02.txt": [
+-      ".→→→→↓→→→→↓.\n+↑╦.╦↓↑╦.╦↓-\n↓↑←↓←←↑←↓←←↑\n→→↑→→→→↑→→→↑\n\n"
++      ".→→→→↓→→→→↓.\n+↑╦.╦↓↑╦.╦↓-\n↓↑←↓←←↑←↓←←↑\n→→↑→→→→↑→→→↑\n\n",
++      ".→→→→→→→→→↓.\n+↑╦.╦..╦.╦↓-\n↓↑←.←..←.←→↑\n→→↑.........\n\n"
+     ],
+     "data/freshly-frosted/08-hot-summer/03.txt": [
+       "→→→→→→↓...\n↑╦.↓+-↓.╦.\n↑←←←←↑→→↓.\n..←..↑.→↓.\n....↑↑↓←←.\n..╠.↑↑←╣..\n\n"
+     ],
+     "data/freshly-frosted/08-hot-summer/04.txt": [
+       "↓←←+→→↓\n↓╦↑←↑╦↓\n→→↓.↑←↓\n..→→→↑↓\n.↓←←←↓←\n.→→↓↑←.\n.╩.-.╩.\n\n",
+-      "↓←←+→→↓\n↓╦↑←↑╦↓\n→→→↓↑←↓\n...→→↑↓\n.↓←←←↓←\n.→→↓↑←.\n.╩.-.╩.\n\n"
++      "↓←←+→→↓\n↓╦↑←↑╦↓\n→→→↓↑←↓\n...→→↑↓\n.↓←←←↓←\n.→→↓↑←.\n.╩.-.╩.\n\n",
++      "↓←←+...\n↓╦↑←.╦.\n→→↓..←.\n..↓....\n..↓....\n.→→↓.←.\n.╩.-.╩.\n\n"
+     ],
+     "data/freshly-frosted/08-hot-summer/05.txt": [
+       "+→↓←←←←→→↓╣\n↓↑↓←←↑↓↑←→↓\n↓←←↑→→↓↑↑←↓\n↓↑←→↑↓→↑↓←←\n→↓↑↑↑↓↓←←→↓\n↓→→↑↓←←→→↑↓\n→↓←←←↑→↑↓←←\n╠→→→→→↑←→→-\n\n",
+       "+→↓←←←←→→↓╣\n↓↑↓←←↑↓↑←→↓\n↓←←↑→→↓→↑←↓\n↓↑←→↑↓→↑↓←←\n→↓↑↑↑↓↓←←→↓\n↓→→↑↓←←→→↑↓\n→↓←←←↑→↑↓←←\n╠→→→→→↑←→→-\n\n"
+     ],
+     "data/freshly-frosted/08-hot-summer/06.txt": [
+-      "+╦.╦.╦.╦.╦.╦.╦-\n→→↓→..→→→→↓→..↑\n.╦↓╦.╦↑╦.╦↓╦.╦↑\n.←↓..←↑→↓←←..←↑\n.╦↓╦.╦↑╦↓╦.╦.╦↑\n..→→→→↑→→→→→→→↑\n\n"
++      "+╦.╦.╦.╦.╦.╦.╦-\n→→↓→..→→→→↓→..↑\n.╦↓╦.╦↑╦.╦↓╦.╦↑\n.←↓..←↑→↓←←..←↑\n.╦↓╦.╦↑╦↓╦.╦.╦↑\n..→→→→↑→→→→→→→↑\n\n",
++      "+╦.╦.╦.╦.╦.╦.╦-\n→→→→→→→→→→→→→→↑\n.╦.╦.╦.╦.╦.╦.╦.\n.←...←.→.←...←.\n.╦.╦.╦.╦.╦.╦.╦.\n...→...→...→...\n\n"
+     ],
+     "data/freshly-frosted/08-hot-summer/09.txt": [
+       ".↓←←╣..\n.↓├↑←←←\n╦↓...┬↑\n↓←↓+.→↑\n↓┴→→→↑╩\n→→→↓├↑-\n..╠→→↑.\n\n"
+@@ -368,10 +376,12 @@
+       "DEBUG simulation result: [(Point { x: 0, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 3, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 1, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 2, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 4, y: 0 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 1, y: 3 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 3, y: 0 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 3, y: 0 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 3, y: 2 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 4, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 3 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 4, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 4, y: 2 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 0, y: 3 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 4, y: 0 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 0 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 4, y: 3 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 4, y: 2 }, Toppings { bits: 0 })]\nDEBUG simulation result: [(Point { x: 3, y: 2 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 2, y: 0 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 2, y: 1 }, Toppings { bits: 3 })]\nDEBUG simulation result: [(Point { x: 3, y: 1 }, Toppings { bits: 3 })]\nDEBUG simulation result: [(Point { x: 3, y: 2 }, Toppings { bits: 3 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 3, y: 3 }, Toppings { bits: 3 })]\nDEBUG simulation result: [(Point { x: 4, y: 3 }, Toppings { bits: 1 })]\nDEBUG simulation result: [(Point { x: 4, y: 3 }, Toppings { bits: 3 })]\nDEBUG simulation result: [(Point { x: 4, y: 2 }, Toppings { bits: 1 })]\n→↓↓←←\n+↓→↓◒\n○↓╩↓-\n↑←╣→↑\n\n"
+     ],
+     "data/freshly-frosted/09-tropical-rain/02.txt": [
+-      ".→→→→↓.\n→↑↓←←←.\n↑╩↓→↓╩.\n↑◑↓+↓○←\n.╦↓-↓╦↑\n.↓←↑→→↑\n.→→↑...\n\n"
++      ".→→→→↓.\n→↑↓←←←.\n↑╩↓→↓╩.\n↑◑↓+↓○←\n.╦↓-↓╦↑\n.↓←↑→→↑\n.→→↑...\n\n",
++      ".......\n.......\n.╩.→↓╩.\n.◑.+↓○.\n.╦.-↓╦.\n...↑→↓.\n...↑←←.\n\n"
+     ],
+     "data/freshly-frosted/09-tropical-rain/03.txt": [
+-      "◐→→→→→↓\n╦+→→↓╠↓\n→→→-→↓↓\n↑→→↓╩↓↓\n↑↑╣→○↓↓\n↑↑←←←←↓\n↑←←←←←←\n\n"
++      "◐→→→→→↓\n╦+→→↓╠↓\n→→→-→↓↓\n↑→→↓╩↓↓\n↑↑╣→○↓↓\n↑↑←←←←↓\n↑←←←←←←\n\n",
++      "◐......\n╦+→→↓╠.\n..→-→↓.\n..↑←╩↓.\n..╣↑○↓.\n...↑←←.\n.......\n\n"
+     ],
+     "data/freshly-frosted/09-tropical-rain/04-solved.txt": [
+       "○←+→→→→→↓\n╠↑←←←←←←↓\n→→→→↓→↓↑↓\n↑←↓+-+↓↑↓\n╩↑↓↓←←←↑←\n→↑↓↓╦↓←←╩\n↑←←→↓↓╩↑←\n╩-←←←→→-◒\n\n"
+@@ -382,7 +392,8 @@
+       "+→→→→↓\n...↑╦↓\n.→→→←○\n.X◑┴-←\n.→→→→↑\n\n"
+     ],
+     "data/freshly-frosted/09-tropical-rain/09.txt": [
+-      "↓←←←←→→→→↓\n○╩↓←↑↑↓←╩○\n↓←←+↑↑-↑..\n↓◓→→↑↑←↑◓.\n↓→↑.╩╩↑↑←.\n→→→→→→↑...\n\n"
++      "↓←←←←→→→→↓\n○╩↓←↑↑↓←╩○\n↓←←+↑↑-↑..\n↓◓→→↑↑←↑◓.\n↓→↑.╩╩↑↑←.\n→→→→→→↑...\n\n",
++      "..........\n○╩.→↓→↓.╩○\n...+↓↑-...\n.◓..→↑..◓.\n....╩╩....\n..........\n\n"
+     ],
+     "data/freshly-frosted/09-tropical-rain/10.txt": [
+       "→→→→→→→↓\n↑╩↓+╩╦╠↓\n↑←←╠↓←←↓\n◒.╩.→↓↑↓\n+→→○.↓+↓\n→↑╠↓←↓-↓\n↑╩↓←↑↓↑←\n↑←←+↑←╣╩\n\n"
+@@ -395,7 +406,8 @@
+       "+╦╦-\n↓↓←↑\n→*↑↑\n.→→↑\n\n"
+     ],
+     "data/freshly-frosted/10-autumn-festivities/03.txt": [
+-      "+╦...→→↓\n↓↓←←→↑╣↓\n↓→↓↑*←←↓\n↓╠→→↑→↑↓\n→→→→→↑╩-\n\n"
++      "+╦...→→↓\n↓↓←←→↑╣↓\n↓→↓↑*←←↓\n↓╠→→↑→↑↓\n→→→→→↑╩-\n\n",
++      "+╦......\n↓.....╣.\n→→→→*↓..\n.╠...→→↓\n......╩-\n\n"
+     ],
+     "data/freshly-frosted/10-autumn-festivities/04-solved.txt": [
+       "↓←+↓←\n↓╦→*↑\n↓↓*←-\n→*↑╣↑\n╠→→→↑\n\n"
+@@ -442,6 +454,9 @@
+     ],
+     "data/freshly-frosted/11-winter-snow/07.txt": [
+       "◐↓→→→→○-\n◓↓↑╦+╦↑↑\n↓↓↑←→→↑↑\n↓→→↑↑↓◑↑\n→→→→↑→→↑\n\n"
++    ],
++    "data/freshly-frosted/12-deepest-midnight/01-solved.txt": [
++      "--↓⧺→→→→→↓\n↑↑↓┬↑┬→→↓↓\n↑↑→→→→→-↓↓\n↑↑←←┴↓┴-←↓\n↑←←←←←-←←←\n\n"
+     ]
+   },
+   "metadata": {
+@@ -454,64 +469,64 @@
+     "stderr_mode": "Print",
+     "env": [],
+     "preserve_env": false,
+-    "timeout": 60
++    "timeout": 1
+   },
+   "timing": {
+     "data/freshly-frosted/01-spring-day/01-solved.txt": {
+       "fastest": 179,
+-      "most_recent": 218
++      "most_recent": 185
+     },
+     "data/freshly-frosted/01-spring-day/01.txt": {
+       "fastest": 7,
+-      "most_recent": 13
++      "most_recent": 12
+     },
+     "data/freshly-frosted/01-spring-day/02.txt": {
+-      "fastest": 7,
+-      "most_recent": 218
++      "fastest": 6,
++      "most_recent": 184
+     },
+     "data/freshly-frosted/01-spring-day/03.txt": {
+       "fastest": 7,
+-      "most_recent": 216
++      "most_recent": 15
+     },
+     "data/freshly-frosted/01-spring-day/04.txt": {
+       "fastest": 8,
+-      "most_recent": 215
++      "most_recent": 190
+     },
+     "data/freshly-frosted/01-spring-day/05.txt": {
+       "fastest": 43,
+-      "most_recent": 91
++      "most_recent": 249
+     },
+     "data/freshly-frosted/01-spring-day/06.txt": {
+       "fastest": 36,
+-      "most_recent": 68
++      "most_recent": 251
+     },
+     "data/freshly-frosted/01-spring-day/07.txt": {
+       "fastest": 5,
+-      "most_recent": 11
++      "most_recent": 12
+     },
+     "data/freshly-frosted/01-spring-day/08.txt": {
+       "fastest": 13,
+-      "most_recent": 13
++      "most_recent": 17
+     },
+     "data/freshly-frosted/01-spring-day/09.txt": {
+       "fastest": 59,
+-      "most_recent": 371
++      "most_recent": 316
+     },
+     "data/freshly-frosted/01-spring-day/10.txt": {
+-      "fastest": 14,
+-      "most_recent": 120
++      "fastest": 7,
++      "most_recent": 125
+     },
+     "data/freshly-frosted/01-spring-day/11.txt": {
+-      "fastest": 3148,
+-      "most_recent": 39900
++      "fastest": 22,
++      "most_recent": 25
+     },
+     "data/freshly-frosted/01-spring-day/12.txt": {
+-      "fastest": 9285,
+-      "most_recent": 288576
++      "fastest": 10,
++      "most_recent": 14
+     },
+     "data/freshly-frosted/02-summer/01.txt": {
+       "fastest": 6,
+-      "most_recent": 105
++      "most_recent": 38
+     },
+     "data/freshly-frosted/02-summer/02.txt": {
+       "fastest": 9,
+@@ -519,7 +534,7 @@
+     },
+     "data/freshly-frosted/02-summer/03.txt": {
+       "fastest": 5,
+-      "most_recent": 40
++      "most_recent": 23
+     },
+     "data/freshly-frosted/02-summer/04.txt": {
+       "fastest": 93,
+@@ -543,11 +558,11 @@
+     },
+     "data/freshly-frosted/03-autumn-sunset/01.txt": {
+       "fastest": 11,
+-      "most_recent": 53
++      "most_recent": 48
+     },
+     "data/freshly-frosted/03-autumn-sunset/02.txt": {
+       "fastest": 20,
+-      "most_recent": 736
++      "most_recent": 640
+     },
+     "data/freshly-frosted/03-autumn-sunset/04.txt": {
+       "fastest": 12275,
+@@ -575,31 +590,31 @@
+     },
+     "data/freshly-frosted/04-romantic-twilight/01.txt": {
+       "fastest": 12,
+-      "most_recent": 206
++      "most_recent": 153
+     },
+     "data/freshly-frosted/04-romantic-twilight/02-solved.txt": {
+       "fastest": 3,
+-      "most_recent": 34
++      "most_recent": 15
+     },
+     "data/freshly-frosted/04-romantic-twilight/02.txt": {
+       "fastest": 4,
+-      "most_recent": 239
++      "most_recent": 201
+     },
+     "data/freshly-frosted/04-romantic-twilight/03.txt": {
+       "fastest": 10,
+-      "most_recent": 303
++      "most_recent": 229
+     },
+     "data/freshly-frosted/04-romantic-twilight/04-solved.txt": {
+       "fastest": 3,
+-      "most_recent": 14
++      "most_recent": 9
+     },
+     "data/freshly-frosted/04-romantic-twilight/04.txt": {
+       "fastest": 12,
+-      "most_recent": 461
++      "most_recent": 360
+     },
+     "data/freshly-frosted/04-romantic-twilight/05.txt": {
+       "fastest": 6,
+-      "most_recent": 39
++      "most_recent": 40
+     },
+     "data/freshly-frosted/04-romantic-twilight/05b.txt": {
+       "fastest": 28,
+@@ -611,11 +626,11 @@
+     },
+     "data/freshly-frosted/04-romantic-twilight/08.txt": {
+       "fastest": 29,
+-      "most_recent": 252
++      "most_recent": 202
+     },
+     "data/freshly-frosted/04-romantic-twilight/09.txt": {
+       "fastest": 38,
+-      "most_recent": 705
++      "most_recent": 600
+     },
+     "data/freshly-frosted/04-romantic-twilight/12-hint.txt": {
+       "fastest": 259797,
+@@ -623,11 +638,11 @@
+     },
+     "data/freshly-frosted/05-spring-dreams/01.txt": {
+       "fastest": 9,
+-      "most_recent": 41
++      "most_recent": 27
+     },
+     "data/freshly-frosted/05-spring-dreams/02.txt": {
+       "fastest": 9,
+-      "most_recent": 32
++      "most_recent": 38
+     },
+     "data/freshly-frosted/05-spring-dreams/03.txt": {
+       "fastest": 11,
+@@ -635,19 +650,19 @@
+     },
+     "data/freshly-frosted/05-spring-dreams/04.txt": {
+       "fastest": 38,
+-      "most_recent": 1182
++      "most_recent": 936
+     },
+     "data/freshly-frosted/05-spring-dreams/05.txt": {
+       "fastest": 11,
+-      "most_recent": 113
++      "most_recent": 69
+     },
+     "data/freshly-frosted/05-spring-dreams/06.txt": {
+-      "fastest": 1223,
+-      "most_recent": 2589
++      "fastest": 12,
++      "most_recent": 13
+     },
+     "data/freshly-frosted/05-spring-dreams/08.txt": {
+       "fastest": 18,
+-      "most_recent": 171
++      "most_recent": 152
+     },
+     "data/freshly-frosted/05-spring-dreams/09-hint.txt": {
+       "fastest": 49794,
+@@ -662,12 +677,12 @@
+       "most_recent": 7224
+     },
+     "data/freshly-frosted/06-summer-morning/01.txt": {
+-      "fastest": 8,
+-      "most_recent": 44
++      "fastest": 6,
++      "most_recent": 20
+     },
+     "data/freshly-frosted/06-summer-morning/02.txt": {
+       "fastest": 7,
+-      "most_recent": 23
++      "most_recent": 36
+     },
+     "data/freshly-frosted/06-summer-morning/03 copy.txt": {
+       "fastest": 48,
+@@ -675,11 +690,11 @@
+     },
+     "data/freshly-frosted/06-summer-morning/03-solved.txt": {
+       "fastest": 3,
+-      "most_recent": 12
++      "most_recent": 190
+     },
+     "data/freshly-frosted/06-summer-morning/03.txt": {
+       "fastest": 10,
+-      "most_recent": 19
++      "most_recent": 28
+     },
+     "data/freshly-frosted/06-summer-morning/04.txt": {
+       "fastest": 565,
+@@ -687,19 +702,19 @@
+     },
+     "data/freshly-frosted/06-summer-morning/05.txt": {
+       "fastest": 61,
+-      "most_recent": 243
++      "most_recent": 158
+     },
+     "data/freshly-frosted/06-summer-morning/06.txt": {
+       "fastest": 4,
+-      "most_recent": 57
++      "most_recent": 40
+     },
+     "data/freshly-frosted/06-summer-morning/07-solved.txt": {
+       "fastest": 4,
+-      "most_recent": 28
++      "most_recent": 15
+     },
+     "data/freshly-frosted/06-summer-morning/08-solved.txt": {
+-      "fastest": 6,
+-      "most_recent": 18
++      "fastest": 5,
++      "most_recent": 27
+     },
+     "data/freshly-frosted/06-summer-morning/08.txt": {
+       "fastest": 3898,
+@@ -711,39 +726,39 @@
+     },
+     "data/freshly-frosted/07-lunar-night/01-solved.txt": {
+       "fastest": 9,
+-      "most_recent": 74
++      "most_recent": 11
+     },
+     "data/freshly-frosted/07-lunar-night/01.txt": {
+       "fastest": 8,
+-      "most_recent": 31
++      "most_recent": 10
+     },
+     "data/freshly-frosted/07-lunar-night/02-solved.txt": {
+       "fastest": 5,
+-      "most_recent": 22
++      "most_recent": 24
+     },
+     "data/freshly-frosted/07-lunar-night/02.txt": {
+       "fastest": 196,
+-      "most_recent": 250
++      "most_recent": 274
+     },
+     "data/freshly-frosted/07-lunar-night/03.txt": {
+       "fastest": 5,
+-      "most_recent": 14
++      "most_recent": 34
+     },
+     "data/freshly-frosted/07-lunar-night/04-solved.txt": {
+       "fastest": 4,
+-      "most_recent": 73
++      "most_recent": 19
+     },
+     "data/freshly-frosted/07-lunar-night/04.txt": {
+       "fastest": 38,
+-      "most_recent": 163
++      "most_recent": 108
+     },
+     "data/freshly-frosted/07-lunar-night/05.txt": {
+       "fastest": 53,
+-      "most_recent": 175
++      "most_recent": 69
+     },
+     "data/freshly-frosted/07-lunar-night/06.txt": {
+       "fastest": 78,
+-      "most_recent": 206
++      "most_recent": 135
+     },
+     "data/freshly-frosted/07-lunar-night/07.txt": {
+       "fastest": 16325,
+@@ -751,7 +766,7 @@
+     },
+     "data/freshly-frosted/07-lunar-night/08.txt": {
+       "fastest": 76,
+-      "most_recent": 148
++      "most_recent": 177
+     },
+     "data/freshly-frosted/07-lunar-night/10-solved.txt": {
+       "fastest": 9,
+@@ -762,36 +777,36 @@
+       "most_recent": 4655
+     },
+     "data/freshly-frosted/08-hot-summer/02.txt": {
+-      "fastest": 239,
+-      "most_recent": 368
++      "fastest": 30,
++      "most_recent": 304
+     },
+     "data/freshly-frosted/08-hot-summer/03.txt": {
+       "fastest": 80,
+-      "most_recent": 173
++      "most_recent": 144
+     },
+     "data/freshly-frosted/08-hot-summer/04.txt": {
+-      "fastest": 1556,
+-      "most_recent": 2197
++      "fastest": 34,
++      "most_recent": 34
+     },
+     "data/freshly-frosted/08-hot-summer/05.txt": {
+       "fastest": 100,
+-      "most_recent": 170
++      "most_recent": 181
+     },
+     "data/freshly-frosted/08-hot-summer/06.txt": {
+-      "fastest": 145,
+-      "most_recent": 215
++      "fastest": 10,
++      "most_recent": 187
+     },
+     "data/freshly-frosted/08-hot-summer/09.txt": {
+       "fastest": 37,
+-      "most_recent": 68
++      "most_recent": 57
+     },
+     "data/freshly-frosted/08-hot-summer/10.txt": {
+       "fastest": 438,
+-      "most_recent": 625
++      "most_recent": 604
+     },
+     "data/freshly-frosted/08-hot-summer/11.txt": {
+-      "fastest": 49,
+-      "most_recent": 56
++      "fastest": 48,
++      "most_recent": 55
+     },
+     "data/freshly-frosted/08-hot-summer/12.txt": {
+       "fastest": 40824,
+@@ -799,31 +814,31 @@
+     },
+     "data/freshly-frosted/09-tropical-rain/01-solved.txt": {
+       "fastest": 3,
+-      "most_recent": 26
++      "most_recent": 10
+     },
+     "data/freshly-frosted/09-tropical-rain/01.txt": {
+       "fastest": 4,
+-      "most_recent": 36
++      "most_recent": 11
+     },
+     "data/freshly-frosted/09-tropical-rain/02.txt": {
+-      "fastest": 2114,
+-      "most_recent": 2909
++      "fastest": 16,
++      "most_recent": 42
+     },
+     "data/freshly-frosted/09-tropical-rain/03.txt": {
+-      "fastest": 5506,
+-      "most_recent": 8159
++      "fastest": 18,
++      "most_recent": 19
+     },
+     "data/freshly-frosted/09-tropical-rain/04-solved.txt": {
+       "fastest": 3,
+-      "most_recent": 12
++      "most_recent": 13
+     },
+     "data/freshly-frosted/09-tropical-rain/05.txt": {
+       "fastest": 11,
+-      "most_recent": 95
++      "most_recent": 89
+     },
+     "data/freshly-frosted/09-tropical-rain/09.txt": {
+-      "fastest": 52596,
+-      "most_recent": 52596
++      "fastest": 8,
++      "most_recent": 23
+     },
+     "data/freshly-frosted/09-tropical-rain/10.txt": {
+       "fastest": 16020,
+@@ -831,75 +846,79 @@
+     },
+     "data/freshly-frosted/10-autumn-festivities/01.txt": {
+       "fastest": 4,
+-      "most_recent": 31
++      "most_recent": 30
+     },
+     "data/freshly-frosted/10-autumn-festivities/02.txt": {
+       "fastest": 10,
+-      "most_recent": 15
++      "most_recent": 12
+     },
+     "data/freshly-frosted/10-autumn-festivities/03.txt": {
+-      "fastest": 2060,
+-      "most_recent": 3049
++      "fastest": 10,
++      "most_recent": 20
+     },
+     "data/freshly-frosted/10-autumn-festivities/04-solved.txt": {
+       "fastest": 8,
+-      "most_recent": 8
++      "most_recent": 26
+     },
+     "data/freshly-frosted/10-autumn-festivities/04.txt": {
+       "fastest": 20,
+-      "most_recent": 37
++      "most_recent": 29
+     },
+     "data/freshly-frosted/10-autumn-festivities/05.txt": {
+       "fastest": 13,
+-      "most_recent": 20
++      "most_recent": 19
+     },
+     "data/freshly-frosted/10-autumn-festivities/06-solved.txt": {
+-      "fastest": 11,
+-      "most_recent": 11
++      "fastest": 7,
++      "most_recent": 10
+     },
+     "data/freshly-frosted/10-autumn-festivities/06.txt": {
+       "fastest": 509,
+-      "most_recent": 536
++      "most_recent": 628
+     },
+     "data/freshly-frosted/11-winter-snow/01-solved.txt": {
+-      "fastest": 9,
+-      "most_recent": 30
++      "fastest": 7,
++      "most_recent": 22
+     },
+     "data/freshly-frosted/11-winter-snow/01.txt": {
+-      "fastest": 25,
+-      "most_recent": 33
++      "fastest": 24,
++      "most_recent": 30
+     },
+     "data/freshly-frosted/11-winter-snow/03-solved.txt": {
+-      "fastest": 10,
+-      "most_recent": 47
++      "fastest": 8,
++      "most_recent": 42
+     },
+     "data/freshly-frosted/11-winter-snow/03.txt": {
+       "fastest": 7280,
+       "most_recent": 7280
+     },
+     "data/freshly-frosted/11-winter-snow/04-solved.txt": {
+-      "fastest": 7,
+-      "most_recent": 7
++      "fastest": 5,
++      "most_recent": 12
+     },
+     "data/freshly-frosted/11-winter-snow/04.txt": {
+-      "fastest": 11,
+-      "most_recent": 11
++      "fastest": 9,
++      "most_recent": 16
+     },
+     "data/freshly-frosted/11-winter-snow/05-solved.txt": {
+-      "fastest": 15,
+-      "most_recent": 15
++      "fastest": 6,
++      "most_recent": 6
+     },
+     "data/freshly-frosted/11-winter-snow/05.txt": {
+-      "fastest": 493,
+-      "most_recent": 493
++      "fastest": 331,
++      "most_recent": 350
+     },
+     "data/freshly-frosted/11-winter-snow/06.txt": {
+-      "fastest": 148,
+-      "most_recent": 148
++      "fastest": 94,
++      "most_recent": 129
+     },
+     "data/freshly-frosted/11-winter-snow/07.txt": {
+       "fastest": 21838,
+       "most_recent": 21838
++    },
++    "data/freshly-frosted/12-deepest-midnight/01-solved.txt": {
++      "fastest": 12,
++      "most_recent": 12
+     }
+   }
+ }
+\ No newline at end of file
