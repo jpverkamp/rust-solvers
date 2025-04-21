@@ -16,6 +16,10 @@ impl From<&str> for Global {
         let mut global = Global::default();
 
         for line in input.lines() {
+            if line.trim().is_empty() || line.starts_with("//") {
+                continue;
+            }
+
             let chars = line.chars();
             let mut width = 0;
             global.height += 1;
@@ -314,18 +318,6 @@ impl Global {
 impl State<Global, Direction> for Local {
     #[tracing::instrument(skip(global), ret)]
     fn is_valid(&self, global: &Global) -> bool {
-        // If we don't have enough blocks left to match the global
-        // if self.blocks.iter().map(|b| b.len()).sum::<usize>()
-        //     < global.cells.iter().filter(|&&x| x).count()
-        // {
-        //     tracing::debug!(
-        //         "Not enough blocks overall: {} < {}",
-        //         self.blocks.iter().map(|b| b.len()).sum::<usize>(),
-        //         global.cells.iter().filter(|&&x| x).count()
-        //     );
-        //     return false;
-        // }
-
         // Blocks can only fall straight down, if any column doesn't have enough
         // This is measured top down since chunks can never go up or side to side
         for x in 0..global.width {
@@ -403,6 +395,10 @@ impl State<Global, Direction> for Local {
 
         let mut heuristic = 0;
         for (i, &cell) in local_cells.iter().enumerate() {
+            let p = Point {
+                x: (i % global.width as usize) as isize,
+                y: (i / global.width as usize) as isize,
+            };
             if cell != global.cells[i] {
                 heuristic += 1;
             }
