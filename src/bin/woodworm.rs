@@ -442,7 +442,7 @@ fn main() {
     let global = Global::from(input.as_str());
     let local = global.make_local();
 
-    let tracing_enabled = std::env::var("WORMWOOD_TRACE").is_ok();
+    let tracing_enabled = std::env::var("woodworm_TRACE").is_ok();
 
     if tracing_enabled {
         tracing_subscriber::fmt()
@@ -500,6 +500,7 @@ fn main() {
     let solution = solver.get_solution();
 
     if let Some(solution) = solution {
+        log::debug!("{solver}");
         log::info!("{}", solver.stringify(&solution));
 
         let path = solver.path(&local, &solution).unwrap();

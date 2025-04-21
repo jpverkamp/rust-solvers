@@ -1,0 +1,134 @@
+{
+  "results": {
+    "data/woodworm/01-mushroom.txt": [
+      "Sequence: RRULL UUUUR URRRR DRDDD LDLU\n",
+      "Sequence: RRULL UUUUR URRRR DRRDL LULD\n",
+      "Sequence: RRULL UUUUR URRRR DRDDD LLDR\n",
+      "Sequence: RRULL UUUUR URRRR DRRDL LLUR\n"
+    ],
+    "data/woodworm/02-cat.txt": [
+      "Sequence: RRURD RRRRU LLURR UUUUL ULLDL DLU\n",
+      "Sequence: URRDR URRDR ULURR UUUUL ULLDL DLU\n",
+      "Sequence: RRURD RRUUR DLDRU RUUUU LULLD LDLU\n"
+    ],
+    "data/woodworm/03-frame.txt": [
+      "Sequence: RRRUR ULLUU RRDRR UU\n",
+      "Sequence: RRRUU LUURR DDDRR RU\n",
+      "Sequence: UUUUU RRRUR RRDDD LLLLD DRRUU U\n",
+      "Sequence: URRUU URRDL DDRUR RDD\n",
+      "Sequence: URRUU URDDD RUUUR RDD\n",
+      "Sequence: URRUU URDDD RUUUR RRU\n",
+      "Sequence: URRUR DRUUL LLLUU UUURR RRRRD DLLLL\n"
+    ],
+    "data/woodworm/04-pillars.txt": [
+      "Sequence: URUUU RRDDD RRRUL UU\n",
+      "Sequence: URUUU RRDDD RRURU LUU\n",
+      "Sequence: URUUU RRDDD RRUUR ULUU\n",
+      "Sequence: URUUU RRDDD RRUUU RU\n"
+    ],
+    "data/woodworm/05-diamond.txt": [
+      "Sequence: RRURR DRUUR UUULU LULLD LDLDD RD\n",
+      "Sequence: RURRR DRUUR UUULU LULLD LDLDD RR\n",
+      "Sequence: RRRRR ULDLL ULULU UURUR URRDR DRDDL\n"
+    ],
+    "data/woodworm/06-dog.txt": [
+      "Sequence: RRURD RURRU URDRU UULLL LLLLD RDRRU URRRR RULLD L\n",
+      "Sequence: UUUUR UURRR DDLDL DDDRU RDRRR ULURU UL\n",
+      "Sequence: RRUUR UURUU LLDRD RUUUR RRRDD DLDLD DRULU ULLUL LULLD DDDRR DRR\n"
+    ],
+    "data/woodworm/07-trophy.txt": [
+      "Sequence: RURUL URRRR URURU UUULL LLLDR RRURR RDLLU\n",
+      "Sequence: RURUL URRRR URURU UUULL LLLDR RRURR RULLD\n",
+      "Sequence: RURUL URRRR URDLU RRUUU UULLD LLLUR RRURR DDDDL D\n"
+    ],
+    "data/woodworm/08-duck.txt": [
+      "Sequence: RURRU RULUL LUURR RUURR RDRDD LDDLU U\n",
+      "Sequence: RUURU RUULL DRRDR UUURR RDRDD LDDLU U\n",
+      "Sequence: RURUR URULU LDRRU UURRR DRDDL DLDRD LUUUL LULDR ULLLL DDDR\n"
+    ],
+    "data/woodworm/09-blade.txt": [
+      "Sequence: UUUUU RRDRD RDRDR RUULU ULULU LLLLL DRRRU LLUUR RR\n"
+    ],
+    "data/woodworm/10-chair.txt": ["Sequence: UUUUU RRDDR RDLDD LU\n"],
+    "data/woodworm/12-hash.txt": [
+      "Sequence: RURRD RRURU ULULL DLLUL UURUR RRRRD LULLD\n"
+    ],
+    "data/woodworm/13-tv.txt": [
+      "Sequence: RURRU ULUUU RRRDD DLDDR RD\n",
+      "Sequence: RURRR UURUU ULLLD DDRRD LDRRR D\n"
+    ],
+    "data/woodworm/14-gravestone.txt": [
+      "Sequence: UUUUR RDRRU LULLL UURUR RRRDR DDLLL DDD\n"
+    ]
+  },
+  "metadata": {
+    "command": "./target/release/woodworm",
+    "directory": null,
+    "files": "data/woodworm/*.txt"
+  },
+  "options": {
+    "stdout_mode": "Both",
+    "stderr_mode": "Print",
+    "env": [],
+    "preserve_env": false,
+    "timeout": 30
+  },
+  "timing": {
+    "data/woodworm/00-test.txt": {
+      "fastest": 9,
+      "most_recent": 12
+    },
+    "data/woodworm/01-mushroom.txt": {
+      "fastest": 11,
+      "most_recent": 13
+    },
+    "data/woodworm/02-cat.txt": {
+      "fastest": 479,
+      "most_recent": 486
+    },
+    "data/woodworm/03-frame.txt": {
+      "fastest": 67,
+      "most_recent": 770
+    },
+    "data/woodworm/04-pillars.txt": {
+      "fastest": 62,
+      "most_recent": 151
+    },
+    "data/woodworm/05-diamond.txt": {
+      "fastest": 467,
+      "most_recent": 674
+    },
+    "data/woodworm/06-dog.txt": {
+      "fastest": 16354,
+      "most_recent": 16354
+    },
+    "data/woodworm/07-trophy.txt": {
+      "fastest": 4734,
+      "most_recent": 13193
+    },
+    "data/woodworm/08-duck.txt": {
+      "fastest": 271,
+      "most_recent": 1340
+    },
+    "data/woodworm/09-blade.txt": {
+      "fastest": 193,
+      "most_recent": 193
+    },
+    "data/woodworm/10-chair.txt": {
+      "fastest": 10,
+      "most_recent": 34
+    },
+    "data/woodworm/12-hash.txt": {
+      "fastest": 34193,
+      "most_recent": 36803
+    },
+    "data/woodworm/13-tv.txt": {
+      "fastest": 707,
+      "most_recent": 2027
+    },
+    "data/woodworm/14-gravestone.txt": {
+      "fastest": 2303,
+      "most_recent": 11591
+    }
+  }
+}
