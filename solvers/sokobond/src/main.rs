@@ -2,7 +2,8 @@ use std::io;
 use std::ops::Add;
 use std::ops::Sub;
 
-use solver::{Point, Solver, State};
+use point::Point;
+use solver::{Solver, State};
 
 const SINGLE_HORIZONTAL: char = '-';
 const SINGLE_VERTICAL: char = '|';

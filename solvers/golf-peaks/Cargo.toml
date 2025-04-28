@@ -1,0 +1,12 @@
+[package]
+name = "golf-peaks"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.98"
+direction = { version = "0.1.0", path = "../../libs/direction" }
+env_logger = "0.11.8"
+log = "0.4.27"
+point = { version = "0.1.0", path = "../../libs/point" }
+solver = { version = "0.1.0", path = "../../libs/solver" }

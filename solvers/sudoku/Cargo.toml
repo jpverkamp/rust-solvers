@@ -1,0 +1,8 @@
+[package]
+name = "sudoku"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+env_logger = "0.11.8"
+solver = { version = "0.1.0", path = "../../libs/solver" }

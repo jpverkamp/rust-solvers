@@ -5,8 +5,10 @@ use std::{
     rc::Rc,
 };
 
+use direction::Direction;
 use itertools::Itertools;
-use solver::{Direction, Point, Solver, State};
+use point::Point;
+use solver::{Solver, State};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default, PartialOrd, Ord)]
 enum Toppings {

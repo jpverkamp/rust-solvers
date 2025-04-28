@@ -1,7 +1,9 @@
+use itertools::{Either, Itertools};
 use std::io::Read;
 
-use itertools::{Either, Itertools};
-use solver::{Direction, Point, Solver, State};
+use direction::Direction;
+use point::Point;
+use solver::{Solver, State};
 
 #[derive(Debug, Clone, Default)]
 struct Global {
@@ -395,7 +397,7 @@ impl State<Global, Direction> for Local {
 
         let mut heuristic = 0;
         for (i, &cell) in local_cells.iter().enumerate() {
-            let p = Point {
+            let _p = Point {
                 x: (i % global.width as usize) as isize,
                 y: (i / global.width as usize) as isize,
             };

@@ -1,6 +1,6 @@
 use anyhow::{anyhow, Result};
 
-use crate::point::Point;
+use point::Point;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Default)]
 pub enum Direction {
