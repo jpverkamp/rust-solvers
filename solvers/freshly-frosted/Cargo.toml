@@ -1,0 +1,16 @@
+[package]
+name = "freshly-frosted"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+direction = { version = "0.1.0", path = "../../libs/direction" }
+env_logger = "0.11.8"
+itertools = "0.14.0"
+log = "0.4.27"
+paste = "1.0.15"
+pathfinding = "4.14.0"
+point = { version = "0.1.0", path = "../../libs/point" }
+solver = { version = "0.1.0", path = "../../libs/solver" }
+tracing = "0.1.41"
+tracing-subscriber = "0.3.19"

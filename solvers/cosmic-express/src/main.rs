@@ -4,7 +4,8 @@ use std::io;
 use fxhash::{FxHashSet, FxHasher};
 use serde::{Deserialize, Serialize};
 
-use solver::{Point, Solver, State};
+use point::Point;
+use solver::{Solver, State};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Serialize, Deserialize, Hash, Ord, PartialOrd)]
 enum Color {

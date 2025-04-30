@@ -1,7 +1,8 @@
 use std::fmt;
 use std::io;
 
-use solver::{Point, Solver, State};
+use point::Point;
+use solver::{Solver, State};
 
 const MOVE_EMPTY_COST: i64 = 1;
 const MOVE_SNOW_COST: i64 = 1;

@@ -1,7 +1,10 @@
 use anyhow::{anyhow, Result};
 use fxhash::FxHashMap;
-use solver::{Direction, Point, Solver, State};
 use std::io::{BufRead, Read};
+
+use direction::Direction;
+use point::Point;
+use solver::{Solver, State};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 enum Tile {
