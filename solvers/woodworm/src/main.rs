@@ -6,8 +6,8 @@ use solver::{Solver, State};
 
 mod global;
 mod local;
-mod step;
 mod state;
+mod step;
 
 use global::Global;
 
