@@ -1,6 +1,7 @@
 use crate::Global;
 use crate::global::{Critter, Tile, WallKind};
 use direction::Direction;
+use point::Point;
 
 #[derive(Clone, Debug, PartialEq, Eq, Hash)]
 pub(crate) struct Local {
@@ -8,13 +9,15 @@ pub(crate) struct Local {
 }
 
 impl Local {
+    // Try to move the given critter in the given direction
+    // Returns the point the critter moves to (if it moves)
     #[tracing::instrument(skip(self, global), ret)]
     pub(crate) fn try_move(
         &self,
         global: &Global,
         index: usize,
         direction: Direction,
-    ) -> Option<Local> {
+    ) -> Option<Point> {
         let mut pt = self.critters[index].location;
         let mut moved = false;
 
@@ -52,9 +55,7 @@ impl Local {
             return None;
         }
 
-        let mut result = self.clone();
-        result.critters[index].location = pt;
-        Some(result)
+        Some(pt)
     }
 }
 

@@ -34,6 +34,11 @@ impl State<Global, (usize, Direction)> for Local {
             }
         }
 
+        // There can't be any seals left (they all have to leave the level)
+        if self.critters.iter().any(|c| c.kind == CritterKind::Seal) {
+            return false;
+        }
+
         true
     }
 
@@ -43,8 +48,17 @@ impl State<Global, (usize, Direction)> for Local {
 
         for (index, _critter) in self.critters.iter().enumerate() {
             for d in Direction::all() {
-                if let Some(next) = self.try_move(global, index, d) {
-                    next_states.push((1, (index, d), next))
+                if let Some(move_to) = self.try_move(global, index, d) {
+                    let mut new_local = self.clone();
+                    
+                    if global.tile_at(move_to) == Tile::Water {
+                        // The critter went swimming
+                        new_local.critters.remove(index);
+                    } else {
+                        new_local.critters[index].location = move_to;
+                    }
+                    
+                    next_states.push((1, (index, d), new_local))
                 }
             }
         }
