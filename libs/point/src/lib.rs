@@ -53,6 +53,18 @@ impl From<(isize, isize)> for Point {
     }
 }
 
+impl From<(usize, usize)> for Point {
+    fn from((x, y): (usize, usize)) -> Point {
+        Point { x: x as isize, y: y as isize }
+    }
+}
+
+impl From<(i32, i32)> for Point {
+    fn from((x, y): (i32, i32)) -> Point {
+        Point { x: x as isize, y: y as isize }
+    }
+}
+
 impl Add<Point> for Point {
     type Output = Point;
 

@@ -1,0 +1,13 @@
+....
+...~
+
+.....
+.|...
+
+--..
+....
+---.
+
+1 4 red penguin
+1 3 red nest
+2 1 blue penguin

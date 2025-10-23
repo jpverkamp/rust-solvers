@@ -1,0 +1,14 @@
+....
+...~
+
+|....
+.|.|.
+
+-.-.
+....
+.-..
+
+1 4 yellow penguin
+1 1 yellow nest
+2 1 blue penguin
+1 3 blue nest
