@@ -1,8 +1,8 @@
 mod model;
 mod simulation;
 
-use std::io::Read;
 use solver::{Solver, State};
+use std::io::Read;
 
 use crate::model::map::Map;
 
@@ -10,8 +10,8 @@ fn main() {
     let mut input = String::new();
     std::io::stdin().read_to_string(&mut input).unwrap();
     let map = Map::from(input.as_str());
-    
-    let tracing_enabled = std::env::var("SOLVER_TRACE").is_ok();
+
+    let tracing_enabled = std::env::var("RUST_TRACE").is_ok();
     if tracing_enabled {
         tracing_subscriber::fmt()
             .without_time()
@@ -52,14 +52,20 @@ fn main() {
             match step {
                 simulation::Step::SwitchCritter { critter } => {
                     print!("\n{critter}\t");
-                },
-                simulation::Step::Move { direction, new_critter } => {
-                    print!("{}", match direction {
-                        direction::Direction::Up => 'U',
-                        direction::Direction::Down => 'D',
-                        direction::Direction::Left => 'L',
-                        direction::Direction::Right => 'R',
-                    });
+                }
+                simulation::Step::Move {
+                    direction,
+                    new_critter,
+                } => {
+                    print!(
+                        "{}",
+                        match direction {
+                            direction::Direction::Up => 'U',
+                            direction::Direction::Down => 'D',
+                            direction::Direction::Left => 'L',
+                            direction::Direction::Right => 'R',
+                        }
+                    );
                     if let Some(critter) = new_critter {
                         print!("\n{critter}\t");
                     }

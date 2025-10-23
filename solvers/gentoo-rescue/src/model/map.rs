@@ -32,19 +32,57 @@ impl Map {
         self.tiles[index]
     }
 
-    pub(crate) fn wall_at(&self, p: Point, d: Direction) -> WallKind {
+    pub(crate) fn break_floor(&mut self, p: Point) {
+        assert!(
+            p.x >= 0 || p.x < (self.width as isize) || p.y >= 0 || p.y < (self.height as isize),
+            "Tried to break a floor out of bounds at {p:?}"
+        );
+
+        let index = (p.y * (self.width as isize) + p.x) as usize;
+        assert_eq!(
+            self.tiles[index],
+            Tile::CrackedFloor,
+            "Tried to break a non-cracked floor at {p:?}"
+        );
+        self.tiles[index] = Tile::Water;
+    }
+
+    pub(crate) fn wall_index(&self, p: Point, d: Direction) -> Option<(bool, usize)> {
         if p.x < 0 || p.x >= (self.width as isize) || p.y < 0 || p.y >= (self.height as isize) {
-            return WallKind::Empty;
+            return None;
         }
 
         let x = p.x as usize;
         let y = p.y as usize;
 
         match d {
-            Direction::Up => self.h_walls[x + y * self.width],
-            Direction::Down => self.h_walls[x + (y + 1) * self.width],
-            Direction::Left => self.v_walls[x + y * (self.width + 1)],
-            Direction::Right => self.v_walls[(x + 1) + y * (self.width + 1)],
+            Direction::Up => Some((true, x + y * self.width)),
+            Direction::Down => Some((true, x + (y + 1) * self.width)),
+            Direction::Left => Some((false, x + y * (self.width + 1))),
+            Direction::Right => Some((false, (x + 1) + y * (self.width + 1))),
+        }
+    }
+
+    pub(crate) fn wall_at(&self, p: Point, d: Direction) -> WallKind {
+        match self.wall_index(p, d) {
+            Some((true, index)) => self.h_walls[index],
+            Some((false, index)) => self.v_walls[index],
+            None => WallKind::Empty,
+        }
+    }
+
+    pub(crate) fn break_wall(&mut self, p: Point, d: Direction) {
+        if let Some(wall) = match self.wall_index(p, d) {
+            Some((true, index)) => self.h_walls.get_mut(index),
+            Some((false, index)) => self.v_walls.get_mut(index),
+            None => None,
+        } {
+            assert_eq!(
+                *wall,
+                WallKind::Cracked,
+                "Tried to break a n non-cracked wall at {p:?} {d:?}"
+            );
+            *wall = WallKind::Empty
         }
     }
 }

@@ -14,3 +14,4 @@
 2 1 blue penguin
 3 1 green penguin
 3 5 blue nest
+2 1 green nest

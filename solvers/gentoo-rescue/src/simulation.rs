@@ -32,17 +32,42 @@ impl Map {
         let mut pt = self.critters[self.active_critter].location;
         let mut moved = false;
 
+        // We will throw this away if it's invalid, but this is necessary to update cracked walls/floors
+        let mut new_map = self.clone();
+
         loop {
-            // If we're on water, stop moving
-            if self.tile_at(pt) == Tile::Water {
-                tracing::debug!("{pt:?} stopped at water");
-                break;
+            match new_map.tile_at(pt) {
+                Tile::Water => {
+                    // If we're on water, stop moving
+                    tracing::debug!("{pt:?} stopped at water");
+                    break;
+                }
+                Tile::CrackedFloor => {
+                    // Cracked tiles turn into water
+                    // But we're allowed to continue (will stop if we hit it again)
+                    tracing::debug!("{pt:?} broke the floor");
+                    new_map.break_floor(pt);
+                }
+                Tile::Nest(_) | Tile::Floor => {
+                    // Everything else just keep on sliding
+                }
             }
 
-            // Bumped into a wall
-            if self.wall_at(pt, direction) != WallKind::Empty {
-                tracing::debug!("{pt:?} stopped at wall");
-                break;
+            match new_map.wall_at(pt, direction) {
+                WallKind::Empty => {}
+                WallKind::Solid => {
+                    // Bumped into a wall
+                    tracing::debug!("{pt:?} stopped at wall");
+                    break;
+                }
+                WallKind::Cracked => {
+                    // Bumped into a cracked wall, break it
+                    // This counts as moving even even though we stopped
+                    tracing::debug!("{pt:?} stopped at cracked wall, breaking it");
+                    new_map.break_wall(pt, direction);
+                    moved = true;
+                    break;
+                }
             }
 
             // Bumped into any other critter
@@ -65,9 +90,6 @@ impl Map {
         if !moved {
             return None;
         }
-
-        // If we did move, we need to generate and return a new state
-        let mut new_map = self.clone();
 
         // If the critter is on water, remove it and choose a new active critter
         if self.tile_at(pt) == Tile::Water {
