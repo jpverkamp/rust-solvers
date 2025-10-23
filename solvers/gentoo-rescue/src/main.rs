@@ -1,20 +1,16 @@
-mod global;
-mod local;
-mod state;
+mod model;
+mod simulation;
 
 use std::io::Read;
-
-use global::Global;
 use solver::{Solver, State};
 
-use crate::global::Critter;
+use crate::model::map::Map;
 
 fn main() {
     let mut input = String::new();
     std::io::stdin().read_to_string(&mut input).unwrap();
-    let global = Global::from(input.as_str());
-    let local = global.make_local();
-
+    let map = Map::from(input.as_str());
+    
     let tracing_enabled = std::env::var("SOLVER_TRACE").is_ok();
     if tracing_enabled {
         tracing_subscriber::fmt()
@@ -25,7 +21,7 @@ fn main() {
         env_logger::init();
     }
 
-    log::info!("Initial state:\n{}", local.stringify(&global));
+    log::info!("Initial state:\n{}", map.stringify(&()));
 
     // If we have args, run each of those as a solution
     if std::env::args().len() > 1 {
@@ -37,11 +33,11 @@ fn main() {
     }
 
     // Otherwise, run the solver
-    let mut solver = Solver::new(global.clone(), local.clone());
+    let mut solver = Solver::new((), map.clone());
 
     while let Some(state) = solver.next() {
         if solver.states_checked() % 100_000 == 0 {
-            log::debug!("\n{}", state.stringify(&global));
+            log::debug!("\n{}", state.stringify(&()));
             log::debug!("{solver}");
         }
     }
@@ -49,27 +45,26 @@ fn main() {
     if let Some(solution) = solver.get_solution() {
         log::info!("{solution:?}");
 
-        let path = solver.path(&local, &solution).unwrap();
-        let mut last_index = usize::MAX;
+        let path = solver.path(&map, &solution).unwrap();
+        print!("{}\t", map.critters[0]);
 
-        for (i, d) in path {
-            if last_index != i {
-                let critter = global.critter(i);
-                print!(
-                    "\n{}\t{:?}\t{:?}\t",
-                    Critter::index_char(i),
-                    critter.color,
-                    critter.kind,
-                );
-                last_index = i;
+        for step in path {
+            match step {
+                simulation::Step::SwitchCritter { critter } => {
+                    print!("\n{critter}\t");
+                },
+                simulation::Step::Move { direction, new_critter } => {
+                    print!("{}", match direction {
+                        direction::Direction::Up => 'U',
+                        direction::Direction::Down => 'D',
+                        direction::Direction::Left => 'L',
+                        direction::Direction::Right => 'R',
+                    });
+                    if let Some(critter) = new_critter {
+                        print!("\n{critter}\t");
+                    }
+                }
             }
-            let c = match d {
-                direction::Direction::Up => "U",
-                direction::Direction::Down => "D",
-                direction::Direction::Left => "L",
-                direction::Direction::Right => "R",
-            };
-            print!("{c}");
         }
         println!();
     } else {

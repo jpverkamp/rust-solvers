@@ -1,158 +1,28 @@
 use direction::Direction;
 use point::Point;
 
-use crate::local::Local;
+use crate::model::{
+    color::Color,
+    critter::{Critter, CritterKind},
+    tile::Tile,
+    wall::WallKind,
+};
 
-#[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
-pub enum Color {
-    #[default]
-    Red,
-    Yellow,
-    Green,
-    Blue,
-}
+#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+pub(crate) struct Map {
+    pub(crate) width: usize,
+    pub(crate) height: usize,
 
-impl From<&str> for Color {
-    fn from(value: &str) -> Self {
-        match value {
-            "red" => Color::Red,
-            "yellow" => Color::Yellow,
-            "green" => Color::Green,
-            "blue" => Color::Blue,
-            _ => unimplemented!("Unknown color {value}"),
-        }
-    }
-}
-
-#[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
-pub enum Tile {
-    #[default]
-    Water,
-    Floor,
-    CrackedFloor,
-    Nest(Color),
-}
-
-impl From<char> for Tile {
-    fn from(value: char) -> Self {
-        match value {
-            '~' => Tile::Water,
-            '.' => Tile::Floor,
-            'x' => Tile::CrackedFloor,
-            _ => unimplemented!("unknown tile {value}"),
-        }
-    }
-}
-
-impl TryFrom<&str> for Tile {
-    type Error = ();
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value {
-            "nest" => Ok(Tile::Nest(Color::default())),
-            _ => Err(()),
-        }
-    }
-}
-
-impl From<Tile> for char {
-    fn from(val: Tile) -> Self {
-        match val {
-            Tile::Water => '~',
-            Tile::Floor => '.',
-            Tile::CrackedFloor => 'x',
-            Tile::Nest(_color) => 'o', // TODO: Support this somehow?
-        }
-    }
-}
-
-#[derive(Copy, Clone, Debug, Default, PartialEq, Eq)]
-pub enum WallKind {
-    #[default]
-    Empty,
-    Solid,
-    Cracked,
-}
-
-impl From<char> for WallKind {
-    fn from(value: char) -> Self {
-        match value {
-            '.' => WallKind::Empty,
-            '|' | '-' => WallKind::Solid,
-            ':' | '~' => WallKind::Cracked,
-            _ => unimplemented!("unknown wall kind {value}"),
-        }
-    }
-}
-
-impl WallKind {
-    pub(crate) fn as_vertical_char(self) -> char {
-        match self {
-            WallKind::Empty => ' ',
-            WallKind::Solid => '|',
-            WallKind::Cracked => ':',
-        }
-    }
-
-    pub(crate) fn as_horizontal_char(self) -> char {
-        match self {
-            WallKind::Empty => ' ',
-            WallKind::Solid => '-',
-            WallKind::Cracked => '╌',
-        }
-    }
-}
-
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-pub enum CritterKind {
-    Penguin,
-    Seal,
-}
-
-impl TryFrom<&str> for CritterKind {
-    type Error = ();
-
-    fn try_from(value: &str) -> Result<Self, Self::Error> {
-        match value {
-            "penguin" => Ok(CritterKind::Penguin),
-            "seal" => Ok(CritterKind::Seal),
-            _ => Err(()),
-        }
-    }
-}
-
-#[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
-pub struct Critter {
-    pub(crate) kind: CritterKind,
-    pub(crate) color: Color,
-    pub(crate) location: Point,
-}
-
-impl Critter {
-    pub(crate) fn index_char(index: usize) -> char {
-        if index < 10 {
-            (b'0' + (index as u8)) as char
-        } else if index < 10 + 26 {
-            (b'a' + ((index - 10) as u8)) as char
-        } else if index < 10 + 26 + 26 {
-            (b'A' + ((index - 10 - 26) as u8)) as char
-        } else {
-            unimplemented!("Too many critters!")
-        }
-    }
-}
-
-#[derive(Debug, Clone, Default)]
-pub struct Global {
-    pub width: usize,
-    pub height: usize,
     tiles: Vec<Tile>,
+
     h_walls: Vec<WallKind>,
     v_walls: Vec<WallKind>,
-    initial_critters: Vec<Critter>,
+
+    pub(crate) critters: Vec<Critter>,
+    pub(crate) active_critter: usize,
 }
 
-impl Global {
+impl Map {
     pub(crate) fn tile_at(&self, p: Point) -> Tile {
         if p.x < 0 || p.x >= (self.width as isize) || p.y < 0 || p.y >= (self.height as isize) {
             return Tile::Water;
@@ -177,19 +47,9 @@ impl Global {
             Direction::Right => self.v_walls[(x + 1) + y * (self.width + 1)],
         }
     }
-
-    pub(crate) fn make_local(&self) -> Local {
-        Local {
-            critters: self.initial_critters.clone(),
-        }
-    }
-
-    pub(crate) fn critter(&self, i: usize) -> Critter {
-        self.initial_critters[i]
-    }
 }
 
-impl From<&str> for Global {
+impl From<&str> for Map {
     fn from(input: &str) -> Self {
         let mut lines = input.lines();
 
@@ -298,13 +158,14 @@ impl From<&str> for Global {
             }
         }
 
-        Global {
+        Map {
             width,
             height,
             tiles,
             h_walls,
             v_walls,
-            initial_critters: critters,
+            critters,
+            active_critter: 0,
         }
     }
 }
