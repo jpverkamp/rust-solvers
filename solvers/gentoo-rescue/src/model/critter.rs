@@ -1,6 +1,6 @@
 use point::Point;
 
-use crate::model::color::Color;
+use crate::model::{color::Color, thing::ThingKind};
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub enum CritterKind {
@@ -25,30 +25,22 @@ pub struct Critter {
     pub(crate) kind: CritterKind,
     pub(crate) color: Color,
     pub(crate) location: Point,
-}
-
-impl Critter {
-    pub(crate) fn index_char(index: usize) -> char {
-        if index < 10 {
-            (b'0' + (index as u8)) as char
-        } else if index < 10 + 26 {
-            (b'a' + ((index - 10) as u8)) as char
-        } else if index < 10 + 26 + 26 {
-            (b'A' + ((index - 10 - 26) as u8)) as char
-        } else {
-            unimplemented!("Too many critters!")
-        }
-    }
+    pub(crate) carrying: Option<ThingKind>,
 }
 
 impl std::fmt::Display for Critter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_fmt(format_args!(
-            "{row} {col} {color:?} {kind:?}",
+            "{row} {col} {color:?} {kind:?}{carrying}",
             row = self.location.y + 1,
             col = self.location.x + 1,
             color = self.color,
             kind = self.kind,
+            carrying = if let Some(thing) = self.carrying {
+                format!(" w/{thing:?}")
+            } else {
+                String::new()
+            }
         ))
     }
 }

@@ -4,6 +4,7 @@ use point::Point;
 use crate::model::{
     color::Color,
     critter::{Critter, CritterKind},
+    thing::{Thing, ThingKind},
     tile::Tile,
     wall::WallKind,
 };
@@ -20,6 +21,8 @@ pub(crate) struct Map {
 
     pub(crate) critters: Vec<Critter>,
     pub(crate) active_critter: usize,
+
+    pub(crate) things: Vec<Thing>,
 }
 
 impl Map {
@@ -160,13 +163,18 @@ impl From<&str> for Map {
             "Not enough rows when reading horizontal walls"
         );
 
-        // Then the critters (plus setting nests in tiles)
+        // Then the critters, things, and setting nests in tiles
         let mut critters = vec![];
+        let mut things = vec![];
+
         while let Some(line) = lines.next()
             && !line.is_empty()
         {
             let parts: Vec<_> = line.split_ascii_whitespace().collect();
-            assert_eq!(parts.len(), 4, "Malformed critter at {line}");
+            assert!(
+                parts.len() >= 3,
+                "Need at least a row, col, and name in {line}"
+            );
 
             // TODO: Why did I make these 1 based...
             let row = parts[0]
@@ -177,15 +185,24 @@ impl From<&str> for Map {
                 .parse::<usize>()
                 .expect("Critter col should be a number")
                 - 1;
-            let color = Color::from(parts[2]);
 
-            if let Ok(kind) = CritterKind::try_from(parts[3]) {
+            if parts.len() == 4
+                && let Ok(kind) = CritterKind::try_from(parts[3])
+            {
+                // Try to load critters: 1 1 red penguin
+                let color = Color::from(parts[2]);
                 critters.push(Critter {
                     kind,
                     color,
                     location: Point::from((col, row)),
+                    carrying: None,
                 })
-            } else if let Ok(mut tile) = Tile::try_from(parts[3]) {
+            } else if parts.len() == 4
+                && let Ok(mut tile) = Tile::try_from(parts[3])
+            {
+                // Try to load a nest: 1 1 red nest
+                let color = Color::from(parts[2]);
+
                 // TOOD: Can this be done better?
                 if let Tile::Nest(nest_color) = &mut tile {
                     *nest_color = color;
@@ -193,17 +210,33 @@ impl From<&str> for Map {
 
                 let index = row * width + col;
                 tiles[index] = tile;
+            } else if parts.len() == 3
+                && let Ok(kind) = ThingKind::try_from(parts[2])
+            {
+                // Things are ... things(?) the critters can carry around
+                things.push(Thing {
+                    kind,
+                    location: Point::from((col, row)),
+                });
+            } else {
+                // If we made it this far, it's a bad object (probably?)
+                panic!("Malformed object: {line}");
             }
         }
 
         Map {
             width,
             height,
+
             tiles,
+
             h_walls,
             v_walls,
+
             critters,
             active_critter: 0,
+
+            things,
         }
     }
 }

@@ -17,6 +17,7 @@ pub(crate) enum Step {
 
 use crate::model::critter::{Critter, CritterKind};
 use crate::model::map::Map;
+use crate::model::thing::{Thing, ThingKind};
 use crate::model::tile::Tile;
 use crate::model::wall::WallKind;
 
@@ -70,6 +71,15 @@ impl Map {
                 }
             }
 
+            // Standing on a thing, pick it up
+            // TODO: Only if not carrying something, is this correct?
+            if new_map.critters[new_map.active_critter].carrying.is_none()
+                && let Some(index) = self.things.iter().position(|t| t.location == pt)
+            {
+                let thing = new_map.things.remove(index);
+                new_map.critters[new_map.active_critter].carrying = Some(thing.kind);
+            }
+
             // Bumped into any other critter
             if self
                 .critters
@@ -89,6 +99,12 @@ impl Map {
         // TODO: Handle bouncing etc
         if !moved {
             return None;
+        }
+
+        // If, at the end of moving, the critter is carrying a spring, they bounce backwards one
+        // TODO: Handle bouncing backwards over a wall
+        if new_map.critters[new_map.active_critter].carrying == Some(ThingKind::Spring) {
+            pt = pt - direction.into();
         }
 
         // If the critter is on water, remove it and choose a new active critter
@@ -188,8 +204,21 @@ impl State<Global, Step> for Map {
 
     fn stringify(&self, _: &Global) -> String {
         let mut result = String::new();
-
         let mut critters_to_print = vec![];
+        let mut things_to_print = vec![];
+        let mut index = 0;
+
+        fn index_char(index: usize) -> char {
+            if index < 10 {
+                (b'0' + (index as u8)) as char
+            } else if index < 10 + 26 {
+                (b'a' + ((index - 10) as u8)) as char
+            } else if index < 10 + 26 + 26 {
+                (b'A' + ((index - 10 - 26) as u8)) as char
+            } else {
+                unimplemented!("Too many critters!")
+            }
+        }
 
         for row in 0..self.height {
             // The horizontal walls
@@ -212,9 +241,23 @@ impl State<Global, Step> for Map {
                     .iter()
                     .find(|&c| c.location.x == col as isize && c.location.y == row as isize)
                 {
-                    let c = Critter::index_char(critters_to_print.len());
+                    let c = index_char(index);
+                    index += 1;
+
                     result.push(c);
                     critters_to_print.push((c, critter));
+                } else if let Some(thing) = self
+                    .things
+                    .iter()
+                    .find(|&t| t.location.x == col as isize && t.location.y == row as isize)
+                {
+                    // TODO: Combine critters and things?
+
+                    let c = index_char(index);
+                    index += 1;
+
+                    result.push(c);
+                    things_to_print.push((c, thing));
                 } else {
                     result.push(self.tile_at(p).into())
                 }
@@ -241,6 +284,12 @@ impl State<Global, Step> for Map {
         for (c, critter) in critters_to_print {
             let Critter { kind, color, .. } = critter;
             result.push_str(format!("{c}: {color:?} {kind:?}\n").as_str());
+        }
+
+        result.push('\n');
+        for (c, thing) in things_to_print {
+            let Thing { kind, .. } = thing;
+            result.push_str(format!("{c}: {kind:?}\n").as_str());
         }
 
         result
