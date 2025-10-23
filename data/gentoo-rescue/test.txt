@@ -1,0 +1,10 @@
+..
+
+|.|
+
+..
+..
+
+1 1 green penguin
+1 1 spring
+1 2 green nest

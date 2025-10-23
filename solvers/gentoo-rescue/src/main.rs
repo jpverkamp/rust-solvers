@@ -1,6 +1,7 @@
 mod model;
 mod simulation;
 
+use direction::Direction;
 use solver::{Solver, State};
 use std::io::Read;
 
@@ -25,8 +26,57 @@ fn main() {
 
     // If we have args, run each of those as a solution
     if std::env::args().len() > 1 {
-        for sequence in std::env::args().skip(1) {
-            todo!("{sequence:?}")
+        for arg in std::env::args().skip(1) {
+            let mut map = map.clone();
+
+            for line in arg.lines() {
+                if line.is_empty() {
+                    continue;
+                }
+
+                // All lines should be "{row} {column} {color} {kind} {movements...}"
+                let parts: Vec<_> = line.split_ascii_whitespace().collect();
+                assert_eq!(parts.len(), 5);
+
+                let row = parts[0]
+                    .parse::<isize>()
+                    .expect("Lines must start with {row} {col}");
+                let col = parts[1]
+                    .parse::<isize>()
+                    .expect("Lines must start with {row} {col}");
+
+                let index = map
+                    .critters
+                    .iter()
+                    .position(|c| c.location.x == col - 1 && c.location.y == row - 1)
+                    .expect("No critter at {row} {col}");
+                map.active_critter = index;
+                println!(
+                    "=== Switched to critter {index}: {} ===",
+                    map.critters[map.active_critter]
+                );
+
+                for c in parts[4].chars() {
+                    let d = match c {
+                        'U' => Direction::Up,
+                        'D' => Direction::Down,
+                        'L' => Direction::Left,
+                        'R' => Direction::Right,
+                        _ => panic!("Unknown movement char {c}"),
+                    };
+                    println!("=== Moving {d:?} ===");
+                    match map.try_move(d) {
+                        Some((new_map, _)) => {
+                            map = new_map;
+                            println!("{}", map.stringify(&()));
+                        }
+                        None => {
+                            panic!("Failed to move");
+                        }
+                    }
+                    println!();
+                }
+            }
         }
 
         return;

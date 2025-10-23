@@ -25,7 +25,7 @@ impl Map {
     // Try to move the active critter in the given direction
     // Returns the point the critter moves to (if it moves) + if the critter changed
     #[tracing::instrument(skip(self), ret)]
-    pub(crate) fn try_move(&self, _: &Global, direction: Direction) -> Option<(Map, bool)> {
+    pub(crate) fn try_move(&self, direction: Direction) -> Option<(Map, bool)> {
         if self.critters.is_empty() {
             return None;
         }
@@ -54,6 +54,17 @@ impl Map {
                 }
             }
 
+            // Standing on a thing, pick it up
+            // TODO: Only if not carrying something, is this correct?
+            if new_map.critters[new_map.active_critter].carrying.is_none()
+                && let Some(index) = self.things.iter().position(|t| t.location == pt)
+            {
+                let thing = new_map.things.remove(index);
+                tracing::debug!("picked up {thing:?}");
+                new_map.critters[new_map.active_critter].carrying = Some(thing.kind);
+                moved = true;
+            }
+
             match new_map.wall_at(pt, direction) {
                 WallKind::Empty => {}
                 WallKind::Solid => {
@@ -71,15 +82,6 @@ impl Map {
                 }
             }
 
-            // Standing on a thing, pick it up
-            // TODO: Only if not carrying something, is this correct?
-            if new_map.critters[new_map.active_critter].carrying.is_none()
-                && let Some(index) = self.things.iter().position(|t| t.location == pt)
-            {
-                let thing = new_map.things.remove(index);
-                new_map.critters[new_map.active_critter].carrying = Some(thing.kind);
-            }
-
             // Bumped into any other critter
             if self
                 .critters
@@ -95,16 +97,21 @@ impl Map {
             moved = true;
         }
 
+        // If, at the end of moving, the critter is carrying a spring, they bounce backwards one
+        // TODO: Handle bouncing backwards over a wall
+        // TODO: Is this handling of water correct?
+        if new_map.critters[new_map.active_critter].carrying == Some(ThingKind::Spring)
+            && new_map.tile_at(pt) != Tile::Water
+        {
+            tracing::debug!("bouncing backwards");
+            pt = pt - direction.into();
+            moved = true;
+        }
+
         // If we didn't move, this is invalid location
         // TODO: Handle bouncing etc
         if !moved {
             return None;
-        }
-
-        // If, at the end of moving, the critter is carrying a spring, they bounce backwards one
-        // TODO: Handle bouncing backwards over a wall
-        if new_map.critters[new_map.active_critter].carrying == Some(ThingKind::Spring) {
-            pt = pt - direction.into();
         }
 
         // If the critter is on water, remove it and choose a new active critter
@@ -155,13 +162,13 @@ impl State<Global, Step> for Map {
         true
     }
 
-    #[tracing::instrument(skip(global))]
-    fn next_states(&self, global: &Global) -> Option<Vec<(i64, Step, Map)>> {
+    #[tracing::instrument()]
+    fn next_states(&self, _: &Global) -> Option<Vec<(i64, Step, Map)>> {
         let mut next_states = vec![];
 
         // Try moving the active critter
         for d in Direction::all() {
-            if let Some((new_map, new_critter)) = self.try_move(global, d) {
+            if let Some((new_map, new_critter)) = self.try_move(d) {
                 // If the step resulted in a critter switch, record that in the step
                 let step = Step::Move {
                     direction: d,
@@ -197,7 +204,7 @@ impl State<Global, Step> for Map {
         }
     }
 
-    fn heuristic(&self, _global: &Global) -> i64 {
+    fn heuristic(&self, _: &Global) -> i64 {
         // TODO
         0
     }
@@ -282,8 +289,23 @@ impl State<Global, Step> for Map {
         result.push('\n');
         result.push('\n');
         for (c, critter) in critters_to_print {
-            let Critter { kind, color, .. } = critter;
-            result.push_str(format!("{c}: {color:?} {kind:?}\n").as_str());
+            let Critter {
+                kind,
+                color,
+                carrying,
+                ..
+            } = critter;
+            result.push_str(
+                format!(
+                    "{c}: {color:?} {kind:?}{carrying}\n",
+                    carrying = if let Some(thing) = carrying {
+                        format!(" w/{thing:?}")
+                    } else {
+                        String::new()
+                    }
+                )
+                .as_str(),
+            );
         }
 
         result.push('\n');
