@@ -105,6 +105,23 @@ impl Map {
                     "Wall tiles should always be surrounded, so this should be impossible"
                 );
             }
+            Tile::Teleport(target) => {
+                tracing::debug!("on teleport at {:?}", me.location);
+                match self.critters.iter().position(|c| c.location == target) {
+                    Some(_) => {
+                        tracing::debug!("cannot teleport to {target:?}, occupied");
+                        // There is a critter where you're going
+                        // Don't do that
+                        return false;
+                    }
+                    None => {
+                        // Teleport there and keep going!
+                        tracing::debug!("teleporting to {target:?}");
+                        self.critters[self.active_critter].location = target;
+                        return true;
+                    }
+                }
+            }
         }
 
         // Standing on a thing, pick it up

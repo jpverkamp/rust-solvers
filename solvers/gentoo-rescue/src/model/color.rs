@@ -30,7 +30,7 @@ impl TryFrom<char> for Color {
             'y' => Ok(Color::Yellow),
             'g' => Ok(Color::Green),
             'b' => Ok(Color::Blue),
-            _ => Err(())
+            _ => Err(()),
         }
     }
 }

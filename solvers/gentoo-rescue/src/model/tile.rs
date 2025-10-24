@@ -1,3 +1,5 @@
+use point::Point;
+
 use crate::model::color::Color;
 
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
@@ -9,6 +11,7 @@ pub enum Tile {
     Nest(Color),
     Wall,
     Dust,
+    Teleport(Point),
 }
 
 impl From<char> for Tile {
@@ -44,6 +47,7 @@ impl From<Tile> for char {
             Tile::Nest(_color) => 'o', // TODO: Support this somehow?
             Tile::Wall => '#',
             Tile::Dust => '*',
+            Tile::Teleport(_) => '§',
         }
     }
 }

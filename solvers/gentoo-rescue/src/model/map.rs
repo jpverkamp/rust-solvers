@@ -218,6 +218,18 @@ impl From<&str> for Map {
                     kind,
                     location: Point::from((col, row)),
                 });
+            } else if parts[2] == "teleport" {
+                let dest_row = parts[3]
+                    .parse::<usize>()
+                    .expect("Teleport destination row should be a number")
+                    - 1;
+                let dest_col = parts[4]
+                    .parse::<usize>()
+                    .expect("Teleport destination col should be a number")
+                    - 1;
+
+                let index = row * width + col;
+                tiles[index] = Tile::Teleport((dest_col, dest_row).into());
             } else {
                 // If we made it this far, it's a bad object (probably?)
                 panic!("Malformed object: {line}");
