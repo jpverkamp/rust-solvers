@@ -30,92 +30,25 @@ impl Map {
             return None;
         }
 
-        let mut pt = self.critters[self.active_critter].location;
-        let mut moved = false;
-
         // We will throw this away if it's invalid, but this is necessary to update cracked walls/floors
         let mut new_map = self.clone();
-
-        loop {
-            match new_map.tile_at(pt) {
-                Tile::Water => {
-                    // If we're on water, stop moving
-                    tracing::debug!("{pt:?} stopped at water");
-                    break;
-                }
-                Tile::CrackedFloor => {
-                    // Cracked tiles turn into water
-                    // But we're allowed to continue (will stop if we hit it again)
-                    tracing::debug!("{pt:?} broke the floor");
-                    new_map.break_floor(pt);
-                }
-                Tile::Nest(_) | Tile::Floor => {
-                    // Everything else just keep on sliding
-                }
-            }
-
-            // Standing on a thing, pick it up
-            // TODO: Only if not carrying something, is this correct?
-            if new_map.critters[new_map.active_critter].carrying.is_none()
-                && let Some(index) = self.things.iter().position(|t| t.location == pt)
-            {
-                let thing = new_map.things.remove(index);
-                tracing::debug!("picked up {thing:?}");
-                new_map.critters[new_map.active_critter].carrying = Some(thing.kind);
-                moved = true;
-            }
-
-            match new_map.wall_at(pt, direction) {
-                WallKind::Empty => {}
-                WallKind::Solid => {
-                    // Bumped into a wall
-                    tracing::debug!("{pt:?} stopped at wall");
-                    break;
-                }
-                WallKind::Cracked => {
-                    // Bumped into a cracked wall, break it
-                    // This counts as moving even even though we stopped
-                    tracing::debug!("{pt:?} stopped at cracked wall, breaking it");
-                    new_map.break_wall(pt, direction);
-                    moved = true;
-                    break;
-                }
-            }
-
-            // Bumped into any other critter
-            if self
-                .critters
-                .iter()
-                .any(|c| c.location == pt + direction.into())
-            {
-                tracing::debug!("{pt:?} stopped at critter");
-                break;
-            }
-
-            pt = pt + direction.into();
-            tracing::debug!("moved to {pt:?}");
-            moved = true;
+        while new_map.try_move_one(direction) {
+            // Keep on moving
+            // It feels weird to have an empty loop
         }
 
-        // If, at the end of moving, the critter is carrying a spring, they bounce backwards one
-        // TODO: Handle bouncing backwards over a wall
-        // TODO: Is this handling of water correct?
-        if new_map.critters[new_map.active_critter].carrying == Some(ThingKind::Spring)
-            && new_map.tile_at(pt) != Tile::Water
-        {
-            tracing::debug!("bouncing backwards");
-            pt = pt - direction.into();
-            moved = true;
-        }
-
-        // If we didn't move, this is invalid location
+        // If nothing changed, this is invalid location
         // TODO: Handle bouncing etc
-        if !moved {
+        // if !moved {
+        //     return None;
+        // }
+        if self == &new_map {
             return None;
         }
 
         // If the critter is on water, remove it and choose a new active critter
-        if self.tile_at(pt) == Tile::Water {
+        if new_map.tile_at(new_map.critters[new_map.active_critter].location) == Tile::Water {
+            tracing::info!("critter ESCAPED into the water");
             new_map.critters.remove(self.active_critter);
             if new_map.active_critter >= new_map.critters.len() {
                 new_map.active_critter = 0;
@@ -125,8 +58,80 @@ impl Map {
         }
 
         // Otherwise, the critter just moved
-        new_map.critters[self.active_critter].location = pt;
         Some((new_map, false))
+    }
+
+    // Internal function to move a single tile in a direction, looped to slide or used once to bounce
+    // Modifies the map in place
+    // Returns if we should continue moving
+    #[tracing::instrument(skip(self), ret, fields(pt = ?self.critters[self.active_critter].location))]
+    fn try_move_one(&mut self, direction: Direction) -> bool {
+        let me = self.critters[self.active_critter];
+
+        match self.tile_at(me.location) {
+            Tile::Water => {
+                // If we're on water, don't move
+                tracing::debug!("stopped at water");
+                return false;
+            }
+            Tile::CrackedFloor => {
+                // Cracked tiles turn into water
+                // But we're allowed to continue (will stop if we hit it again)
+                tracing::debug!("broke the floor");
+                self.break_floor(me.location);
+            }
+            Tile::Nest(_) | Tile::Floor => {
+                // Everything else just keep on sliding
+            }
+        }
+
+        // Standing on a thing, pick it up
+        // TODO: Only if not carrying something, is this correct?
+        if self.critters[self.active_critter].carrying.is_none()
+            && let Some(index) = self.things.iter().position(|t| t.location == me.location)
+        {
+            let thing = self.things.remove(index);
+            tracing::debug!("picked up {thing:?}");
+            self.critters[self.active_critter].carrying = Some(thing.kind);
+        }
+
+        let wall = self.wall_at(me.location, direction);
+        match wall {
+            WallKind::Empty => {}
+            WallKind::Solid | WallKind::Cracked => {
+                if wall == WallKind::Cracked {
+                    tracing::debug!("hit a cracked wall, breaking it");
+                    self.break_wall(me.location, direction);
+                }
+
+                if self.critters[self.active_critter].carrying == Some(ThingKind::Spring) {
+                    tracing::debug!("bounced off a wall");
+                    self.try_move_one(direction.flip());
+                } else {
+                    tracing::debug!("hit wall");
+                    
+                }
+
+                // Either way, don't keep moving
+                return false;
+            }
+        }
+
+        // Bumped into any other critter
+        // TODO: Do we bounce off critters? 
+        if self
+            .critters
+            .iter()
+            .any(|c| c.location == me.location + direction.into())
+        {
+            tracing::debug!("stopped at critter");
+            return false;
+        }
+
+        let dst = me.location + direction.into();
+        tracing::debug!("moved to {dst:?}");
+        self.critters[self.active_critter].location = dst;
+        true
     }
 }
 

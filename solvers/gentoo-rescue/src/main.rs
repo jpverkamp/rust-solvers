@@ -36,6 +36,9 @@ fn main() {
 
                 // All lines should be "{row} {column} {color} {kind} {movements...}"
                 let parts: Vec<_> = line.split_ascii_whitespace().collect();
+                if parts.len() == 4 {
+                    continue; // If we don't move the first critter
+                }
                 assert_eq!(parts.len(), 5);
 
                 let row = parts[0]
@@ -124,6 +127,6 @@ fn main() {
         }
         println!();
     } else {
-        println!("No solution found");
+        panic!("No solution found");
     }
 }
