@@ -67,7 +67,7 @@ impl Map {
     // Internal function to move a single tile in a direction, looped to slide or used once to bounce
     // Modifies the map in place
     // Returns if we should continue moving
-    #[tracing::instrument(skip(self), ret, fields(pt = ?self.critters[self.active_critter].location))]
+    #[tracing::instrument(skip(self), ret, fields(pt = ?self.critters.get(self.active_critter)))]
     fn try_move_one(&mut self, direction: Direction, depth: usize, ignore_water: bool) -> bool {
         // If we're stuck in a bouncing loop, launch off the map
         // TODO: Do we have to actually stop at a specific point or just 'off'?
@@ -82,7 +82,7 @@ impl Map {
         match self.tile_at(me.location) {
             Tile::Water => {
                 // If we're on water, don't move
-                if ignore_water {   
+                if ignore_water {
                     // Picked up a hammer on a cracked floor that broke
                     // Comes up in 025
                     tracing::debug!("on water, but just sliiiiiding on by");
@@ -109,8 +109,7 @@ impl Map {
 
         // Standing on a thing, pick it up
         // If we were already holding something, chuck our current thing into the water
-        if let Some(index) = self.things.iter().position(|t| t.location == me.location)
-        {
+        if let Some(index) = self.things.iter().position(|t| t.location == me.location) {
             let thing = self.things.remove(index);
             tracing::debug!("picked up {thing:?}");
             self.critters[self.active_critter].carrying = Some(thing.kind);
@@ -129,7 +128,7 @@ impl Map {
 
                 // Either way, don't keep moving
                 return false;
-            },
+            }
             WallKind::Color(c) => {
                 if c == me.color {
                     // Go right through my own colored walls!
@@ -162,7 +161,7 @@ impl Map {
                     None => {
                         return false;
                     }
-                }                
+                }
             }
         }
 
@@ -184,35 +183,25 @@ impl Map {
                     let my_position = self.critters[my_index].location;
 
                     // The other critter gets bumped out of our way
-                    // TODO: Handle recursion that moves the original critter out of the way
                     self.active_critter = other_critter;
                     match self.try_move(direction) {
-                        Some((mut new_map, false)) => {
-                            // The critter being bumped did not leave the map
+                        Some((mut new_map, _)) => {
                             std::mem::swap(self, &mut new_map);
-                            self.active_critter = my_index;
-                        }
-
-                        Some((mut new_map, true)) => {
-                            // The critter being bumped left the map
-                            // This might have screwed up the active index, so (try to) find it again
-                            std::mem::swap(self, &mut new_map);
-                            match self
-                                .critters
-                                .iter()
-                                .position(|oc| oc.location == my_position)
-                            {
-                                Some(my_index) => self.active_critter = my_index,
-                                None => panic!("Could not find original critter after hammer time"),
-                            }
                         }
                         None => {
-                            // The bonked critter cannot move
-                            // In this case, remove it from the level
-                            // TODO: Still hacky
-                            self.critters[other_critter].location = Point { x: -10, y: -10 };
-                            self.active_critter = my_index;
+                            self.critters.remove(other_critter);
                         }
+                    }
+
+                    // Find the original critter and switch back
+                    // TODO: Handle recursion that moves the original critter out of the way
+                    match self
+                        .critters
+                        .iter()
+                        .position(|oc| oc.location == my_position)
+                    {
+                        Some(new_index) => self.active_critter = new_index,
+                        None => panic!("Could not find original critter after hammer time"),
                     }
 
                     // We take that spot
@@ -251,6 +240,7 @@ impl State<Global, Step> for Map {
                             && c.color == nest_color
                     })
                 {
+                    tracing::debug!("Unsolved nest");
                     return false;
                 }
             }
@@ -258,6 +248,7 @@ impl State<Global, Step> for Map {
 
         // There can't be any seals left (they all have to leave the level)
         if self.critters.iter().any(|c| c.kind == CritterKind::Seal) {
+            tracing::debug!("Unsolved seal");
             return false;
         }
 
