@@ -87,6 +87,9 @@ impl Map {
             }
             Tile::Nest(_) | Tile::Floor => {
                 // Everything else just keep on sliding
+            },
+            Tile::Wall => {
+                unreachable!("Wall tiles should always be surrounded, so this should be impossible");
             }
         }
 
@@ -136,13 +139,33 @@ impl Map {
                 Some(ThingKind::Hammer) => {
                     tracing::debug!("hammered off another critter");
                     let my_index = self.active_critter;
+                    let my_position = self.critters[my_index].location;
 
                     // The other critter gets bumped out of our way
+                    // TODO: Handle recursion that moves the original critter out of the way
                     self.active_critter = other_critter;
-                    self.try_move_one(direction, depth + 1);
+                    match self.try_move(direction) {
+                        Some((mut new_map, false)) => {
+                            // The critter being bumped did not leave the map
+                            std::mem::swap(self, &mut new_map);
+                            self.active_critter = my_index;
+                        },
+
+                        Some((mut new_map, true)) => {
+                            // The critter being bumped left the map
+                            // This might have screwed up the active index, so (try to) find it again
+                            std::mem::swap(self, &mut new_map);
+                            match self.critters.iter().position(|oc| oc.location == my_position) {
+                                Some(my_index) => self.active_critter = my_index,
+                                None => panic!("Could not find original critter after hammer time")
+                            }
+                        },
+                        None => {
+                            self.active_critter = my_index;
+                        }
+                    }
                     
-                    // We take that spotr
-                    self.active_critter = my_index;
+                    // We take that spot
                     self.try_move_one(direction, depth + 1);
                 },
                 None => {

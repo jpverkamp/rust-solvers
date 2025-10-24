@@ -1,0 +1,19 @@
+......
+....#.
+.~...~
+
+|.....|
+|...|||
+|......
+
+......
+....-.
+....--
+-.....
+
+1 1 red penguin
+1 6 yellow penguin
+2 6 blue nest
+3 3 blue penguin
+3 3 hammer
+3 5 green seal

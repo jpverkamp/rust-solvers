@@ -7,6 +7,7 @@ pub enum Tile {
     Floor,
     CrackedFloor,
     Nest(Color),
+    Wall,
 }
 
 impl From<char> for Tile {
@@ -15,6 +16,7 @@ impl From<char> for Tile {
             '~' => Tile::Water,
             '.' => Tile::Floor,
             'x' => Tile::CrackedFloor,
+            '#' => Tile::Wall,
             _ => unimplemented!("unknown tile {value}"),
         }
     }
@@ -38,6 +40,7 @@ impl From<Tile> for char {
             Tile::Floor => '.',
             Tile::CrackedFloor => 'x',
             Tile::Nest(_color) => 'o', // TODO: Support this somehow?
+            Tile::Wall => '#',
         }
     }
 }
