@@ -15,6 +15,7 @@ pub(crate) enum Step {
     },
 }
 
+use crate::model::color::Color;
 use crate::model::critter::{Critter, CritterKind};
 use crate::model::map::Map;
 use crate::model::thing::{Thing, ThingKind};
@@ -38,10 +39,6 @@ impl Map {
         }
 
         // If nothing changed, this is invalid location
-        // TODO: Handle bouncing etc
-        // if !moved {
-        //     return None;
-        // }
         if self == &new_map {
             return None;
         }
@@ -126,16 +123,31 @@ impl Map {
 
         // Bumped into any other critter
         // TODO: Do we bounce off critters? 
-        if self
+        if let Some(other_critter) = self
             .critters
             .iter()
-            .any(|c| c.location == me.location + direction.into())
+            .position(|c| c.location == me.location + direction.into())
         {
-            if self.critters[self.active_critter].carrying == Some(ThingKind::Spring) {
-                tracing::debug!("bounced off another critter");
-                self.try_move_one(direction.flip(), depth + 1);
-            } else {
-                tracing::debug!("hit another critter");
+            match self.critters[self.active_critter].carrying {
+                Some(ThingKind::Spring) => {
+                    tracing::debug!("bounced off another critter");
+                    self.try_move_one(direction.flip(), depth + 1);
+                },
+                Some(ThingKind::Hammer) => {
+                    tracing::debug!("hammered off another critter");
+                    let my_index = self.active_critter;
+
+                    // The other critter gets bumped out of our way
+                    self.active_critter = other_critter;
+                    self.try_move_one(direction, depth + 1);
+                    
+                    // We take that spotr
+                    self.active_critter = my_index;
+                    self.try_move_one(direction, depth + 1);
+                },
+                None => {
+                    tracing::debug!("hit another critter");
+                },
             }
             return false;
         }
@@ -200,8 +212,13 @@ impl State<Global, Step> for Map {
         }
 
         // Try switching to each other critter
+        // Gray critters don't move under our control
         for i in 0..self.critters.len() {
             if i == self.active_critter {
+                continue;
+            }
+
+            if self.critters[i].color == Color::Gray {
                 continue;
             }
 

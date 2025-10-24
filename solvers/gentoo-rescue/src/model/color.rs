@@ -1,6 +1,7 @@
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub enum Color {
     #[default]
+    Gray,
     Red,
     Yellow,
     Green,
@@ -10,6 +11,7 @@ pub enum Color {
 impl From<&str> for Color {
     fn from(value: &str) -> Self {
         match value {
+            "gray" => Color::Gray,
             "red" => Color::Red,
             "yellow" => Color::Yellow,
             "green" => Color::Green,

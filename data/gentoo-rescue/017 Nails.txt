@@ -1,0 +1,24 @@
+.......
+...~~~~
+~~~~...
+.......
+
+|.......
+|..|....
+....|..|
+.......|
+
+-------
+...----
+---.---
+----...
+-------
+
+1 1 green penguin
+1 2 hammer
+1 6 green nest
+1 7 gray penguin
+4 1 gray penguin
+4 1 yellow nest
+4 6 hammer
+4 7 yellow penguin
