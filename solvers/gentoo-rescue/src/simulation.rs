@@ -67,7 +67,7 @@ impl Map {
     // Internal function to move a single tile in a direction, looped to slide or used once to bounce
     // Modifies the map in place
     // Returns if we should continue moving
-    #[tracing::instrument(skip(self), ret, fields(pt = ?self.critters.get(self.active_critter)))]
+    #[tracing::instrument(skip(self), ret, fields(pt = ?self.critters[self.active_critter].location))]
     fn try_move_one(&mut self, direction: Direction, depth: usize, ignore_water: bool) -> bool {
         // If we're stuck in a bouncing loop, launch off the map
         // TODO: Do we have to actually stop at a specific point or just 'off'?
@@ -121,7 +121,7 @@ impl Map {
             WallKind::Solid => {
                 if self.critters[self.active_critter].carrying == Some(ThingKind::Spring) {
                     tracing::debug!("bounced off a wall");
-                    self.try_move_one(direction.flip(), depth + 1, false);
+                    self.try_move_one(direction.flip(), depth + 1, true);
                 } else {
                     tracing::debug!("hit wall");
                 }
@@ -136,7 +136,7 @@ impl Map {
                     // Treat every other color as solid
                     if self.critters[self.active_critter].carrying == Some(ThingKind::Spring) {
                         tracing::debug!("bounced off a mis-matched colored wall");
-                        self.try_move_one(direction.flip(), depth + 1, false);
+                        self.try_move_one(direction.flip(), depth + 1, true);
                     } else {
                         tracing::debug!("hit colored wall");
                     }

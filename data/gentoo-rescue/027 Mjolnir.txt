@@ -1,0 +1,33 @@
+~~~~~....
+~~~~~....
+......*x.
+~~~~~...*
+~~~.~..#.
+
+.........|
+.....|..||
+|......:..
+.....|.|||
+.....|.|||
+
+.....---y
+......~-.
+------...
+-----..~.
+.....~.-.
+.....----
+
+3 6 yellow penguin
+3 3 yellow nest
+5 9 blue penguin
+1 9 hammer
+3 1 gray seal
+3 1 hammer
+3 2 gray seal 
+3 2 hammer
+3 3 gray seal
+3 3 hammer
+3 4 gray penguin
+3 4 hammer
+3 5 gray penguin
+3 5 hammer
