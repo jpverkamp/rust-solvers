@@ -63,10 +63,10 @@ impl Map {
     // Returns if we should continue moving
     #[tracing::instrument(skip(self), ret, fields(pt = ?self.critters[self.active_critter].location))]
     fn try_move_one(&mut self, direction: Direction, depth: usize) -> bool {
-        // If we're stuck in a bouncing loop, launch off the map 
+        // If we're stuck in a bouncing loop, launch off the map
         // TODO: Do we have to actually stop at a specific point or just 'off'?
         // TODO: Magick constants!
-        if depth > 10 { 
+        if depth > 10 {
             self.critters[self.active_critter].location = Point { x: -10, y: -10 };
             return false;
         }
@@ -87,9 +87,11 @@ impl Map {
             }
             Tile::Nest(_) | Tile::Floor => {
                 // Everything else just keep on sliding
-            },
+            }
             Tile::Wall => {
-                unreachable!("Wall tiles should always be surrounded, so this should be impossible");
+                unreachable!(
+                    "Wall tiles should always be surrounded, so this should be impossible"
+                );
             }
         }
 
@@ -106,17 +108,31 @@ impl Map {
         let wall = self.wall_at(me.location, direction);
         match wall {
             WallKind::Empty => {}
-            WallKind::Solid | WallKind::Cracked => {
-                if wall == WallKind::Cracked {
-                    tracing::debug!("hit a cracked wall, breaking it");
-                    self.break_wall(me.location, direction);
-                }
-
+            WallKind::Solid => {
                 if self.critters[self.active_critter].carrying == Some(ThingKind::Spring) {
                     tracing::debug!("bounced off a wall");
                     self.try_move_one(direction.flip(), depth + 1);
                 } else {
-                    tracing::debug!("hit wall");    
+                    tracing::debug!("hit wall");
+                }
+
+                // Either way, don't keep moving
+                return false;
+            }
+            WallKind::Cracked => {
+                tracing::debug!("hit a cracked wall, breaking it");
+                self.break_wall(me.location, direction);
+
+                match self.critters[self.active_critter].carrying {
+                    Some(ThingKind::Spring) => {
+                        tracing::debug!("bounced off a wall");
+                        self.try_move_one(direction.flip(), depth + 1);
+                    }
+                    Some(ThingKind::Hammer) => {
+                        tracing::debug!("smashed right on through it");
+                        return true;
+                    }
+                    None => {}
                 }
 
                 // Either way, don't keep moving
@@ -125,7 +141,7 @@ impl Map {
         }
 
         // Bumped into any other critter
-        // TODO: Do we bounce off critters? 
+        // TODO: Do we bounce off critters?
         if let Some(other_critter) = self
             .critters
             .iter()
@@ -135,7 +151,7 @@ impl Map {
                 Some(ThingKind::Spring) => {
                     tracing::debug!("bounced off another critter");
                     self.try_move_one(direction.flip(), depth + 1);
-                },
+                }
                 Some(ThingKind::Hammer) => {
                     tracing::debug!("hammered off another critter");
                     let my_index = self.active_critter;
@@ -149,28 +165,36 @@ impl Map {
                             // The critter being bumped did not leave the map
                             std::mem::swap(self, &mut new_map);
                             self.active_critter = my_index;
-                        },
+                        }
 
                         Some((mut new_map, true)) => {
                             // The critter being bumped left the map
                             // This might have screwed up the active index, so (try to) find it again
                             std::mem::swap(self, &mut new_map);
-                            match self.critters.iter().position(|oc| oc.location == my_position) {
+                            match self
+                                .critters
+                                .iter()
+                                .position(|oc| oc.location == my_position)
+                            {
                                 Some(my_index) => self.active_critter = my_index,
-                                None => panic!("Could not find original critter after hammer time")
+                                None => panic!("Could not find original critter after hammer time"),
                             }
-                        },
+                        }
                         None => {
+                            // The bonked critter cannot move
+                            // In this case, remove it from the level
+                            // TODO: Still hacky
+                            self.critters[other_critter].location = Point { x: -10, y: -10 };
                             self.active_critter = my_index;
                         }
                     }
-                    
+
                     // We take that spot
                     self.try_move_one(direction, depth + 1);
-                },
+                }
                 None => {
                     tracing::debug!("hit another critter");
-                },
+                }
             }
             return false;
         }

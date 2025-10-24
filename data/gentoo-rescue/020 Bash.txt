@@ -1,0 +1,19 @@
+~...
+....
+~~..
+
+.|..|
+|...|
+..:.|
+
+.---
+-...
+-...
+..--
+
+1 2 red penguin
+1 2 hammer
+1 3 red nest
+2 1 green nest
+2 1 gray penguin
+2 3 green penguinr
