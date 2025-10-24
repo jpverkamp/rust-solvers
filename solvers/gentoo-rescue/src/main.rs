@@ -69,7 +69,7 @@ fn main() {
                         _ => panic!("Unknown movement char {c}"),
                     };
                     println!("=== Moving {d:?} ===");
-                    match map.try_move(d) {
+                    match map.try_move(d, true) {
                         Some((new_map, _)) => {
                             map = new_map;
                             println!("{}", map.stringify(&()));

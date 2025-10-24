@@ -26,7 +26,7 @@ impl Map {
     // Try to move the active critter in the given direction
     // Returns the point the critter moves to (if it moves) + if the critter changed
     #[tracing::instrument(skip(self), ret, fields(critter = %self.critters[self.active_critter]))]
-    pub(crate) fn try_move(&self, direction: Direction) -> Option<(Map, bool)> {
+    pub(crate) fn try_move(&self, direction: Direction, first_call: bool) -> Option<(Map, bool)> {
         // Handle an edge case where we try to generate a next move after all critters leave the level
         if self.critters.is_empty() {
             return None;
@@ -39,6 +39,10 @@ impl Map {
 
         // We will throw this away if it's invalid, but this is necessary to update cracked walls/floors
         let mut new_map = self.clone();
+        if first_call {
+            new_map.reset();
+        }
+
         while new_map.try_move_one(direction, 0, false) {
             // Keep on moving
             // It feels weird to have an empty loop
@@ -105,22 +109,15 @@ impl Map {
                     "Wall tiles should always be surrounded, so this should be impossible"
                 );
             }
-            Tile::Teleport(target) => {
-                tracing::debug!("on teleport at {:?}", me.location);
-                match self.critters.iter().position(|c| c.location == target) {
-                    Some(_) => {
-                        tracing::debug!("cannot teleport to {target:?}, occupied");
-                        // There is a critter where you're going
-                        // Don't do that
-                        return false;
-                    }
-                    None => {
-                        // Teleport there and keep going!
-                        tracing::debug!("teleporting to {target:?}");
-                        self.critters[self.active_critter].location = target;
-                        return true;
-                    }
-                }
+            Tile::Teleport(_) => {
+                // Handle below
+            }
+        }
+
+        match self.maybe_do_teleport(direction) {
+            Some(end_movement) => return end_movement,
+            None => {
+                // Didn't teleport
             }
         }
 
@@ -154,6 +151,7 @@ impl Map {
                     if self.critters[self.active_critter].carrying == Some(ThingKind::Spring) {
                         tracing::debug!("bounced off a mis-matched colored wall");
                         self.try_move_one(direction.flip(), depth + 1, true);
+                        self.maybe_do_teleport(direction.flip());
                     } else {
                         tracing::debug!("hit colored wall");
                     }
@@ -170,6 +168,7 @@ impl Map {
                     Some(ThingKind::Spring) => {
                         tracing::debug!("bounced off a wall");
                         self.try_move_one(direction.flip(), depth + 1, false);
+                        self.maybe_do_teleport(direction.flip());
                         return false;
                     }
                     Some(ThingKind::Hammer) => {
@@ -201,7 +200,7 @@ impl Map {
 
                     // The other critter gets bumped out of our way
                     self.active_critter = other_critter;
-                    match self.try_move(direction) {
+                    match self.try_move(direction, false) {
                         Some((mut new_map, _)) => {
                             std::mem::swap(self, &mut new_map);
                         }
@@ -228,13 +227,57 @@ impl Map {
                     tracing::debug!("hit another critter");
                 }
             }
+            self.maybe_do_teleport(direction);
             return false;
         }
 
         let dst = me.location + direction.into();
         tracing::debug!("moved to {dst:?}");
         self.critters[self.active_critter].location = dst;
+
+        if self.teleport_cooldown {
+            tracing::debug!("ending teleport cooldown");
+            self.teleport_cooldown = false;
+        }
+
         true
+    }
+
+    fn maybe_do_teleport(&mut self, direction: Direction) -> Option<bool> {
+        let me = self.critters[self.active_critter];
+        if let Tile::Teleport(target) = self.tile_at(me.location) {
+            if self.teleport_cooldown {
+                tracing::debug!("Cannot teleport, on cooldown");
+                return None;
+            }
+
+            if self.used_teleports.contains(&(direction, me.location)) {
+                tracing::debug!("teleport loop detected, not using teleport LAUNCHING");
+
+                // TODO: Magic constants
+                self.critters[self.active_critter].location = Point { x: -10, y: -10 };
+                return Some(false);
+            }
+
+            match self.critters.iter().position(|c| c.location == target) {
+                Some(_) => {
+                    tracing::debug!("cannot teleport to {target:?}, occupied");
+                    // There is a critter where you're going
+                    // Don't do that
+                    return Some(false);
+                }
+                None => {
+                    // Teleport there and keep going!
+                    tracing::debug!("teleporting to {target:?}");
+                    self.used_teleports.push((direction, me.location));
+                    self.teleport_cooldown = true;
+                    self.critters[self.active_critter].location = target;
+                    return Some(true);
+                }
+            }
+        }
+
+        None
     }
 }
 
@@ -278,7 +321,7 @@ impl State<Global, Step> for Map {
 
         // Try moving the active critter
         for d in Direction::all() {
-            if let Some((new_map, new_critter)) = self.try_move(d) {
+            if let Some((mut new_map, new_critter)) = self.try_move(d, true) {
                 // If the step resulted in a critter switch, record that in the step
                 let step = Step::Move {
                     direction: d,
@@ -288,6 +331,7 @@ impl State<Global, Step> for Map {
                         None
                     },
                 };
+                new_map.reset();
                 next_states.push((1, step, new_map))
             }
         }

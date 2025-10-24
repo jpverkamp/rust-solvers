@@ -1,0 +1,25 @@
+.~~~..~
+...~~.~
+....~..
+.~..~.~
+
+........
+...|.|..
+|...|:.|
+|||.|.|.
+
+.......
+....-..
+...-...
+......-
+-.--.~.
+
+1 1 green penguin
+3 1 red penguin
+4 1 teleport 1 6
+3 4 spring
+1 5 green nest
+1 6 teleport 1 5 
+4 6 red nest
+3 7 blue penguin
+3 7 blue nest

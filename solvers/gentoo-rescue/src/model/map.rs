@@ -11,18 +11,30 @@ use crate::model::{
 
 #[derive(Clone, PartialEq, Eq, Hash, Debug)]
 pub(crate) struct Map {
+    // The size of the map
     pub(crate) width: usize,
     pub(crate) height: usize,
 
+    // The tiles that make up the floors of the map, solid, cracked, water
+    // May change (cracked -> water)
     tiles: Vec<Tile>,
 
+    // The horizontal and vertical walls of the level
+    // May change (cracked -> water)
     h_walls: Vec<WallKind>,
     v_walls: Vec<WallKind>,
 
+    // The critters moving around the level and the one we're currently moving
     pub(crate) critters: Vec<Critter>,
     pub(crate) active_critter: usize,
 
+    // Anything a critter could pick up and carry
     pub(crate) things: Vec<Thing>,
+
+    // Current state of teleporters
+    // Used to detect infinite loops and avoid double teleports
+    pub(crate) used_teleports: Vec<(Direction, Point)>,
+    pub(crate) teleport_cooldown: bool,
 }
 
 impl Map {
@@ -87,6 +99,14 @@ impl Map {
             );
             *wall = WallKind::Empty
         }
+    }
+
+    pub(crate) fn reset(&mut self) {
+        // Using the same teleport (in the same direction) twice in a move is an infinite loop
+        self.used_teleports.clear();
+
+        // The first move you make cannot be through a teleport
+        self.teleport_cooldown = true;
     }
 }
 
@@ -249,6 +269,9 @@ impl From<&str> for Map {
             active_critter: 0,
 
             things,
+
+            used_teleports: vec![],
+            teleport_cooldown: false,
         }
     }
 }
