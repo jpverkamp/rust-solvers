@@ -1,0 +1,24 @@
+.......
+..~.~.~
+..~.~.~
+
+|......|
+........
+..||..|.
+
+--....-
+.......
+.......
+--.-.-.
+
+1 2 blue nest
+1 7 green penguin
+2 2 blue penguin
+2 2 spring
+2 4 red penguin
+2 4 spring
+2 6 yellow penguin
+2 6 spring
+3 2 green nest
+3 4 red nest
+3 6 yellow nest
