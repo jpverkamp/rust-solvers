@@ -1,9 +1,12 @@
+use crate::model::color::Color;
+
 #[derive(Copy, Clone, Debug, Default, PartialEq, Eq, Hash)]
 pub enum WallKind {
     #[default]
     Empty,
     Solid,
     Cracked,
+    Color(Color),
 }
 
 impl From<char> for WallKind {
@@ -12,7 +15,13 @@ impl From<char> for WallKind {
             '.' => WallKind::Empty,
             '|' | '-' => WallKind::Solid,
             ':' | '~' => WallKind::Cracked,
-            _ => unimplemented!("unknown wall kind {value}"),
+            _ => {
+                if let Ok(c) = Color::try_from(value) {
+                    WallKind::Color(c)
+                } else {
+                    unimplemented!("unknown wall kind {value}")
+                }
+            }
         }
     }
 }
@@ -23,6 +32,7 @@ impl WallKind {
             WallKind::Empty => ' ',
             WallKind::Solid => '|',
             WallKind::Cracked => ':',
+            WallKind::Color(_) => '⁞', // TODO: Print colors?
         }
     }
 
@@ -31,6 +41,7 @@ impl WallKind {
             WallKind::Empty => ' ',
             WallKind::Solid => '-',
             WallKind::Cracked => '╌',
+            WallKind::Color(_) => '┈', // TODO: Print colors?
         }
     }
 }

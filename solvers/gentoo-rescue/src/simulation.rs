@@ -118,6 +118,22 @@ impl Map {
 
                 // Either way, don't keep moving
                 return false;
+            },
+            WallKind::Color(c) => {
+                if c == me.color {
+                    // Go right through my own colored walls!
+                } else {
+                    // Treat every other color as solid
+                    if self.critters[self.active_critter].carrying == Some(ThingKind::Spring) {
+                        tracing::debug!("bounced off a mis-matched colored wall");
+                        self.try_move_one(direction.flip(), depth + 1);
+                    } else {
+                        tracing::debug!("hit colored wall");
+                    }
+
+                    // Either way, don't keep moving
+                    return false;
+                }
             }
             WallKind::Cracked => {
                 tracing::debug!("hit a cracked wall, breaking it");

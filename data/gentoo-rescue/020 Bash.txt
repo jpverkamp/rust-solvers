@@ -16,4 +16,4 @@
 1 3 red nest
 2 1 green nest
 2 1 gray penguin
-2 3 green penguinr
+2 3 green penguin

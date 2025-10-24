@@ -20,3 +20,17 @@ impl From<&str> for Color {
         }
     }
 }
+
+impl TryFrom<char> for Color {
+    type Error = ();
+
+    fn try_from(value: char) -> Result<Self, Self::Error> {
+        match value {
+            'r' => Ok(Color::Red),
+            'y' => Ok(Color::Yellow),
+            'g' => Ok(Color::Green),
+            'b' => Ok(Color::Blue),
+            _ => Err(())
+        }
+    }
+}

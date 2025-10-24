@@ -1,0 +1,14 @@
+~.~~.~
+......
+
+.||.||.
+r.....|
+
+.-..g.
+-.--.-
+------
+
+1 2 red nest
+2 3 red penguin
+2 3 hammer
+2 4 green penguin
