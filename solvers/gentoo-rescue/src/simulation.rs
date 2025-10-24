@@ -25,7 +25,7 @@ use crate::model::wall::WallKind;
 impl Map {
     // Try to move the active critter in the given direction
     // Returns the point the critter moves to (if it moves) + if the critter changed
-    #[tracing::instrument(skip(self), ret)]
+    #[tracing::instrument(skip(self), ret, fields(critter = %self.critters[self.active_critter]))]
     pub(crate) fn try_move(&self, direction: Direction) -> Option<(Map, bool)> {
         // Handle an edge case where we try to generate a next move after all critters leave the level
         if self.critters.is_empty() {
@@ -39,7 +39,7 @@ impl Map {
 
         // We will throw this away if it's invalid, but this is necessary to update cracked walls/floors
         let mut new_map = self.clone();
-        while new_map.try_move_one(direction, 0) {
+        while new_map.try_move_one(direction, 0, false) {
             // Keep on moving
             // It feels weird to have an empty loop
         }
@@ -68,7 +68,7 @@ impl Map {
     // Modifies the map in place
     // Returns if we should continue moving
     #[tracing::instrument(skip(self), ret, fields(pt = ?self.critters[self.active_critter].location))]
-    fn try_move_one(&mut self, direction: Direction, depth: usize) -> bool {
+    fn try_move_one(&mut self, direction: Direction, depth: usize, ignore_water: bool) -> bool {
         // If we're stuck in a bouncing loop, launch off the map
         // TODO: Do we have to actually stop at a specific point or just 'off'?
         // TODO: Magick constants!
@@ -82,8 +82,14 @@ impl Map {
         match self.tile_at(me.location) {
             Tile::Water => {
                 // If we're on water, don't move
-                tracing::debug!("stopped at water");
-                return false;
+                if ignore_water {   
+                    // Picked up a hammer on a cracked floor that broke
+                    // Comes up in 025
+                    tracing::debug!("on water, but just sliiiiiding on by");
+                } else {
+                    tracing::debug!("stopped at water");
+                    return false;
+                }
             }
             Tile::CrackedFloor => {
                 // Cracked tiles turn into water
@@ -116,7 +122,7 @@ impl Map {
             WallKind::Solid => {
                 if self.critters[self.active_critter].carrying == Some(ThingKind::Spring) {
                     tracing::debug!("bounced off a wall");
-                    self.try_move_one(direction.flip(), depth + 1);
+                    self.try_move_one(direction.flip(), depth + 1, false);
                 } else {
                     tracing::debug!("hit wall");
                 }
@@ -131,7 +137,7 @@ impl Map {
                     // Treat every other color as solid
                     if self.critters[self.active_critter].carrying == Some(ThingKind::Spring) {
                         tracing::debug!("bounced off a mis-matched colored wall");
-                        self.try_move_one(direction.flip(), depth + 1);
+                        self.try_move_one(direction.flip(), depth + 1, false);
                     } else {
                         tracing::debug!("hit colored wall");
                     }
@@ -147,17 +153,16 @@ impl Map {
                 match self.critters[self.active_critter].carrying {
                     Some(ThingKind::Spring) => {
                         tracing::debug!("bounced off a wall");
-                        self.try_move_one(direction.flip(), depth + 1);
+                        self.try_move_one(direction.flip(), depth + 1, false);
+                        return false;
                     }
                     Some(ThingKind::Hammer) => {
                         tracing::debug!("smashed right on through it");
-                        return true;
                     }
-                    None => {}
-                }
-
-                // Either way, don't keep moving
-                return false;
+                    None => {
+                        return false;
+                    }
+                }                
             }
         }
 
@@ -171,7 +176,7 @@ impl Map {
             match self.critters[self.active_critter].carrying {
                 Some(ThingKind::Spring) => {
                     tracing::debug!("bounced off another critter");
-                    self.try_move_one(direction.flip(), depth + 1);
+                    self.try_move_one(direction.flip(), depth + 1, false);
                 }
                 Some(ThingKind::Hammer) => {
                     tracing::debug!("hammered off another critter");
@@ -211,7 +216,7 @@ impl Map {
                     }
 
                     // We take that spot
-                    self.try_move_one(direction, depth + 1);
+                    self.try_move_one(direction, depth + 1, true);
                 }
                 None => {
                     tracing::debug!("hit another critter");

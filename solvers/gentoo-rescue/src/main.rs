@@ -15,6 +15,7 @@ fn main() {
     let tracing_enabled = std::env::var("RUST_TRACE").is_ok();
     if tracing_enabled {
         tracing_subscriber::fmt()
+            .pretty()
             .without_time()
             .with_max_level(tracing::Level::DEBUG)
             .init();
