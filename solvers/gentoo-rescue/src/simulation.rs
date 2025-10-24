@@ -27,7 +27,13 @@ impl Map {
     // Returns the point the critter moves to (if it moves) + if the critter changed
     #[tracing::instrument(skip(self), ret)]
     pub(crate) fn try_move(&self, direction: Direction) -> Option<(Map, bool)> {
+        // Handle an edge case where we try to generate a next move after all critters leave the level
         if self.critters.is_empty() {
+            return None;
+        }
+
+        // If the current critter is on a dust cloud it cannot move
+        if self.tile_at(self.critters[self.active_critter].location) == Tile::Dust {
             return None;
         }
 
@@ -85,7 +91,7 @@ impl Map {
                 tracing::debug!("broke the floor");
                 self.break_floor(me.location);
             }
-            Tile::Nest(_) | Tile::Floor => {
+            Tile::Nest(_) | Tile::Floor | Tile::Dust => {
                 // Everything else just keep on sliding
             }
             Tile::Wall => {

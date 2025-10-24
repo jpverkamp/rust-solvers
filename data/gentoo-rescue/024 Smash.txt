@@ -1,0 +1,16 @@
+...*.
+~~...
+
+|....|
+.....|
+
+-----
+--...
+..---
+
+1 1 yellow penguin
+1 2 green penguin
+1 2 hammer
+1 5 blue seal
+2 3 yellow nest
+2 4 green nest
