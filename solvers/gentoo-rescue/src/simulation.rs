@@ -32,7 +32,7 @@ impl Map {
 
         // We will throw this away if it's invalid, but this is necessary to update cracked walls/floors
         let mut new_map = self.clone();
-        while new_map.try_move_one(direction) {
+        while new_map.try_move_one(direction, 0) {
             // Keep on moving
             // It feels weird to have an empty loop
         }
@@ -65,7 +65,15 @@ impl Map {
     // Modifies the map in place
     // Returns if we should continue moving
     #[tracing::instrument(skip(self), ret, fields(pt = ?self.critters[self.active_critter].location))]
-    fn try_move_one(&mut self, direction: Direction) -> bool {
+    fn try_move_one(&mut self, direction: Direction, depth: usize) -> bool {
+        // If we're stuck in a bouncing loop, launch off the map 
+        // TODO: Do we have to actually stop at a specific point or just 'off'?
+        // TODO: Magick constants!
+        if depth > 10 { 
+            self.critters[self.active_critter].location = Point { x: -10, y: -10 };
+            return false;
+        }
+
         let me = self.critters[self.active_critter];
 
         match self.tile_at(me.location) {
@@ -106,10 +114,9 @@ impl Map {
 
                 if self.critters[self.active_critter].carrying == Some(ThingKind::Spring) {
                     tracing::debug!("bounced off a wall");
-                    self.try_move_one(direction.flip());
+                    self.try_move_one(direction.flip(), depth + 1);
                 } else {
-                    tracing::debug!("hit wall");
-                    
+                    tracing::debug!("hit wall");    
                 }
 
                 // Either way, don't keep moving
@@ -124,7 +131,12 @@ impl Map {
             .iter()
             .any(|c| c.location == me.location + direction.into())
         {
-            tracing::debug!("stopped at critter");
+            if self.critters[self.active_critter].carrying == Some(ThingKind::Spring) {
+                tracing::debug!("bounced off another critter");
+                self.try_move_one(direction.flip(), depth + 1);
+            } else {
+                tracing::debug!("hit another critter");
+            }
             return false;
         }
 

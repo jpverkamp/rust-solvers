@@ -35,6 +35,9 @@
     "data/gentoo-rescue/011 Unbounded.txt": [
       "2 2 Blue Penguin\tLLUURRULUR\n"
     ],
+    "data/gentoo-rescue/012 Twist.txt": [
+      "2 1 Yellow Penguin\t\n3 2 Blue Penguin\tUL\n2 1 Yellow Penguin\tRD\n2 3 Blue Penguin w/Spring\tRD\n3 2 Yellow Penguin\tUR\n1 2 Blue Penguin w/Spring\tUR\n2 3 Yellow Penguin\tLDR\n"
+    ],
     "data/gentoo-rescue/test.txt": [
       "1 1 Green Penguin\tL\n"
     ]
@@ -54,27 +57,27 @@
   "timing": {
     "data/gentoo-rescue/001 Movement.txt": {
       "fastest": 8,
-      "most_recent": 10
+      "most_recent": 9
     },
     "data/gentoo-rescue/002 Landing.txt": {
       "fastest": 8,
-      "most_recent": 10
+      "most_recent": 9
     },
     "data/gentoo-rescue/003 Assistance.txt": {
       "fastest": 8,
-      "most_recent": 10
+      "most_recent": 9
     },
     "data/gentoo-rescue/004 Conjunction.txt": {
       "fastest": 9,
-      "most_recent": 14
+      "most_recent": 9
     },
     "data/gentoo-rescue/005 Blockers.txt": {
       "fastest": 27,
-      "most_recent": 35
+      "most_recent": 30
     },
     "data/gentoo-rescue/006 Escape.txt": {
       "fastest": 9,
-      "most_recent": 10
+      "most_recent": 12
     },
     "data/gentoo-rescue/007 Return.txt": {
       "fastest": 9,
@@ -82,23 +85,27 @@
     },
     "data/gentoo-rescue/008 Separation.txt": {
       "fastest": 10,
-      "most_recent": 16
+      "most_recent": 11
     },
     "data/gentoo-rescue/009 Skipping.txt": {
-      "fastest": 9,
-      "most_recent": 14
+      "fastest": 4,
+      "most_recent": 4
     },
     "data/gentoo-rescue/010 Retrograde.txt": {
       "fastest": 9,
-      "most_recent": 10
+      "most_recent": 9
     },
     "data/gentoo-rescue/011 Unbounded.txt": {
       "fastest": 9,
       "most_recent": 10
     },
+    "data/gentoo-rescue/012 Twist.txt": {
+      "fastest": 10,
+      "most_recent": 10
+    },
     "data/gentoo-rescue/test.txt": {
       "fastest": 9,
-      "most_recent": 10
+      "most_recent": 9
     }
   }
 }

@@ -1,0 +1,18 @@
+~.~~
+...~
+~...
+
+..|..
+...|.
+.|..|
+
+.-..
+..-.
+-..-
+.-..
+
+2 1 yellow penguin
+2 1 blue nest
+2 2 spring
+3 2 blue penguin
+3 4 yellow nest
