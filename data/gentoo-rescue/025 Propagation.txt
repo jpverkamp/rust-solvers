@@ -1,0 +1,24 @@
+~~~~..
+..x...
+~~...~
+
+....|.|
+|.:....
+..|..|.
+
+....-.
+--.-..
+--...-
+..-.-.
+
+1 5 yellow penguin
+1 5 hammer
+2 1 gray nest
+2 2 gray penguin
+2 2 green nest
+2 3 hammer
+2 4 red nest
+2 5 yellow nest
+3 3 green penguin
+3 5 red penguin
+3 5 hammer

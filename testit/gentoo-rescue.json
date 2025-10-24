@@ -69,6 +69,9 @@
     "data/gentoo-rescue/023 March.txt": [
       "1 2 Blue Seal                 R\n2 1 Red Penguin               URDLU\n1 5 Blue Seal                 L\n1 1 Red Penguin w/Hammer      R\n1 5 Blue Seal                 L\n1 2 Red Penguin w/Hammer      R\n1 5 Blue Seal                 LD\n1 3 Red Penguin w/Hammer      RDULD\n2 4 Blue Seal                 L\n2 1 Red Penguin w/Hammer      R\n2 5 Blue Seal                 LD\n2 2 Red Penguin w/Hammer      \n"
     ],
+    "data/gentoo-rescue/024 Smash.txt": [
+      "1 1 Yellow Penguin            \n1 5 Blue Seal                 L\n1 2 Green Penguin             RD\n1 5 Blue Seal                 D\n1 1 Yellow Penguin            R\n2 3 Green Penguin w/Hammer    UL\n1 5 Yellow Penguin            L\n1 1 Green Penguin w/Hammer    R\n1 5 Yellow Penguin            LD\n2 5 Blue Seal                 L\n1 2 Green Penguin w/Hammer    R\n2 3 Yellow Penguin            U\n1 5 Green Penguin w/Hammer    DL\n1 3 Yellow Penguin            D\n"
+    ],
     "data/gentoo-rescue/test.txt": [
       "1 1 Green Penguin             L\n"
     ]
@@ -88,15 +91,15 @@
   "timing": {
     "data/gentoo-rescue/001 Movement.txt": {
       "fastest": 8,
-      "most_recent": 11
+      "most_recent": 10
     },
     "data/gentoo-rescue/002 Landing.txt": {
       "fastest": 5,
-      "most_recent": 7
+      "most_recent": 10
     },
     "data/gentoo-rescue/003 Assistance.txt": {
       "fastest": 5,
-      "most_recent": 5
+      "most_recent": 10
     },
     "data/gentoo-rescue/004 Conjunction.txt": {
       "fastest": 6,
@@ -104,11 +107,11 @@
     },
     "data/gentoo-rescue/005 Blockers.txt": {
       "fastest": 26,
-      "most_recent": 34
+      "most_recent": 37
     },
     "data/gentoo-rescue/006 Escape.txt": {
       "fastest": 5,
-      "most_recent": 8
+      "most_recent": 10
     },
     "data/gentoo-rescue/007 Return.txt": {
       "fastest": 6,
@@ -116,7 +119,7 @@
     },
     "data/gentoo-rescue/008 Separation.txt": {
       "fastest": 7,
-      "most_recent": 13
+      "most_recent": 12
     },
     "data/gentoo-rescue/009 Skipping.txt": {
       "fastest": 4,
@@ -124,67 +127,67 @@
     },
     "data/gentoo-rescue/010 Retrograde.txt": {
       "fastest": 5,
-      "most_recent": 10
+      "most_recent": 9
     },
     "data/gentoo-rescue/011 Unbounded.txt": {
       "fastest": 5,
-      "most_recent": 10
+      "most_recent": 12
     },
     "data/gentoo-rescue/012 Twist.txt": {
       "fastest": 5,
-      "most_recent": 10
+      "most_recent": 9
     },
     "data/gentoo-rescue/013 Recoil.txt": {
       "fastest": 6,
-      "most_recent": 11
+      "most_recent": 14
     },
     "data/gentoo-rescue/014 Lean.txt": {
       "fastest": 12,
-      "most_recent": 27
+      "most_recent": 29
     },
     "data/gentoo-rescue/015 Ometa.txt": {
       "fastest": 6,
-      "most_recent": 8
+      "most_recent": 10
     },
     "data/gentoo-rescue/016 Escort.txt": {
       "fastest": 6,
-      "most_recent": 8
+      "most_recent": 12
     },
     "data/gentoo-rescue/017 Nails.txt": {
       "fastest": 7,
-      "most_recent": 8
+      "most_recent": 10
     },
     "data/gentoo-rescue/018 Spin.txt": {
       "fastest": 5,
-      "most_recent": 6
+      "most_recent": 8
     },
     "data/gentoo-rescue/019 Stomp.txt": {
       "fastest": 9,
-      "most_recent": 15
+      "most_recent": 12
     },
     "data/gentoo-rescue/020 Bash.txt": {
       "fastest": 10,
-      "most_recent": 11
+      "most_recent": 16
     },
     "data/gentoo-rescue/021 Preservation.txt": {
       "fastest": 7,
-      "most_recent": 10
+      "most_recent": 9
     },
     "data/gentoo-rescue/022 Trail.txt": {
       "fastest": 8,
-      "most_recent": 10
+      "most_recent": 8
     },
     "data/gentoo-rescue/023 March.txt": {
       "fastest": 10,
-      "most_recent": 16
+      "most_recent": 13
     },
     "data/gentoo-rescue/024 Smash.txt": {
       "fastest": 12,
-      "most_recent": 12
+      "most_recent": 14
     },
     "data/gentoo-rescue/test.txt": {
       "fastest": 5,
-      "most_recent": 8
+      "most_recent": 7
     }
   }
 }

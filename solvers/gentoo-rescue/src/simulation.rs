@@ -102,9 +102,8 @@ impl Map {
         }
 
         // Standing on a thing, pick it up
-        // TODO: Only if not carrying something, is this correct?
-        if self.critters[self.active_critter].carrying.is_none()
-            && let Some(index) = self.things.iter().position(|t| t.location == me.location)
+        // If we were already holding something, chuck our current thing into the water
+        if let Some(index) = self.things.iter().position(|t| t.location == me.location)
         {
             let thing = self.things.remove(index);
             tracing::debug!("picked up {thing:?}");
