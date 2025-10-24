@@ -99,12 +99,12 @@ fn main() {
         log::info!("{solution:?}");
 
         let path = solver.path(&map, &solution).unwrap();
-        print!("{}\t", map.critters[0]);
+        print!("{start_critter:30}", start_critter = map.critters[0]);
 
         for step in path {
             match step {
                 simulation::Step::SwitchCritter { critter } => {
-                    print!("\n{critter}\t");
+                    print!("\n{critter:<30}");
                 }
                 simulation::Step::Move {
                     direction,
@@ -120,7 +120,7 @@ fn main() {
                         }
                     );
                     if let Some(critter) = new_critter {
-                        print!("\n{critter}\t");
+                        print!("\n{critter:30}");
                     }
                 }
             }

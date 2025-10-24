@@ -30,7 +30,7 @@ pub struct Critter {
 
 impl std::fmt::Display for Critter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        f.write_fmt(format_args!(
+        f.pad(&format!(
             "{row} {col} {color:?} {kind:?}{carrying}",
             row = self.location.y + 1,
             col = self.location.x + 1,
