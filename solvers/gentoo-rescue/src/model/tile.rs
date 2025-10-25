@@ -8,7 +8,10 @@ pub enum Tile {
     Water,
     Floor,
     CrackedFloor,
-    Nest(Color),
+    Nest {
+        color: Color,
+        dusty: bool,
+    },
     Wall,
     Dust,
     Teleport(Point),
@@ -32,7 +35,10 @@ impl TryFrom<&str> for Tile {
 
     fn try_from(value: &str) -> Result<Self, Self::Error> {
         match value {
-            "nest" => Ok(Tile::Nest(Color::default())),
+            "nest" => Ok(Tile::Nest {
+                color: Color::default(),
+                dusty: false,
+            }),
             _ => Err(()),
         }
     }
@@ -44,7 +50,7 @@ impl From<Tile> for char {
             Tile::Water => '~',
             Tile::Floor => '.',
             Tile::CrackedFloor => 'x',
-            Tile::Nest(_color) => 'o', // TODO: Support this somehow?
+            Tile::Nest { .. } => 'o', // TODO: Support this somehow?
             Tile::Wall => '#',
             Tile::Dust => '*',
             Tile::Teleport(_) => '§',

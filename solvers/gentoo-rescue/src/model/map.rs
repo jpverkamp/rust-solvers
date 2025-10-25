@@ -222,13 +222,20 @@ impl From<&str> for Map {
             {
                 // Try to load a nest: 1 1 red nest
                 let color = Color::from(parts[2]);
+                let index = row * width + col;
 
                 // TOOD: Can this be done better?
-                if let Tile::Nest(nest_color) = &mut tile {
+                if let Tile::Nest {
+                    color: nest_color,
+                    dusty,
+                } = &mut tile
+                {
                     *nest_color = color;
+                    if tiles[index] == Tile::Dust {
+                        *dusty = true;
+                    }
                 }
 
-                let index = row * width + col;
                 tiles[index] = tile;
             } else if parts.len() == 3
                 && let Ok(kind) = ThingKind::try_from(parts[2])

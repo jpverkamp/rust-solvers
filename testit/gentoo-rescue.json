@@ -108,6 +108,15 @@
     "data/gentoo-rescue/032 Ricochet.txt": [
       "1 1 Green Penguin             \n3 7 Blue Penguin              L\n1 1 Green Penguin             DRDRU\n3 1 Red Penguin               R\n4 4 Green Penguin w/Spring    RDL\n3 4 Red Penguin               L\n3 2 Green Penguin w/Spring    RD\n3 6 Blue Penguin              R\n3 3 Red Penguin               LD\n"
     ],
+    "data/gentoo-rescue/033 Turn.txt": [
+      "4 2 Blue Penguin              \n4 5 Green Penguin             LULD\n4 2 Blue Penguin              RUL\n3 2 Green Penguin             LDR\n"
+    ],
+    "data/gentoo-rescue/034 Momentum.txt": [
+      "2 3 Red Penguin               \n4 2 Green Penguin             UR\n2 3 Red Penguin               LD\n2 1 Green Penguin w/Spring    L\n4 2 Red Penguin               UR\n2 2 Green Penguin w/Spring    DR\n3 3 Red Penguin               UL\n3 1 Green Penguin w/Spring    U\n"
+    ],
+    "data/gentoo-rescue/035 Quake.txt": [
+      "3 2 Red Seal                  LUR\n3 3 Green Penguin             LU\n2 4 Red Seal                  L\n1 1 Green Penguin             RL\n2 1 Red Seal                  URL\n2 2 Green Penguin             U\n"
+    ],
     "data/gentoo-rescue/test.txt": [
       "1 1 Green Penguin             L\n"
     ]
@@ -127,31 +136,31 @@
   "timing": {
     "data/gentoo-rescue/001 Movement.txt": {
       "fastest": 8,
-      "most_recent": 41
+      "most_recent": 13
     },
     "data/gentoo-rescue/002 Landing.txt": {
       "fastest": 5,
-      "most_recent": 9
+      "most_recent": 11
     },
     "data/gentoo-rescue/003 Assistance.txt": {
       "fastest": 5,
-      "most_recent": 10
+      "most_recent": 15
     },
     "data/gentoo-rescue/004 Conjunction.txt": {
       "fastest": 6,
-      "most_recent": 10
+      "most_recent": 11
     },
     "data/gentoo-rescue/005 Blockers.txt": {
       "fastest": 26,
-      "most_recent": 47
+      "most_recent": 44
     },
     "data/gentoo-rescue/006 Escape.txt": {
       "fastest": 5,
-      "most_recent": 10
+      "most_recent": 11
     },
     "data/gentoo-rescue/007 Return.txt": {
       "fastest": 6,
-      "most_recent": 10
+      "most_recent": 12
     },
     "data/gentoo-rescue/008 Separation.txt": {
       "fastest": 7,
@@ -159,15 +168,15 @@
     },
     "data/gentoo-rescue/009 Skipping.txt": {
       "fastest": 4,
-      "most_recent": 12
+      "most_recent": 9
     },
     "data/gentoo-rescue/010 Retrograde.txt": {
       "fastest": 5,
-      "most_recent": 10
+      "most_recent": 11
     },
     "data/gentoo-rescue/011 Unbounded.txt": {
       "fastest": 5,
-      "most_recent": 14
+      "most_recent": 11
     },
     "data/gentoo-rescue/012 Twist.txt": {
       "fastest": 5,
@@ -175,87 +184,99 @@
     },
     "data/gentoo-rescue/013 Recoil.txt": {
       "fastest": 6,
-      "most_recent": 14
+      "most_recent": 10
     },
     "data/gentoo-rescue/014 Lean.txt": {
       "fastest": 12,
-      "most_recent": 27
+      "most_recent": 29
     },
     "data/gentoo-rescue/015 Ometa.txt": {
       "fastest": 6,
-      "most_recent": 10
+      "most_recent": 12
     },
     "data/gentoo-rescue/016 Escort.txt": {
       "fastest": 6,
-      "most_recent": 10
+      "most_recent": 8
     },
     "data/gentoo-rescue/017 Nails.txt": {
       "fastest": 7,
-      "most_recent": 12
+      "most_recent": 8
     },
     "data/gentoo-rescue/018 Spin.txt": {
       "fastest": 5,
-      "most_recent": 8
+      "most_recent": 11
     },
     "data/gentoo-rescue/019 Stomp.txt": {
       "fastest": 9,
-      "most_recent": 17
+      "most_recent": 16
     },
     "data/gentoo-rescue/020 Bash.txt": {
       "fastest": 9,
-      "most_recent": 14
+      "most_recent": 12
     },
     "data/gentoo-rescue/021 Preservation.txt": {
       "fastest": 7,
-      "most_recent": 39
+      "most_recent": 12
     },
     "data/gentoo-rescue/022 Trail.txt": {
       "fastest": 7,
-      "most_recent": 8
+      "most_recent": 11
     },
     "data/gentoo-rescue/023 March.txt": {
       "fastest": 10,
-      "most_recent": 15
+      "most_recent": 14
     },
     "data/gentoo-rescue/024 Smash.txt": {
       "fastest": 12,
-      "most_recent": 18
+      "most_recent": 14
     },
     "data/gentoo-rescue/025 Propagation.txt": {
       "fastest": 33,
-      "most_recent": 40
+      "most_recent": 34
     },
     "data/gentoo-rescue/026 Frozen.txt": {
       "fastest": 11,
-      "most_recent": 15
+      "most_recent": 13
     },
     "data/gentoo-rescue/027 Mjolnir.txt": {
-      "fastest": 14,
-      "most_recent": 16
+      "fastest": 12,
+      "most_recent": 18
     },
     "data/gentoo-rescue/028 Inception.txt": {
       "fastest": 19,
-      "most_recent": 24
+      "most_recent": 20
     },
     "data/gentoo-rescue/029 Thinking.txt": {
-      "fastest": 23,
-      "most_recent": 26
+      "fastest": 22,
+      "most_recent": 22
     },
     "data/gentoo-rescue/030 Inertia.txt": {
-      "fastest": 12,
-      "most_recent": 15
+      "fastest": 9,
+      "most_recent": 12
     },
     "data/gentoo-rescue/031 While.txt": {
-      "fastest": 2206,
-      "most_recent": 2241
+      "fastest": 2197,
+      "most_recent": 2197
     },
     "data/gentoo-rescue/032 Ricochet.txt": {
       "fastest": 56,
       "most_recent": 56
     },
+    "data/gentoo-rescue/033 Turn.txt": {
+      "fastest": 9,
+      "most_recent": 11
+    },
+    "data/gentoo-rescue/034 Momentum.txt": {
+      "fastest": 9,
+      "most_recent": 9
+    },
+    "data/gentoo-rescue/035 Quake.txt": {
+      "fastest": 7,
+      "most_recent": 8
+    },
     "data/gentoo-rescue/test.txt": {
       "fastest": 5,
-      "most_recent": 12
+      "most_recent": 10
     }
   }
 }

@@ -25,7 +25,7 @@ use crate::model::wall::WallKind;
 impl Map {
     // Try to move the active critter in the given direction
     // Returns the point the critter moves to (if it moves) + if the critter changed
-    #[tracing::instrument(skip(self), ret, fields(critter = %self.critters[self.active_critter]))]
+    #[tracing::instrument(skip(self), ret, fields(critter = ?self.critters.get(self.active_critter)))]
     pub(crate) fn try_move(&self, direction: Direction, first_call: bool) -> Option<(Map, bool)> {
         // Handle an edge case where we try to generate a next move after all critters leave the level
         if self.critters.is_empty() {
@@ -33,7 +33,10 @@ impl Map {
         }
 
         // If the current critter is on a dust cloud it cannot move
-        if self.tile_at(self.critters[self.active_critter].location) == Tile::Dust {
+        if matches!(
+            self.tile_at(self.critters[self.active_critter].location),
+            Tile::Dust | Tile::Nest { dusty: true, .. }
+        ) {
             return None;
         }
 
@@ -101,7 +104,7 @@ impl Map {
                 tracing::debug!("broke the floor");
                 self.break_floor(me.location);
             }
-            Tile::Nest(_) | Tile::Floor | Tile::Dust => {
+            Tile::Nest { .. } | Tile::Floor | Tile::Dust => {
                 // Everything else just keep on sliding
             }
             Tile::Wall => {
@@ -260,11 +263,10 @@ impl Map {
             }
 
             match self.critters.iter().position(|c| c.location == target) {
-                Some(_) => {
-                    tracing::debug!("cannot teleport to {target:?}, occupied");
-                    // There is a critter where you're going
-                    // Don't do that
-                    return Some(false);
+                Some(other_critter) => {
+                    tracing::debug!("teleporting to {target:?}, TELEFRAG");
+                    self.critters[other_critter].location = Point { x: -10, y: -10 };
+                    return Some(true);
                 }
                 None => {
                     // Teleport there and keep going!
@@ -293,7 +295,9 @@ impl State<Global, Step> for Map {
         // All nests have a matching penguin on them
         for x in 0..self.width {
             for y in 0..self.height {
-                if let Tile::Nest(nest_color) = self.tile_at((x, y).into())
+                if let Tile::Nest {
+                    color: nest_color, ..
+                } = self.tile_at((x, y).into())
                     && !self.critters.iter().any(|c| {
                         c.kind == CritterKind::Penguin
                             && c.location == (x, y).into()
@@ -307,7 +311,11 @@ impl State<Global, Step> for Map {
         }
 
         // There can't be any seals left (they all have to leave the level)
-        if self.critters.iter().any(|c| c.kind == CritterKind::Seal) {
+        if self
+            .critters
+            .iter()
+            .any(|c| c.kind == CritterKind::Seal && self.tile_at(c.location) != Tile::Water)
+        {
             tracing::debug!("Unsolved seal");
             return false;
         }
