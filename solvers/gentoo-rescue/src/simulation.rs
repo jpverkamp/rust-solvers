@@ -6,17 +6,14 @@ type Global = ();
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum Step {
-    SwitchCritter {
-        critter: Critter,
-    },
     Move {
+        critter_index: usize,
         direction: Direction,
-        new_critter: Option<Critter>,
     },
 }
 
 use crate::model::color::Color;
-use crate::model::critter::{Critter, CritterKind};
+use crate::model::critter::CritterKind;
 use crate::model::map::Map;
 use crate::model::thing::{Thing, ThingKind};
 use crate::model::tile::Tile;
@@ -24,69 +21,60 @@ use crate::model::wall::WallKind;
 
 impl Map {
     // Try to move the active critter in the given direction
-    // Returns the point the critter moves to (if it moves) + if the critter changed
-    #[tracing::instrument(skip(self), ret, fields(critter = ?self.critters.get(self.active_critter)))]
-    pub(crate) fn try_move(&self, direction: Direction, first_call: bool) -> Option<(Map, bool)> {
-        // Handle an edge case where we try to generate a next move after all critters leave the level
-        if self.critters.is_empty() {
-            return None;
+    // Returns if the move is possible (and something actually changed)
+    #[tracing::instrument(skip(self), ret)]
+    pub(crate) fn try_move(
+        &mut self,
+        critter_index: usize,
+        direction: Direction,
+        first_call: bool,
+    ) -> bool {
+        // Do not move escaped critters
+        if self.critters[critter_index].escaped() {
+            return false;
         }
 
         // If the current critter is on a dust cloud it cannot move
         if matches!(
-            self.tile_at(self.critters[self.active_critter].location),
+            self.tile_at(self.critters[critter_index].location()),
             Tile::Dust | Tile::Nest { dusty: true, .. }
         ) {
-            return None;
+            return false;
         }
 
-        // We will throw this away if it's invalid, but this is necessary to update cracked walls/floors
-        let mut new_map = self.clone();
-        if first_call {
-            new_map.reset();
-        }
-
-        while new_map.try_move_one(direction, 0, false) {
-            // Keep on moving
-            // It feels weird to have an empty loop
-        }
+        // Take steps until we should not move any more
+        let original_state = self.clone(); // TODO: Expensive...
+        while self.try_move_one(critter_index, direction, 0, false) {}
 
         // If nothing changed, this is invalid location
-        if self == &new_map {
-            return None;
+        if self == &original_state {
+            return false;
         }
 
-        // If the critter is on water, remove it and choose a new active critter
-        if new_map.tile_at(new_map.critters[new_map.active_critter].location) == Tile::Water {
-            tracing::info!("critter ESCAPED into the water");
-            new_map.critters.remove(new_map.active_critter);
-            if new_map.active_critter >= new_map.critters.len() {
-                new_map.active_critter = 0;
-            }
-
-            return Some((new_map, true));
-        }
-
-        // Otherwise, the critter just moved
-        Some((new_map, false))
+        true
     }
 
     // Internal function to move a single tile in a direction, looped to slide or used once to bounce
     // Modifies the map in place
     // Returns if we should continue moving
-    #[tracing::instrument(skip(self), ret, fields(pt = ?self.critters[self.active_critter].location))]
-    fn try_move_one(&mut self, direction: Direction, depth: usize, ignore_water: bool) -> bool {
+    #[tracing::instrument(skip(self), ret)]
+    fn try_move_one(
+        &mut self,
+        critter_index: usize,
+        direction: Direction,
+        depth: usize,
+        ignore_water: bool,
+    ) -> bool {
         // If we're stuck in a bouncing loop, launch off the map
-        // TODO: Do we have to actually stop at a specific point or just 'off'?
         // TODO: Magick constants!
         if depth > 10 {
-            self.critters[self.active_critter].location = Point { x: -10, y: -10 };
+            self.critters[critter_index].escape();
             return false;
         }
 
-        let me = self.critters[self.active_critter];
+        let me = self.critters[critter_index];
 
-        match self.tile_at(me.location) {
+        match self.tile_at(me.location()) {
             Tile::Water => {
                 // If we're on water, don't move
                 if ignore_water {
@@ -94,7 +82,8 @@ impl Map {
                     // Comes up in 025
                     tracing::debug!("on water, but just sliiiiiding on by");
                 } else {
-                    tracing::debug!("stopped at water");
+                    tracing::debug!("escaping into the water at {:?}", me.location());
+                    self.critters[critter_index].escape();
                     return false;
                 }
             }
@@ -102,7 +91,7 @@ impl Map {
                 // Cracked tiles turn into water
                 // But we're allowed to continue (will stop if we hit it again)
                 tracing::debug!("broke the floor");
-                self.break_floor(me.location);
+                self.break_floor(me.location());
             }
             Tile::Nest { .. } | Tile::Floor | Tile::Dust => {
                 // Everything else just keep on sliding
@@ -117,7 +106,7 @@ impl Map {
             }
         }
 
-        match self.maybe_do_teleport(direction) {
+        match self.maybe_do_teleport(critter_index, direction) {
             Some(end_movement) => return end_movement,
             None => {
                 // Didn't teleport
@@ -126,19 +115,19 @@ impl Map {
 
         // Standing on a thing, pick it up
         // If we were already holding something, chuck our current thing into the water
-        if let Some(index) = self.things.iter().position(|t| t.location == me.location) {
+        if let Some(index) = self.things.iter().position(|t| t.location == me.location()) {
             let thing = self.things.remove(index);
             tracing::debug!("picked up {thing:?}");
-            self.critters[self.active_critter].carrying = Some(thing.kind);
+            self.critters[critter_index].pick_up(thing.kind);
         }
 
-        let wall = self.wall_at(me.location, direction);
+        let wall = self.wall_at(me.location(), direction);
         match wall {
             WallKind::Empty => {}
             WallKind::Solid => {
-                if self.critters[self.active_critter].carrying == Some(ThingKind::Spring) {
+                if self.critters[critter_index].carrying() == Some(ThingKind::Spring) {
                     tracing::debug!("bounced off a wall");
-                    self.try_move_one(direction.flip(), depth + 1, true);
+                    self.try_move_one(critter_index, direction.flip(), depth + 1, true);
                 } else {
                     tracing::debug!("hit wall");
                 }
@@ -147,14 +136,14 @@ impl Map {
                 return false;
             }
             WallKind::Color(c) => {
-                if c == me.color {
+                if c == me.color() {
                     // Go right through my own colored walls!
                 } else {
                     // Treat every other color as solid
-                    if self.critters[self.active_critter].carrying == Some(ThingKind::Spring) {
+                    if self.critters[critter_index].carrying() == Some(ThingKind::Spring) {
                         tracing::debug!("bounced off a mis-matched colored wall");
-                        self.try_move_one(direction.flip(), depth + 1, true);
-                        self.maybe_do_teleport(direction.flip());
+                        self.try_move_one(critter_index, direction.flip(), depth + 1, true);
+                        self.maybe_do_teleport(critter_index, direction.flip());
                     } else {
                         tracing::debug!("hit colored wall");
                     }
@@ -165,13 +154,13 @@ impl Map {
             }
             WallKind::Cracked => {
                 tracing::debug!("hit a cracked wall, breaking it");
-                self.break_wall(me.location, direction);
+                self.break_wall(me.location(), direction);
 
-                match self.critters[self.active_critter].carrying {
+                match self.critters[critter_index].carrying() {
                     Some(ThingKind::Spring) => {
                         tracing::debug!("bounced off a wall");
-                        self.try_move_one(direction.flip(), depth + 1, false);
-                        self.maybe_do_teleport(direction.flip());
+                        self.try_move_one(critter_index, direction.flip(), depth + 1, false);
+                        self.maybe_do_teleport(critter_index, direction.flip());
                         return false;
                     }
                     Some(ThingKind::Hammer) => {
@@ -189,55 +178,38 @@ impl Map {
         if let Some(other_critter) = self
             .critters
             .iter()
-            .position(|c| c.location == me.location + direction.into())
+            .position(|c| c.location() == me.location() + direction.into())
         {
-            match self.critters[self.active_critter].carrying {
+            match self.critters[critter_index].carrying() {
                 Some(ThingKind::Spring) => {
                     tracing::debug!("bounced off another critter");
-                    self.try_move_one(direction.flip(), depth + 1, false);
+                    self.try_move_one(critter_index, direction.flip(), depth + 1, false);
                 }
                 Some(ThingKind::Hammer) => {
                     tracing::debug!("hammered off another critter");
-                    let my_index = self.active_critter;
-                    let my_position = self.critters[my_index].location;
 
                     // The other critter gets bumped out of our way
-                    self.active_critter = other_critter;
-                    match self.try_move(direction, false) {
-                        Some((mut new_map, _)) => {
-                            std::mem::swap(self, &mut new_map);
-                        }
-                        None => {
-                            self.critters.remove(other_critter);
-                        }
+                    if self.try_move(other_critter, direction, false) {
+                        // The other could move, all is well
+                    } else {
+                        // The other couldn't move, remove it
+                        self.critters[other_critter].escape();
                     }
 
-                    // Find the original critter and switch back
-                    // TODO: Handle recursion that moves the original critter out of the way
-                    match self
-                        .critters
-                        .iter()
-                        .position(|oc| oc.location == my_position)
-                    {
-                        Some(new_index) => self.active_critter = new_index,
-                        // None => panic!("Could not find original critter after hammer time"),
-                        None => return false,
-                    }
-
-                    // We take that spot
-                    self.try_move_one(direction, depth + 1, true);
+                    // And then we take that spot
+                    self.try_move_one(critter_index, direction, depth + 1, true);
                 }
                 None => {
                     tracing::debug!("hit another critter");
                 }
             }
-            self.maybe_do_teleport(direction);
+            self.maybe_do_teleport(critter_index, direction);
             return false;
         }
 
-        let dst = me.location + direction.into();
+        let dst = me.location() + direction.into();
         tracing::debug!("moved to {dst:?}");
-        self.critters[self.active_critter].location = dst;
+        self.critters[critter_index].move_to(dst);
 
         if self.teleport_cooldown {
             tracing::debug!("ending teleport cooldown");
@@ -247,34 +219,32 @@ impl Map {
         true
     }
 
-    fn maybe_do_teleport(&mut self, direction: Direction) -> Option<bool> {
-        let me = self.critters[self.active_critter];
-        if let Tile::Teleport(target) = self.tile_at(me.location) {
+    fn maybe_do_teleport(&mut self, critter_index: usize, direction: Direction) -> Option<bool> {
+        let me = self.critters[critter_index];
+        if let Tile::Teleport(target) = self.tile_at(me.location()) {
             if self.teleport_cooldown {
                 tracing::debug!("Cannot teleport, on cooldown");
                 return None;
             }
 
-            if self.used_teleports.contains(&(direction, me.location)) {
+            if self.used_teleports.contains(&(direction, me.location())) {
                 tracing::debug!("teleport loop detected, not using teleport LAUNCHING");
-
-                // TODO: Magic constants
-                self.critters[self.active_critter].location = Point { x: -10, y: -10 };
+                self.critters[critter_index].escape();
                 return Some(false);
             }
 
-            match self.critters.iter().position(|c| c.location == target) {
+            match self.critters.iter().position(|c| c.location() == target) {
                 Some(other_critter) => {
                     tracing::debug!("teleporting to {target:?}, TELEFRAG");
-                    self.critters[other_critter].location = Point { x: -10, y: -10 };
+                    self.critters[other_critter].escape();
                     return Some(true);
                 }
                 None => {
                     // Teleport there and keep going!
                     tracing::debug!("teleporting to {target:?}");
-                    self.used_teleports.push((direction, me.location));
+                    self.used_teleports.push((direction, me.location()));
                     self.teleport_cooldown = true;
-                    self.critters[self.active_critter].location = target;
+                    self.critters[critter_index].move_to(target);
                     return Some(true);
                 }
             }
@@ -300,9 +270,9 @@ impl State<Global, Step> for Map {
                     color: nest_color, ..
                 } = self.tile_at((x, y).into())
                     && !self.critters.iter().any(|c| {
-                        c.kind == CritterKind::Penguin
-                            && c.location == (x, y).into()
-                            && c.color == nest_color
+                        c.kind() == CritterKind::Penguin
+                            && c.location() == (x, y).into()
+                            && c.color() == nest_color
                     })
                 {
                     tracing::debug!("Unsolved nest");
@@ -315,7 +285,7 @@ impl State<Global, Step> for Map {
         if self
             .critters
             .iter()
-            .any(|c| c.kind == CritterKind::Seal && self.tile_at(c.location) != Tile::Water)
+            .any(|c| c.kind() == CritterKind::Seal && !c.escaped())
         {
             tracing::debug!("Unsolved seal");
             return false;
@@ -329,40 +299,28 @@ impl State<Global, Step> for Map {
         let mut next_states = vec![];
 
         // Try moving the active critter
-        for d in Direction::all() {
-            if let Some((mut new_map, new_critter)) = self.try_move(d, true) {
-                // If the step resulted in a critter switch, record that in the step
-                let new_critter = if new_critter && !new_map.critters.is_empty() {
-                    Some(new_map.critters[new_map.active_critter])
-                } else {
-                    None
-                };
-                let step = Step::Move {
-                    direction: d,
-                    new_critter,
-                };
-                new_map.reset();
-                next_states.push((1, step, new_map))
-            }
-        }
-
-        // Try switching to each other critter
-        // Gray critters don't move under our control
-        for i in 0..self.critters.len() {
-            if i == self.active_critter {
+        for critter_index in 0..self.critters.len() {
+            if self.critters[critter_index].escaped() {
                 continue;
             }
 
-            if self.critters[i].color == Color::Gray {
+            if self.critters[critter_index].color() == Color::Gray {
                 continue;
             }
 
-            let mut new_map = self.clone();
-            new_map.active_critter = i;
-            let step = Step::SwitchCritter {
-                critter: new_map.critters[i],
-            };
-            next_states.push((0, step, new_map));
+            for direction in Direction::all() {
+                let mut new_map = self.clone();
+                if new_map.try_move(critter_index, direction, true) {
+                    next_states.push((
+                        1,
+                        Step::Move {
+                            critter_index,
+                            direction,
+                        },
+                        new_map,
+                    ))
+                }
+            }
         }
 
         // If we have any new states, return them
@@ -415,7 +373,7 @@ impl State<Global, Step> for Map {
                 if let Some(critter) = self
                     .critters
                     .iter()
-                    .find(|&c| c.location.x == col as isize && c.location.y == row as isize)
+                    .find(|&c| c.location() == (col, row).into())
                 {
                     let c = index_char(index);
                     index += 1;
@@ -458,12 +416,9 @@ impl State<Global, Step> for Map {
         result.push('\n');
         result.push('\n');
         for (c, critter) in critters_to_print {
-            let Critter {
-                kind,
-                color,
-                carrying,
-                ..
-            } = critter;
+            let kind = critter.kind();
+            let color = critter.color();
+            let carrying = critter.carrying();
             result.push_str(
                 format!(
                     "{c}: {color:?} {kind:?}{carrying}\n",

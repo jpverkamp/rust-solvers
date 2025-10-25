@@ -9,7 +9,7 @@ use crate::model::{
     wall::WallKind,
 };
 
-#[derive(Clone, PartialEq, Eq, Hash, Debug)]
+#[derive(Debug)]
 pub(crate) struct Map {
     // The size of the map
     pub(crate) width: usize,
@@ -26,10 +26,11 @@ pub(crate) struct Map {
 
     // The critters moving around the level and the one we're currently moving
     pub(crate) critters: Vec<Critter>,
-    pub(crate) active_critter: usize,
 
     // Anything a critter could pick up and carry
     pub(crate) things: Vec<Thing>,
+
+    // === State variables while solving ===
 
     // Current state of teleporters
     // Used to detect infinite loops and avoid double teleports
@@ -37,7 +38,51 @@ pub(crate) struct Map {
     pub(crate) teleport_cooldown: bool,
 }
 
+impl PartialEq for Map {
+    fn eq(&self, other: &Self) -> bool {
+        self.width == other.width
+            && self.height == other.height
+            && self.tiles == other.tiles
+            && self.h_walls == other.h_walls
+            && self.v_walls == other.v_walls
+            && self.critters == other.critters
+            && self.things == other.things
+    }
+}
+
+impl Eq for Map {}
+
+impl std::hash::Hash for Map {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.width.hash(state);
+        self.height.hash(state);
+        self.tiles.hash(state);
+        self.h_walls.hash(state);
+        self.v_walls.hash(state);
+        self.critters.hash(state);
+        self.things.hash(state);
+    }
+}
+
+impl Clone for Map {
+    fn clone(&self) -> Self {
+        Self {
+            width: self.width.clone(),
+            height: self.height.clone(),
+            tiles: self.tiles.clone(),
+            h_walls: self.h_walls.clone(),
+            v_walls: self.v_walls.clone(),
+            critters: self.critters.clone(),
+            things: self.things.clone(),
+
+            used_teleports: vec![],
+            teleport_cooldown: true,
+        }
+    }
+}
+
 impl Map {
+    // Return what tile is at a given location
     pub(crate) fn tile_at(&self, p: Point) -> Tile {
         if p.x < 0 || p.x >= (self.width as isize) || p.y < 0 || p.y >= (self.height as isize) {
             return Tile::Water;
@@ -47,6 +92,7 @@ impl Map {
         self.tiles[index]
     }
 
+    // Break the floor at a given location
     pub(crate) fn break_floor(&mut self, p: Point) {
         assert!(
             p.x >= 0 || p.x < (self.width as isize) || p.y >= 0 || p.y < (self.height as isize),
@@ -62,7 +108,8 @@ impl Map {
         self.tiles[index] = Tile::Water;
     }
 
-    pub(crate) fn wall_index(&self, p: Point, d: Direction) -> Option<(bool, usize)> {
+    // Helper to calculate the index and map used for a given wall
+    fn wall_index(&self, p: Point, d: Direction) -> Option<(bool, usize)> {
         if p.x < 0 || p.x >= (self.width as isize) || p.y < 0 || p.y >= (self.height as isize) {
             return None;
         }
@@ -78,6 +125,7 @@ impl Map {
         }
     }
 
+    // Return what wall is at a given location in a given direction
     pub(crate) fn wall_at(&self, p: Point, d: Direction) -> WallKind {
         match self.wall_index(p, d) {
             Some((true, index)) => self.h_walls[index],
@@ -86,6 +134,7 @@ impl Map {
         }
     }
 
+    // Break the wall in a given location/direction
     pub(crate) fn break_wall(&mut self, p: Point, d: Direction) {
         if let Some(wall) = match self.wall_index(p, d) {
             Some((true, index)) => self.h_walls.get_mut(index),
@@ -99,14 +148,6 @@ impl Map {
             );
             *wall = WallKind::Empty
         }
-    }
-
-    pub(crate) fn reset(&mut self) {
-        // Using the same teleport (in the same direction) twice in a move is an infinite loop
-        self.used_teleports.clear();
-
-        // The first move you make cannot be through a teleport
-        self.teleport_cooldown = true;
     }
 }
 
@@ -211,12 +252,7 @@ impl From<&str> for Map {
             {
                 // Try to load critters: 1 1 red penguin
                 let color = Color::from(parts[2]);
-                critters.push(Critter {
-                    kind,
-                    color,
-                    location: Point::from((col, row)),
-                    carrying: None,
-                })
+                critters.push(Critter::new(kind, color, (col, row).into()));
             } else if parts.len() == 4
                 && let Ok(mut tile) = Tile::try_from(parts[3])
             {
@@ -266,15 +302,10 @@ impl From<&str> for Map {
         Map {
             width,
             height,
-
             tiles,
-
             h_walls,
             v_walls,
-
             critters,
-            active_critter: 0,
-
             things,
 
             used_teleports: vec![],

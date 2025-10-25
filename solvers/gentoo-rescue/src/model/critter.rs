@@ -22,10 +22,56 @@ impl TryFrom<&str> for CritterKind {
 
 #[derive(Copy, Clone, Debug, PartialEq, Eq, Hash)]
 pub struct Critter {
-    pub(crate) kind: CritterKind,
-    pub(crate) color: Color,
-    pub(crate) location: Point,
-    pub(crate) carrying: Option<ThingKind>,
+    kind: CritterKind,
+    color: Color,
+    location: Point,
+    carrying: Option<ThingKind>,
+    escaped: bool,
+}
+
+impl Critter {
+    pub fn new(kind: CritterKind, color: Color, location: Point) -> Self {
+        Critter {
+            kind,
+            color,
+            location,
+            carrying: None,
+            escaped: false,
+        }
+    }
+
+    pub fn kind(&self) -> CritterKind {
+        return self.kind;
+    }
+
+    pub fn color(&self) -> Color {
+        return self.color;
+    }
+
+    pub fn location(&self) -> Point {
+        return self.location;
+    }
+
+    pub fn move_to(&mut self, p: Point) {
+        self.location = p;
+    }
+
+    pub fn carrying(&self) -> Option<ThingKind> {
+        return self.carrying;
+    }
+
+    pub fn pick_up(&mut self, t: ThingKind) {
+        self.carrying = Some(t);
+    }
+
+    pub fn escaped(&self) -> bool {
+        return self.escaped;
+    }
+
+    pub fn escape(&mut self) {
+        self.escaped = true;
+        self.location = Point { x: -10, y: -10 };
+    }
 }
 
 impl std::fmt::Display for Critter {

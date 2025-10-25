@@ -3,7 +3,7 @@ mod simulation;
 
 use direction::Direction;
 use solver::{Solver, State};
-use std::io::Read;
+use std::{io::Read, usize};
 
 use crate::model::map::Map;
 
@@ -31,7 +31,7 @@ fn main() {
             let mut map = map.clone();
 
             for line in arg.lines() {
-                if line.is_empty() {
+                if line.is_empty() || line.starts_with('#') {
                     continue;
                 }
 
@@ -52,13 +52,8 @@ fn main() {
                 let index = map
                     .critters
                     .iter()
-                    .position(|c| c.location.x == col - 1 && c.location.y == row - 1)
+                    .position(|c| c.location() == (col - 1, row - 1).into())
                     .expect("No critter at {row} {col}");
-                map.active_critter = index;
-                println!(
-                    "=== Switched to critter {index}: {} ===",
-                    map.critters[map.active_critter]
-                );
 
                 for c in parts[4].chars() {
                     let d = match c {
@@ -69,14 +64,12 @@ fn main() {
                         _ => panic!("Unknown movement char {c}"),
                     };
                     println!("=== Moving {d:?} ===");
-                    match map.try_move(d, true) {
-                        Some((new_map, _)) => {
-                            map = new_map;
-                            println!("{}", map.stringify(&()));
-                        }
-                        None => {
-                            panic!("Failed to move");
-                        }
+                    let mut next_map = map.clone();
+                    if next_map.try_move(index, d, true) {
+                        map = next_map;
+                        println!("{}", map.stringify(&()));
+                    } else {
+                        panic!("Failed to move");
                     }
                     println!();
                 }
@@ -100,17 +93,22 @@ fn main() {
         log::info!("{solution:?}");
 
         let path = solver.path(&map, &solution).unwrap();
-        print!("{start_critter:30}", start_critter = map.critters[0]);
+        let mut active_index = usize::MAX;
 
         for step in path {
             match step {
-                simulation::Step::SwitchCritter { critter } => {
-                    print!("\n{critter:<30}");
-                }
                 simulation::Step::Move {
+                    critter_index,
                     direction,
-                    new_critter,
                 } => {
+                    if critter_index != active_index {
+                        if active_index != usize::MAX {
+                            println!();
+                        }
+
+                        print!("{critter:30}", critter = map.critters[critter_index]);
+                        active_index = critter_index;
+                    }
                     print!(
                         "{}",
                         match direction {
@@ -120,9 +118,6 @@ fn main() {
                             direction::Direction::Right => 'R',
                         }
                     );
-                    if let Some(critter) = new_critter {
-                        print!("\n{critter:30}");
-                    }
                 }
             }
         }
