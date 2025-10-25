@@ -59,7 +59,7 @@ impl Map {
         // If the critter is on water, remove it and choose a new active critter
         if new_map.tile_at(new_map.critters[new_map.active_critter].location) == Tile::Water {
             tracing::info!("critter ESCAPED into the water");
-            new_map.critters.remove(self.active_critter);
+            new_map.critters.remove(new_map.active_critter);
             if new_map.active_critter >= new_map.critters.len() {
                 new_map.active_critter = 0;
             }
@@ -220,7 +220,8 @@ impl Map {
                         .position(|oc| oc.location == my_position)
                     {
                         Some(new_index) => self.active_critter = new_index,
-                        None => panic!("Could not find original critter after hammer time"),
+                        // None => panic!("Could not find original critter after hammer time"),
+                        None => return false,
                     }
 
                     // We take that spot
@@ -331,13 +332,14 @@ impl State<Global, Step> for Map {
         for d in Direction::all() {
             if let Some((mut new_map, new_critter)) = self.try_move(d, true) {
                 // If the step resulted in a critter switch, record that in the step
+                let new_critter = if new_critter && !new_map.critters.is_empty() {
+                    Some(new_map.critters[new_map.active_critter])
+                } else {
+                    None
+                };
                 let step = Step::Move {
                     direction: d,
-                    new_critter: if new_critter && !new_map.critters.is_empty() {
-                        Some(new_map.critters[new_map.active_critter])
-                    } else {
-                        None
-                    },
+                    new_critter,
                 };
                 new_map.reset();
                 next_states.push((1, step, new_map))

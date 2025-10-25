@@ -1,0 +1,21 @@
+.x..~.
+......
+~~~~..
+
+|...||.
+|......
+......|
+
+----.-
+....-.
+---...
+....--
+
+1 4 green nest
+1 6 gray nest
+2 2 gray penguin
+2 2 teleport 2 6
+2 3 red penguin
+2 4 green penguin
+2 4 hammer
+3 5 red nest
