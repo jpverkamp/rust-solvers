@@ -188,16 +188,31 @@ impl Map {
                 Some(ThingKind::Hammer) => {
                     tracing::debug!("hammered off another critter");
 
-                    // The other critter gets bumped out of our way
+                    // If the other critter is standing on a teleport, we'll end up going through that first
+                    // Which is a crazy edge case, first discovered in 041 Flow
+                    // TODO: Handle this better (?)
+
+                    // So:
+                    // - Move the other critter out of the way (so we don't hit them again)
+                    // - Move me into that location; might be able to teleport
+                    // - Put them back (overlapping, it's fine)
+                    // - Let them move now
+
+                    let other_location = self.critters[other_critter].location();
+                    self.critters[other_critter].move_to(Point { x: -10, y: -10 });
+
+                    self.try_move_one(critter_index, direction, depth + 1, true);
+                    
+                    self.teleport_cooldown = false;
+                    self.maybe_do_teleport(critter_index, direction);
+
+                    self.critters[other_critter].move_to(other_location);
                     if self.try_move(other_critter, direction, false) {
                         // The other could move, all is well
                     } else {
                         // The other couldn't move, remove it
                         self.critters[other_critter].escape();
                     }
-
-                    // And then we take that spot
-                    self.try_move_one(critter_index, direction, depth + 1, true);
                 }
                 None => {
                     tracing::debug!("hit another critter");
@@ -208,7 +223,7 @@ impl Map {
         }
 
         let dst = me.location() + direction.into();
-        tracing::debug!("moved to {dst:?}");
+        tracing::debug!("{critter:?} moved to {dst:?}", critter = self.critters[critter_index]);
         self.critters[critter_index].move_to(dst);
 
         if self.teleport_cooldown {
