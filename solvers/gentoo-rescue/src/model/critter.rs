@@ -41,15 +41,15 @@ impl Critter {
     }
 
     pub fn kind(&self) -> CritterKind {
-        return self.kind;
+        self.kind
     }
 
     pub fn color(&self) -> Color {
-        return self.color;
+        self.color
     }
 
     pub fn location(&self) -> Point {
-        return self.location;
+        self.location
     }
 
     pub fn move_to(&mut self, p: Point) {
@@ -57,7 +57,7 @@ impl Critter {
     }
 
     pub fn carrying(&self) -> Option<ThingKind> {
-        return self.carrying;
+        self.carrying
     }
 
     pub fn pick_up(&mut self, t: ThingKind) {
@@ -65,7 +65,7 @@ impl Critter {
     }
 
     pub fn escaped(&self) -> bool {
-        return self.escaped;
+        self.escaped
     }
 
     pub fn escape(&mut self) {
@@ -77,13 +77,18 @@ impl Critter {
 impl std::fmt::Display for Critter {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.pad(&format!(
-            "{row} {col} {color:?} {kind:?}{carrying}",
+            "{row} {col} {color:?} {kind:?}{carrying}{escaped}",
             row = self.location.y + 1,
             col = self.location.x + 1,
             color = self.color,
             kind = self.kind,
             carrying = if let Some(thing) = self.carrying {
                 format!(" w/{thing:?}")
+            } else {
+                String::new()
+            },
+            escaped = if self.escaped {
+                " {ESC}".to_string()
             } else {
                 String::new()
             }

@@ -22,7 +22,7 @@ use crate::model::wall::WallKind;
 impl Map {
     // Try to move the active critter in the given direction
     // Returns if the move is possible (and something actually changed)
-    #[tracing::instrument(skip(self), ret)]
+    #[tracing::instrument(skip(self), ret, fields(critter = %self.critters[critter_index]))]
     pub(crate) fn try_move(
         &mut self,
         critter_index: usize,
@@ -57,7 +57,7 @@ impl Map {
     // Internal function to move a single tile in a direction, looped to slide or used once to bounce
     // Modifies the map in place
     // Returns if we should continue moving
-    #[tracing::instrument(skip(self), ret)]
+    #[tracing::instrument(skip(self), ret, fields(critter = %self.critters[critter_index]))]
     fn try_move_one(
         &mut self,
         critter_index: usize,
@@ -202,7 +202,7 @@ impl Map {
                     self.critters[other_critter].move_to(Point { x: -10, y: -10 });
 
                     self.try_move_one(critter_index, direction, depth + 1, true);
-                    
+
                     self.teleport_cooldown = false;
                     self.maybe_do_teleport(critter_index, direction);
 
@@ -223,7 +223,10 @@ impl Map {
         }
 
         let dst = me.location() + direction.into();
-        tracing::debug!("{critter:?} moved to {dst:?}", critter = self.critters[critter_index]);
+        tracing::debug!(
+            "{critter:?} moved to {dst:?}",
+            critter = self.critters[critter_index]
+        );
         self.critters[critter_index].move_to(dst);
 
         if self.teleport_cooldown {
@@ -270,13 +273,13 @@ impl Map {
 }
 
 impl State<Global, Step> for Map {
-    #[tracing::instrument(skip(_global), ret)]
-    fn is_valid(&self, _global: &Global) -> bool {
+    #[tracing::instrument(skip(self), ret)]
+    fn is_valid(&self, _: &Global) -> bool {
         // TODO
         true
     }
 
-    #[tracing::instrument(ret)]
+    #[tracing::instrument(skip(self), ret)]
     fn is_solved(&self, _: &Global) -> bool {
         // All nests have a matching penguin on them
         for x in 0..self.width {
@@ -309,7 +312,7 @@ impl State<Global, Step> for Map {
         true
     }
 
-    #[tracing::instrument()]
+    #[tracing::instrument(skip(self))]
     fn next_states(&self, _: &Global) -> Option<Vec<(i64, Step, Map)>> {
         let mut next_states = vec![];
 

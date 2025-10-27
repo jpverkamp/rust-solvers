@@ -67,8 +67,8 @@ impl std::hash::Hash for Map {
 impl Clone for Map {
     fn clone(&self) -> Self {
         Self {
-            width: self.width.clone(),
-            height: self.height.clone(),
+            width: self.width,
+            height: self.height,
             tiles: self.tiles.clone(),
             h_walls: self.h_walls.clone(),
             v_walls: self.v_walls.clone(),
