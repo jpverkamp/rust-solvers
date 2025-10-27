@@ -282,6 +282,14 @@ impl From<&str> for Map {
             }
         }
 
+        // Any things that start on a tile with a critter get picked up immediately
+        for critter in &mut critters {
+            if let Some(index) = things.iter().position(|t| t.location == critter.location()) {
+                critter.pick_up(things[index].kind);
+                things.remove(index);
+            }
+        }
+
         Map {
             width,
             height,
