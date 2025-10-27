@@ -1,0 +1,22 @@
+~....
+~.xx.
+~~.x.
+.~...
+
+.|...|
+.....|
+.....|
+.....|
+
+.----
+.....
+.....
+.....
+..---
+
+2 2 yellow penguin
+2 4 teleport 4 1
+3 3 red nest
+3 3 crutch
+4 3 red penguin
+4 1 yellow nest

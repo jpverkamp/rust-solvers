@@ -4,6 +4,7 @@ use point::Point;
 pub(crate) enum ThingKind {
     Spring,
     Hammer,
+    Crutch,
 }
 
 impl TryFrom<&str> for ThingKind {
@@ -13,6 +14,7 @@ impl TryFrom<&str> for ThingKind {
         match value {
             "spring" => Ok(ThingKind::Spring),
             "hammer" => Ok(ThingKind::Hammer),
+            "crutch" => Ok(ThingKind::Crutch),
             _ => Err(()),
         }
     }

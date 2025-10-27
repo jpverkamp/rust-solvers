@@ -20,7 +20,7 @@ use crate::model::tile::Tile;
 use crate::model::wall::WallKind;
 
 impl Map {
-    // Reset any local state 
+    // Reset any local state
     fn reset(&mut self) {
         self.teleport_cooldown = true;
         self.used_teleports.clear();
@@ -130,6 +130,11 @@ impl Map {
             let thing = self.things.remove(index);
             tracing::debug!("picked up {thing:?}");
             self.critters[critter_index].pick_up(thing.kind);
+
+            // Crutches stop movement immediately
+            if thing.kind == ThingKind::Crutch {
+                return false;
+            }
         }
 
         let wall = self.wall_at(me.location(), direction);
@@ -177,7 +182,7 @@ impl Map {
                     Some(ThingKind::Hammer) => {
                         tracing::debug!("smashed right on through it");
                     }
-                    None => {
+                    Some(ThingKind::Crutch) | None => {
                         return false;
                     }
                 }
@@ -225,7 +230,7 @@ impl Map {
                         self.critters[other_critter].escape();
                     }
                 }
-                None => {
+                Some(ThingKind::Crutch) | None => {
                     tracing::debug!("hit another critter");
                 }
             }
@@ -243,6 +248,12 @@ impl Map {
         if self.teleport_cooldown {
             tracing::debug!("ending teleport cooldown");
             self.teleport_cooldown = false;
+        }
+
+        // If we're carrying a crutch, only move once
+        if self.critters[critter_index].carrying() == Some(ThingKind::Crutch) {
+            self.maybe_do_teleport(critter_index, direction);
+            return false;
         }
 
         true
