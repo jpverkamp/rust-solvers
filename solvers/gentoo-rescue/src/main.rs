@@ -35,12 +35,10 @@ fn main() {
                     continue;
                 }
 
-                // All lines should be "{row} {column} {color} {kind} {movements...}"
+                // All lines should be "{row} {column} ... {movements...}"
+                // The middle could have color, kind, (optional carrying)
+                // Or you can leave it out
                 let parts: Vec<_> = line.split_ascii_whitespace().collect();
-                if parts.len() == 4 {
-                    continue; // If we don't move the first critter
-                }
-                assert_eq!(parts.len(), 5);
 
                 let row = parts[0]
                     .parse::<isize>()
@@ -57,7 +55,7 @@ fn main() {
 
                 log::info!("Switching to critter {index}: {}", map.critters[index]);
 
-                for c in parts[4].chars() {
+                for c in parts.iter().last().unwrap().chars() {
                     let d = match c {
                         'U' => Direction::Up,
                         'D' => Direction::Down,
@@ -106,9 +104,6 @@ fn main() {
                     critter_index,
                     direction,
                 } => {
-                    // println!(" PRE {step:?}, {c}", c = map.critters[critter_index]);
-                    // dbg!(&step, &map);
-
                     if critter_index != last_critter_index {
                         if last_critter_index != usize::MAX {
                             println!();
@@ -120,8 +115,6 @@ fn main() {
                     if !map.try_move(critter_index, direction, true) {
                         panic!("Simulation failed");
                     }
-
-                    // println!("POST {step:?}, {c}", c = map.critters[critter_index]);
 
                     print!(
                         "{}",
