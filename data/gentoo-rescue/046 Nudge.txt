@@ -1,0 +1,18 @@
+.*...
+..~..
+~~~.~
+
+|....|
+|.||.|
+...||.
+
+-----
+..-.-
+--..-
+...-.
+
+2 1 red penguin
+2 2 crutch
+1 5 hammer
+2 5 yellow nest
+3 4 yellow penguin

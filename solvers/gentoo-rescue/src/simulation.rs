@@ -46,10 +46,12 @@ impl Map {
         }
 
         // If the current critter is on a dust cloud it cannot move
-        if matches!(
-            self.tile_at(self.critters[critter_index].location()),
-            Tile::Dust | Tile::Nest { dusty: true, .. }
-        ) {
+        if first_call
+            && matches!(
+                self.tile_at(self.critters[critter_index].location()),
+                Tile::Dust | Tile::Nest { dusty: true, .. }
+            )
+        {
             return false;
         }
 
@@ -345,6 +347,10 @@ impl State<Global, Step> for Map {
             }
 
             if self.critters[critter_index].color() == Color::Gray {
+                continue;
+            }
+
+            if self.tile_at(self.critters[critter_index].location()) == Tile::Dust {
                 continue;
             }
 
