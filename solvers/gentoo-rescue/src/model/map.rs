@@ -9,7 +9,7 @@ use crate::model::{
     wall::WallKind,
 };
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct Map {
     // The size of the map
     pub(crate) width: usize,
@@ -61,23 +61,6 @@ impl std::hash::Hash for Map {
         self.v_walls.hash(state);
         self.critters.hash(state);
         self.things.hash(state);
-    }
-}
-
-impl Clone for Map {
-    fn clone(&self) -> Self {
-        Self {
-            width: self.width,
-            height: self.height,
-            tiles: self.tiles.clone(),
-            h_walls: self.h_walls.clone(),
-            v_walls: self.v_walls.clone(),
-            critters: self.critters.clone(),
-            things: self.things.clone(),
-
-            used_teleports: vec![],
-            teleport_cooldown: true,
-        }
     }
 }
 

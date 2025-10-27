@@ -20,6 +20,12 @@ use crate::model::tile::Tile;
 use crate::model::wall::WallKind;
 
 impl Map {
+    // Reset any local state 
+    fn reset(&mut self) {
+        self.teleport_cooldown = true;
+        self.used_teleports.clear();
+    }
+
     // Try to move the active critter in the given direction
     // Returns if the move is possible (and something actually changed)
     #[tracing::instrument(skip(self), ret, fields(critter = %self.critters[critter_index]))]
@@ -29,6 +35,11 @@ impl Map {
         direction: Direction,
         first_call: bool,
     ) -> bool {
+        // The first time try_move is called, we have to reset local state
+        if first_call {
+            self.reset();
+        }
+
         // Do not move escaped critters
         if self.critters[critter_index].escaped() {
             return false;

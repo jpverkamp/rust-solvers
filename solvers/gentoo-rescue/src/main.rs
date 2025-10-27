@@ -67,10 +67,7 @@ fn main() {
                     };
                     log::info!("Moving {} {d:?}", map.critters[index]);
 
-                    // This clone is done to reset the teleporter state
-                    let mut new_map = map.clone();
-                    if new_map.try_move(index, d, true) {
-                        map = new_map;
+                    if map.try_move(index, d, true) {
                         println!("{}", map.stringify(&()));
                         for critter in map.critters.iter() {
                             println!("{critter}");
@@ -120,11 +117,7 @@ fn main() {
                         last_critter_index = critter_index;
                     }
 
-                    // This clone is done to reset the teleporter state
-                    let mut new_map = map.clone();
-                    if new_map.try_move(critter_index, direction, true) {
-                        map = new_map;
-                    } else {
+                    if !map.try_move(critter_index, direction, true) {
                         panic!("Simulation failed");
                     }
 
