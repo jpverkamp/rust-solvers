@@ -17,6 +17,7 @@ use crate::model::critter::CritterKind;
 use crate::model::map::Map;
 use crate::model::thing::{Thing, ThingKind};
 use crate::model::tile::Tile;
+use crate::model::toggle::ToggleKind;
 use crate::model::wall::WallKind;
 
 impl Map {
@@ -58,6 +59,26 @@ impl Map {
         // Take steps until we should not move any more
         let original_state = self.clone(); // TODO: Expensive...
         while self.try_move_one(critter_index, direction, 0, false) {}
+
+        // HACK: Escape any animals that ended up on water or cracked floor after movement
+        // I'm not sure how we ended up in this state; it's probably crutches returning early
+        for index in 0..self.critters.len() {
+            if self.critters[index].escaped() {
+                continue;
+            }
+
+            match self.tile_at(self.critters[index].location()) {
+                Tile::Water | Tile::CrackedFloor => {
+                    tracing::debug!(
+                        "Critter {:?} ended up on {:?}, escaping",
+                        self.critters[index],
+                        self.tile_at(self.critters[index].location())
+                    );
+                    self.critters[index].escape();
+                }
+                _ => {}
+            }
+        }
 
         // If nothing changed, this is invalid location
         if self == &original_state {
@@ -117,25 +138,15 @@ impl Map {
             Tile::Teleport(_) => {
                 // Handle below
             }
+            Tile::Toggle(_) => {
+                // Handle below
+            }
         }
 
         match self.maybe_do_teleport(critter_index, direction) {
             Some(end_movement) => return end_movement,
             None => {
                 // Didn't teleport
-            }
-        }
-
-        // Standing on a thing, pick it up
-        // If we were already holding something, chuck our current thing into the water
-        if let Some(index) = self.things.iter().position(|t| t.location == me.location()) {
-            let thing = self.things.remove(index);
-            tracing::debug!("picked up {thing:?}");
-            self.critters[critter_index].pick_up(thing.kind);
-
-            // Crutches stop movement immediately
-            if thing.kind == ThingKind::Crutch {
-                return false;
             }
         }
 
@@ -246,6 +257,41 @@ impl Map {
             critter = self.critters[critter_index]
         );
         self.critters[critter_index].move_to(dst);
+
+        // Moved onto a thing, pick it up
+        // If we were already holding something, chuck our current thing into the water
+        if let Some(index) = self.things.iter().position(|t| t.location == dst) {
+            let thing = self.things.remove(index);
+            tracing::debug!("picked up {thing:?}");
+            self.critters[critter_index].pick_up(thing.kind);
+        }
+
+        // If we moved onto a toggle, trigger any matching rules
+        if let Tile::Toggle(c) = self.tile_at(dst) {
+            tracing::debug!("stepped on toggle {c}, checking rules");
+
+            let matching_rules: Vec<_> = self
+                .toggle_rules
+                .iter()
+                .filter(|r| r.key == c)
+                .map(|r| r.kind)
+                .collect();
+
+            for kind in matching_rules {
+                match kind {
+                    ToggleKind::Floor(p) => {
+                        tracing::debug!("toggle {c} rule: toggling floor at {p:?}");
+                        self.toggle_floor(p);
+                    }
+                    ToggleKind::Wall(p, d) => {
+                        tracing::debug!(
+                            "toggle {c} rule: toggling wall at {p:?} in direction {d:?}"
+                        );
+                        self.toggle_wall(p, d);
+                    }
+                }
+            }
+        }
 
         if self.teleport_cooldown {
             tracing::debug!("ending teleport cooldown");

@@ -15,6 +15,7 @@ pub enum Tile {
     Wall,
     Dust,
     Teleport(Point),
+    Toggle(char),
 }
 
 impl From<char> for Tile {
@@ -25,6 +26,7 @@ impl From<char> for Tile {
             'x' => Tile::CrackedFloor,
             '#' => Tile::Wall,
             '*' => Tile::Dust,
+            'A'..='Z' => Tile::Toggle(value),
             _ => unimplemented!("unknown tile {value}"),
         }
     }
@@ -54,6 +56,7 @@ impl From<Tile> for char {
             Tile::Wall => '#',
             Tile::Dust => '*',
             Tile::Teleport(_) => '§',
+            Tile::Toggle(c) => c,
         }
     }
 }

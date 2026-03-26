@@ -6,6 +6,7 @@ use crate::model::{
     critter::{Critter, CritterKind},
     thing::{Thing, ThingKind},
     tile::Tile,
+    toggle::ToggleRule,
     wall::WallKind,
 };
 
@@ -29,6 +30,9 @@ pub(crate) struct Map {
 
     // Anything a critter could pick up and carry
     pub(crate) things: Vec<Thing>,
+
+    // Toggles that change the map when walked over
+    pub(crate) toggle_rules: Vec<ToggleRule>,
 
     // === State variables while solving ===
 
@@ -132,6 +136,40 @@ impl Map {
             *wall = WallKind::Empty
         }
     }
+
+    // Toggle a floor
+    pub(crate) fn toggle_floor(&mut self, p: Point) {
+        assert!(
+            p.x >= 0 || p.x < (self.width as isize) || p.y >= 0 || p.y < (self.height as isize),
+            "Tried to toggle a floor out of bounds at {p:?}"
+        );
+
+        let index = (p.y * (self.width as isize) + p.x) as usize;
+        self.tiles[index] = match self.tiles[index] {
+            Tile::Floor => Tile::Water,
+            Tile::Water => Tile::Floor,
+            other => {
+                unimplemented!("Can only toggle floor/water tiles, but tile at {p:?} is {other:?}")
+            }
+        }
+    }
+
+    // Toggle a wall
+    pub(crate) fn toggle_wall(&mut self, p: Point, d: Direction) {
+        if let Some(wall) = match self.wall_index(p, d) {
+            Some((true, index)) => self.h_walls.get_mut(index),
+            Some((false, index)) => self.v_walls.get_mut(index),
+            None => None,
+        } {
+            *wall = match *wall {
+                WallKind::Empty => WallKind::Solid,
+                WallKind::Solid => WallKind::Empty,
+                other => unimplemented!(
+                    "Can only toggle empty/solid walls, but wall at {p:?} {d:?} is {other:?}"
+                ),
+            }
+        }
+    }
 }
 
 impl From<&str> for Map {
@@ -210,6 +248,7 @@ impl From<&str> for Map {
         // Then the critters, things, and setting nests in tiles
         let mut critters = vec![];
         let mut things = vec![];
+        let mut toggle_rules = vec![];
 
         while let Some(line) = lines.next()
             && !line.is_empty()
@@ -219,6 +258,12 @@ impl From<&str> for Map {
                 parts.len() >= 3,
                 "Need at least a row, col, and name in {line}"
             );
+
+            // Toggles always start with "toggle"
+            if parts[0] == "toggle" {
+                toggle_rules.push(ToggleRule::from(line));
+                continue;
+            }
 
             // TODO: Why did I make these 1 based...
             let row = parts[0]
@@ -298,6 +343,7 @@ impl From<&str> for Map {
             v_walls,
             critters,
             things,
+            toggle_rules,
 
             used_teleports: vec![],
             teleport_cooldown: false,
