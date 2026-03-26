@@ -1,0 +1,23 @@
+# Gentoo Rescue/Transition/Flare/Abort
+
+~.~~
+~...
+....
+~...
+
+.||..
+.|..|
+|...|
+.|..|
+
+.-..
+..--
+-...
+-...
+.---
+
+3 1 blue nest
+3 3 red seal
+3 3 spring
+4 2 blue penguin
+4 2 bomb

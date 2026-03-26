@@ -1,0 +1,20 @@
+# Gentoo Rescue/Transition/Flare/Trigger
+
+...
+...
+.~~
+
+|..b
+b..|
+||..
+
+---
+...
+.--
+-..
+
+1 1 blue nest
+1 1 blue penguin
+1 1 bomb
+2 1 green nest
+3 1 green penguin

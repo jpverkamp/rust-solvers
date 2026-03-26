@@ -1,0 +1,26 @@
+# Gentoo Rescue/Transition/Flare/Planted
+
+.....
+.....
+..**.
+~~..~
+
+|....|
+|....|
+|....|
+..|.|.
+
+-----
+.....
+.....
+--..-
+..--.
+
+1 3 blue nest
+1 4 red penguin
+2 2 gray penguin
+2 2 gray nest
+2 2 bomb
+2 3 hammer
+3 2 blue penguin
+3 4 yellow seal 
