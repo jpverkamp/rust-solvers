@@ -174,7 +174,16 @@ impl Map {
 
 impl From<&str> for Map {
     fn from(input: &str) -> Self {
-        let mut lines = input.lines();
+        let mut lines = input.lines().peekable();
+
+        // Skip any leading # comment or empty lines
+        while let Some(&line) = lines.peek() {
+            if line.is_empty() || line.starts_with('#') {
+                lines.next();
+            } else {
+                break;
+            }
+        }
 
         // First read the tiles
         let mut width = None;

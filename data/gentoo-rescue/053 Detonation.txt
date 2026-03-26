@@ -1,0 +1,18 @@
+# Gentoo Rescue/Transition/Flare/Detonation 
+
+..~
+...
+
+|.|.
+|..|
+
+--.
+..-
+---
+
+2 1 red nest
+2 1 red penguin
+2 1 bomb
+2 2 green nest
+2 3 green penguin
+2 3 bomb

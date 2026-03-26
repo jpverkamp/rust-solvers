@@ -5,6 +5,7 @@ pub(crate) enum ThingKind {
     Spring,
     Hammer,
     Crutch,
+    Bomb,
 }
 
 impl TryFrom<&str> for ThingKind {
@@ -15,6 +16,7 @@ impl TryFrom<&str> for ThingKind {
             "spring" => Ok(ThingKind::Spring),
             "hammer" => Ok(ThingKind::Hammer),
             "crutch" => Ok(ThingKind::Crutch),
+            "bomb" => Ok(ThingKind::Bomb),
             _ => Err(()),
         }
     }

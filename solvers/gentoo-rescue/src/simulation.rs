@@ -195,7 +195,7 @@ impl Map {
                     Some(ThingKind::Hammer) => {
                         tracing::debug!("smashed right on through it");
                     }
-                    Some(ThingKind::Crutch) | None => {
+                    Some(ThingKind::Crutch) | Some(ThingKind::Bomb) | None => {
                         return false;
                     }
                 }
@@ -203,12 +203,12 @@ impl Map {
         }
 
         // Bumped into any other critter
-        // TODO: Do we bounce off critters?
         if let Some(other_critter) = self
             .critters
             .iter()
             .position(|c| c.location() == me.location() + direction.into())
         {
+            // Behavior based on what we're carrying
             match self.critters[critter_index].carrying() {
                 Some(ThingKind::Spring) => {
                     tracing::debug!("bounced off another critter");
@@ -243,10 +243,22 @@ impl Map {
                         self.critters[other_critter].escape();
                     }
                 }
-                Some(ThingKind::Crutch) | None => {
+                Some(ThingKind::Crutch | ThingKind::Bomb) | None => {
                     tracing::debug!("hit another critter");
                 }
             }
+
+            // Behavior based on what they are carrying
+            match self.critters[other_critter].carrying() {
+                Some(ThingKind::Bomb) => {
+                    tracing::debug!("other critter is carrying a bomb, BOOM");
+                    self.critters[critter_index].escape();
+                    self.critters[other_critter].escape();
+                    return false;
+                }
+                Some(ThingKind::Spring | ThingKind::Hammer | ThingKind::Crutch) | None => {}
+            }
+
             self.maybe_do_teleport(critter_index, direction);
             return false;
         }
