@@ -1,0 +1,21 @@
+..~
+~..
+~..
+
+..|.
+...|
+..|.
+
+.-.
+..-
+...
+.-.
+
+1 1 green penguin
+1 2 yellow penguin
+2 2 red nest
+2 2 crutch
+2 3 red penguin
+2 3 green nest
+3 2 yellow nest
+3 2 crutch
