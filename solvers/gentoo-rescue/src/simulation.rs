@@ -260,6 +260,12 @@ impl Map {
                         // The other couldn't move, remove it
                         self.critters[other_critter].escape();
                     }
+
+                    // If both are now occupying the same space, the other one should escape too
+                    if self.critters[other_critter].location() == self.critters[critter_index].location() {
+                        tracing::debug!("other critter couldn't move, escaping");
+                        self.critters[other_critter].escape();
+                    }
                 }
                 Some(ThingKind::Crutch | ThingKind::Bomb) | None => {
                     tracing::debug!("hit another critter");
