@@ -1,0 +1,42 @@
+# Gentoo Rescue/Transition/Flare
+
+~...~~~.~
+.....~...
+.......~~
+.....~~~~
+~...~~~~~
+
+.|yy|.....
+|....||b|.
+|......g..
+|....|....
+.|yy|.....
+
+.---.....
+-.y.-.y-.
+.....-.-.
+.....--..
+-.y.-....
+.---.....
+
+2 3 bomb
+2 7 green seal
+3 2 yellow nest
+3 2 bomb
+3 3 bomb
+3 4 bomb
+3 6 yellow penguin
+3 7 blue seal
+4 3 bomb
+
+# 1 3 level Exodus
+# 1 8 level ???
+# 2 1 level Planted
+# 2 8 level ??? 
+# 2 9 level ???
+# 3 1 level Trigger
+# 3 4 level ???
+# 3 6 level Detonation
+# 4 1 level Abort
+# 5 3 level ???
+# 5 4 level Breach

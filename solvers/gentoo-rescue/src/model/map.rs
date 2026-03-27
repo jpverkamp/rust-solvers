@@ -1,3 +1,5 @@
+use std::rc::Rc;
+
 use direction::Direction;
 use point::Point;
 
@@ -32,7 +34,10 @@ pub(crate) struct Map {
     pub(crate) things: Vec<Thing>,
 
     // Toggles that change the map when walked over
-    pub(crate) toggle_rules: Vec<ToggleRule>,
+    pub(crate) toggle_rules: Rc<Vec<ToggleRule>>,
+
+    // Sublevels that we should try to enter
+    pub(crate) sublevels: Rc<Vec<(Point, String)>>,
 
     // === State variables while solving ===
 
@@ -42,6 +47,7 @@ pub(crate) struct Map {
     pub(crate) teleport_cooldown: bool,
 }
 
+// Only check equality for things that will actually change and aren't state variables
 impl PartialEq for Map {
     fn eq(&self, other: &Self) -> bool {
         self.width == other.width
@@ -56,6 +62,7 @@ impl PartialEq for Map {
 
 impl Eq for Map {}
 
+// Same for hash: Ignore state variables and things that don't change
 impl std::hash::Hash for Map {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.width.hash(state);
@@ -258,10 +265,13 @@ impl From<&str> for Map {
         let mut critters = vec![];
         let mut things = vec![];
         let mut toggle_rules = vec![];
+        let mut sublevels = vec![];
 
-        while let Some(line) = lines.next()
-            && !line.is_empty()
-        {
+        for line in lines {
+            if line.starts_with('#') || line.is_empty() {
+                continue;
+            }
+
             let parts: Vec<_> = line.split_ascii_whitespace().collect();
             assert!(
                 parts.len() >= 3,
@@ -330,6 +340,9 @@ impl From<&str> for Map {
 
                 let index = row * width + col;
                 tiles[index] = Tile::Teleport((dest_col, dest_row).into());
+            } else if parts[2] == "level" {
+                let name = parts[3];
+                sublevels.push((Point::from((col, row)), name.to_string()));
             } else {
                 // If we made it this far, it's a bad object (probably?)
                 panic!("Malformed object: {line}");
@@ -352,7 +365,8 @@ impl From<&str> for Map {
             v_walls,
             critters,
             things,
-            toggle_rules,
+            toggle_rules: Rc::new(toggle_rules),
+            sublevels: Rc::new(sublevels),
 
             used_teleports: vec![],
             teleport_cooldown: false,

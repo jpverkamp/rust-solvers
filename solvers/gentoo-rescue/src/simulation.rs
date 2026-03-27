@@ -195,7 +195,7 @@ impl Map {
                     Some(ThingKind::Hammer) => {
                         tracing::debug!("smashed right on through it");
                     }
-                    Some(ThingKind::Crutch) | Some(ThingKind::Bomb) | None => {
+                    Some(ThingKind::Crutch | ThingKind::Bomb | ThingKind::Sublevel) | None => {
                         return false;
                     }
                 }
@@ -223,7 +223,10 @@ impl Map {
                         return false;
                     }
                 }
-                Some(ThingKind::Spring | ThingKind::Hammer | ThingKind::Crutch) | None => {}
+                Some(
+                    ThingKind::Spring | ThingKind::Hammer | ThingKind::Crutch | ThingKind::Sublevel,
+                )
+                | None => {}
             }
 
             // Behavior based on what we're carrying
@@ -262,12 +265,14 @@ impl Map {
                     }
 
                     // If both are now occupying the same space, the other one should escape too
-                    if self.critters[other_critter].location() == self.critters[critter_index].location() {
+                    if self.critters[other_critter].location()
+                        == self.critters[critter_index].location()
+                    {
                         tracing::debug!("other critter couldn't move, escaping");
                         self.critters[other_critter].escape();
                     }
                 }
-                Some(ThingKind::Crutch | ThingKind::Bomb) | None => {
+                Some(ThingKind::Crutch | ThingKind::Bomb | ThingKind::Sublevel) | None => {
                     tracing::debug!("hit another critter");
                 }
             }
@@ -376,6 +381,21 @@ impl State<Global, Step> for Map {
 
     #[tracing::instrument(skip(self), ret)]
     fn is_solved(&self, _: &Global) -> bool {
+        // If any sublevels are active / not commented out
+        // "Solved" is any Critter standing on that sublevel
+        // If more than one sublevel is active, the first found will be returned
+        // So comment the rest out
+        if !self.sublevels.is_empty() {
+            for (p, name) in self.sublevels.iter() {
+                if self.critters.iter().any(|c| c.location() == *p) {
+                    tracing::debug!("Sublevel {name} is active at {p:?}");
+                    return true;
+                }
+            }
+
+            return false;
+        }
+
         // All nests have a matching penguin on them
         for x in 0..self.width {
             for y in 0..self.height {
