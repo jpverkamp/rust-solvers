@@ -1,0 +1,24 @@
+# Gentoo Rescue/Transition/Flare/Clear
+
+~..~~~.
+....~~.
+~...*.~
+~~.*..~
+
+.y.|..||
+|...|.||
+.|....|.
+..|.|||.
+
+.--...-
+-..-...
+-...---
+.-..-..
+..--.-.
+
+1 3 blue seal
+2 1 green seal
+2 3 yellow seal
+2 3 bomb
+2 4 red seal
+4 6 teleport 1 7

@@ -1,0 +1,22 @@
+# Gentoo Rescue/Transition/Flare/ON
+
+~~.~~
+.....
+...~~
+
+...|..
+|....|
+.....|
+
+..-..
+...-.
+---..
+...--
+
+2 1 green penguin
+2 2 red penguin
+2 2 bomb
+2 2 red nest
+2 5 blue penguin
+2 5 green nest
+3 4 blue nest

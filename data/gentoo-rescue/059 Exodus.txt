@@ -1,0 +1,25 @@
+# Gentoo Rescue/Transition/Flare/Exodus
+
+~**~~~
+*...*.
+*...*~
+~***..
+
+.|.|...
+|.....|
+|....|.
+.|..|..
+
+.--...
+-..---
+.....-
+-...-.
+.---..
+
+2 2 blue seal
+2 3 red seal
+2 4 yellow seal
+3 2 green seal
+3 3 spring
+3 4 spring
+4 4 bomb
