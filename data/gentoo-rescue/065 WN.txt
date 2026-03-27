@@ -1,0 +1,25 @@
+# Gentoo Rescue/Transition/Walk/WN
+
+~...
+...~
+..~.
+..*.
+
+....|
+|....
+|.||.
+|....
+
+....
+-...
+..--
+..-.
+--..
+
+1 2 blue seal
+1 2 crutch
+1 4 red penguin
+1 4 hammer
+2 1 yellow penguin
+3 2 hammer
+3 4 red nest
