@@ -1,0 +1,43 @@
+# Gentoo Rescue
+
+~~~~~~.~~~~
+.##.#..~~..
+.#x.xx.....
+.~~........
+#~.....~~~~
+...~~..~...
+
+......||....
+||||||...|.|
+|||..:.....|
+...|.......|
+||b....|....
+.|r......:.|
+
+......-....
+---.--b..--
+-----..--..
+---..-.....
+-.--...----
+-.......---
+.-g.....---
+
+3 9 green penguin
+4 7 red penguin
+# 6 1 rocket
+6 7 red nest
+6 10 yellow penguin
+
+# 1 7 level ???
+# 3 4 level ???
+# 3 7 level Transition
+# 4 4 level Impossible
+# 5 4 level ???
+# 5 7 level Ground Rules
+# 5 10 level Inception
+# 6 3 level ???
+# 7 2 level ???
+# 7 6 level ???
+
+4 10 swap blue penguin with spring
+4 10 swap red penguin with hammer

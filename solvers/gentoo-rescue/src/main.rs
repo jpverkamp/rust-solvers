@@ -35,46 +35,57 @@ fn main() {
                     continue;
                 }
 
+                tracing::debug!("Processing line: {line}");
+
                 // All lines should be "{row} {column} ... {movements...}"
                 // The middle could have color, kind, (optional carrying)
                 // Or you can leave it out
                 let parts: Vec<_> = line.split_ascii_whitespace().collect();
 
-                let row = parts[0]
-                    .parse::<isize>()
-                    .expect("Lines must start with {row} {col}");
-                let col = parts[1]
-                    .parse::<isize>()
-                    .expect("Lines must start with {row} {col}");
+                if parts[0].eq_ignore_ascii_case("swap") {
+                    let swap_index = parts[1]
+                        .parse::<usize>()
+                        .expect("Swap lines should be 'swap {index}'");
+                    let swap = &map.swaps[swap_index];
+                    log::info!("Using swap {swap_index}: {swap:?}");
+                    map.try_swap(swap_index);
+                } else {
+                    let row = parts[0]
+                        .parse::<isize>()
+                        .expect("Lines must start with {row} {col}");
+                    let col = parts[1]
+                        .parse::<isize>()
+                        .expect("Lines must start with {row} {col}");
 
-                let index = map
-                    .critters
-                    .iter()
-                    .position(|c| c.location() == (col - 1, row - 1).into())
-                    .expect("No critter at {row} {col}");
+                    let index = map
+                        .critters
+                        .iter()
+                        .position(|c| c.location() == (col - 1, row - 1).into())
+                        .expect("No critter at {row} {col}");
 
-                log::info!("Switching to critter {index}: {}", map.critters[index]);
+                    log::info!("Switching to critter {index}: {}", map.critters[index]);
 
-                for c in parts.iter().last().unwrap().chars() {
-                    let d = match c {
-                        'U' => Direction::Up,
-                        'D' => Direction::Down,
-                        'L' => Direction::Left,
-                        'R' => Direction::Right,
-                        _ => panic!("Unknown movement char {c}"),
-                    };
-                    log::info!("Moving {} {d:?}", map.critters[index]);
+                    for c in parts.iter().last().unwrap().chars() {
+                        let d = match c {
+                            'U' => Direction::Up,
+                            'D' => Direction::Down,
+                            'L' => Direction::Left,
+                            'R' => Direction::Right,
+                            _ => panic!("Unknown movement char {c}"),
+                        };
+                        log::info!("Moving {} {d:?}", map.critters[index]);
 
-                    if map.try_move(index, d, true) {
-                        println!("{}", map.stringify(&()));
-                        for critter in map.critters.iter() {
-                            println!("{critter}");
+                        if !map.try_move(index, d, true) {
+                            panic!("Failed to move");
                         }
-                    } else {
-                        panic!("Failed to move");
                     }
-                    println!();
                 }
+
+                println!("{}", map.stringify(&()));
+                for critter in map.critters.iter() {
+                    println!("{critter}");
+                }
+                println!();
             }
         }
 
@@ -125,6 +136,27 @@ fn main() {
                             direction::Direction::Right => 'R',
                         }
                     );
+                }
+                simulation::Step::Swap(swap_index) => {
+                    // Find the critter at the swap point
+                    let critter_index = map
+                        .critters
+                        .iter()
+                        .position(|c| c.location() == map.swaps[swap_index].critter.location())
+                        .expect("No critter at swap point");
+
+                    let previous_critter = map.critters[critter_index];
+
+                    if !map.try_swap(swap_index) {
+                        panic!("Simulation failed");
+                    }
+
+                    println!();
+                    println!(
+                        "Swap {swap_index} ({previous_critter} -> {critter})",
+                        critter = map.critters[critter_index]
+                    );
+                    last_critter_index = usize::MAX;
                 }
             }
         }

@@ -39,12 +39,21 @@ pub(crate) struct Map {
     // Sublevels that we should try to enter
     pub(crate) sublevels: Rc<Vec<(Point, String)>>,
 
+    // Places where you can swap a critter with one from a sublevel
+    pub(crate) swaps: Vec<Swap>,
+
     // === State variables while solving ===
 
     // Current state of teleporters
     // Used to detect infinite loops and avoid double teleports
     pub(crate) used_teleports: Vec<(Direction, Point)>,
     pub(crate) teleport_cooldown: bool,
+}
+
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub(crate) struct Swap {
+    pub(crate) critter: Critter,
+    pub(crate) used: bool,
 }
 
 // Only check equality for things that will actually change and aren't state variables
@@ -57,6 +66,7 @@ impl PartialEq for Map {
             && self.v_walls == other.v_walls
             && self.critters == other.critters
             && self.things == other.things
+            && self.swaps == other.swaps
     }
 }
 
@@ -72,6 +82,7 @@ impl std::hash::Hash for Map {
         self.v_walls.hash(state);
         self.critters.hash(state);
         self.things.hash(state);
+        self.swaps.hash(state);
     }
 }
 
@@ -266,6 +277,7 @@ impl From<&str> for Map {
         let mut things = vec![];
         let mut toggle_rules = vec![];
         let mut sublevels = vec![];
+        let mut swaps = vec![];
 
         for line in lines {
             if line.starts_with('#') || line.is_empty() {
@@ -343,6 +355,23 @@ impl From<&str> for Map {
             } else if parts[2] == "level" {
                 let name = parts[3];
                 sublevels.push((Point::from((col, row)), name.to_string()));
+            } else if parts[2] == "swap" {
+                let color = Color::from(parts[3]);
+                let critter_kind = CritterKind::try_from(parts[4])
+                    .expect("Swap critter kind should be a valid critter kind");
+                let mut critter = Critter::new(critter_kind, color, Point::from((col, row)));
+
+                if parts.len() == 7 && parts[5] == "with" {
+                    critter.pick_up(
+                        ThingKind::try_from(parts[6])
+                            .expect("Swap holding should be a valid thing kind"),
+                    );
+                }
+
+                swaps.push(Swap {
+                    critter,
+                    used: false,
+                });
             } else {
                 // If we made it this far, it's a bad object (probably?)
                 panic!("Malformed object: {line}");
@@ -367,6 +396,7 @@ impl From<&str> for Map {
             things,
             toggle_rules: Rc::new(toggle_rules),
             sublevels: Rc::new(sublevels),
+            swaps,
 
             used_teleports: vec![],
             teleport_cooldown: false,

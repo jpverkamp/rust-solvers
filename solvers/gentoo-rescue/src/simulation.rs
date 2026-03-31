@@ -10,6 +10,7 @@ pub(crate) enum Step {
         critter_index: usize,
         direction: Direction,
     },
+    Swap(usize),
 }
 
 use crate::model::color::Color;
@@ -135,11 +136,8 @@ impl Map {
                     "Wall tiles should always be surrounded, so this should be impossible"
                 );
             }
-            Tile::Teleport(_) => {
-                // Handle below
-            }
-            Tile::Toggle(_) => {
-                // Handle below
+            Tile::Teleport(_) | Tile::Toggle(_) => {
+                // Handle elsewhere
             }
         }
 
@@ -370,6 +368,35 @@ impl Map {
 
         None
     }
+
+    pub(crate) fn try_swap(&mut self, swap_index: usize) -> bool {
+        // Critter index is the one creature at the swap's point
+        let swap = &mut self.swaps[swap_index];
+        let critter_index = match self
+            .critters
+            .iter()
+            .position(|c| c.location() == swap.critter.location())
+        {
+            Some(i) => i,
+            None => {
+                return false;
+            }
+        };
+        let me = self.critters[critter_index];
+
+        if swap.used {
+            return false;
+        }
+
+        if swap.critter.location() != me.location() {
+            return false;
+        }
+
+        tracing::debug!("Swapping {me:?} for {:?}", swap.critter);
+        self.critters[critter_index] = swap.critter;
+        swap.used = true;
+        true
+    }
 }
 
 impl State<Global, Step> for Map {
@@ -431,7 +458,24 @@ impl State<Global, Step> for Map {
     fn next_states(&self, _: &Global) -> Option<Vec<(i64, Step, Map)>> {
         let mut next_states = vec![];
 
-        // Try moving the active critter
+        // Try each swap
+        for swap_index in 0..self.swaps.len() {
+            let swap = &self.swaps[swap_index];
+
+            if swap.used {
+                continue;
+            }
+
+            // I probably shouldn't clone this many, but most maps don't have swaps
+            let mut new_map = self.clone();
+            if !new_map.try_swap(swap_index) {
+                continue;
+            }
+
+            next_states.push((1, Step::Swap(swap_index), new_map));
+        }
+
+        // Try moving each critter
         for critter_index in 0..self.critters.len() {
             if self.critters[critter_index].escaped() {
                 continue;
@@ -458,6 +502,8 @@ impl State<Global, Step> for Map {
                     ))
                 }
             }
+
+            // If the active critter is standing on a swap, we can exchange it
         }
 
         // If we have any new states, return them

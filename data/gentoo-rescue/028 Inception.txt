@@ -1,3 +1,5 @@
+# Gentoo Rescue/Inception
+
 ~~~~~~.x.
 .~.#~....
 .*..*...~
@@ -21,7 +23,14 @@
 2 1 spring
 2 6 hammer
 2 9 red penguin
+# 2 9 hammer # This can be imported from Gentoo Rescue
 3 7 gray penguin
 5 3 blue nest
 5 4 gray nest
 5 5 red nest
+
+# 1 7 level Mjolnir
+# 3 1 level Moonwalk
+# 3 6 level ???
+# 3 3 export
+# 3 6 level ???

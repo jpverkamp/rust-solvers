@@ -1,0 +1,44 @@
+# Gentoo Rescue/Inception/Moonwalk
+
+~.....~~~.~
+..~~~~~.~..
+..........~
+~~..~~~.~..
+~~.........
+..C~~~~.~~~
+
+.|.......||.
+|.|....|||..
+|.........|.
+..|.|..|||.|
+..|.........
+...|........
+
+.-----...-.
+-.----.-...
+..-------..
+--..---.-.-
+....---.-..
+...------~.
+..-........
+
+1 5 red penguin
+2 8 green penguin
+3 9 red nest
+
+toggle C wall 3 9 down
+
+# 1 2 level Retrograde
+# 1 3 level ???
+# 1 5 level Skipping
+# 1 6 level ???
+# 1 10 level Recoil
+# 2 11 level Torsion
+# 3 2 level Unbounded
+# 3 3 level Escort
+# 3 4 level Omega
+# 3 10 level Twist
+# 4 8 level ???
+# 4 10 level Lean
+# 6 1 level ???
+# 6 8 level ???
