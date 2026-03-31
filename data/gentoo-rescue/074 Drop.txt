@@ -1,0 +1,26 @@
+# Gentoo Rescue/Inception/Foreboding/Drop
+
+~~....
+..*.**
+*.....
+~.....
+~~....
+
+..|...|
+|.....|
+|....||
+.|....|
+..|...|
+
+..----
+--....
+......
+-.-...
+.-....
+..----
+
+3 2 yellow nest
+3 2 hammer
+3 4 hammer
+3 5 yellow penguin
+4 6 spring

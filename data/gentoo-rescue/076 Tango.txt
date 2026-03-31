@@ -1,0 +1,19 @@
+# Gentoo Rescue/Inception/Foreboding/Tango
+
+..~.
+....
+
+|...|
+|...|
+
+--.-
+....
+----
+
+1 1 blue penguin
+1 1 spring
+1 1 blue nest
+1 2 green penguin
+1 2 hammer
+1 4 green nest
+2 2 spring

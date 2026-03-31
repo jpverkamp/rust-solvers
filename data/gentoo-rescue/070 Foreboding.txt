@@ -1,0 +1,41 @@
+# Gentoo Rescue/Inception/Foreboding
+
+~~**.~~
+~*.*..~
+x*.x..x
+~~~..~~
+~~~.~~~
+....X~.
+
+..|..|..
+.|....|.
+|:.....|
+...|.|..
+....|...
+|...||..
+
+..---..
+.-...-.
+-.....-
+----.--
+....-..
+....-..
+....-..
+
+1 4 red nest
+2 3 blue seal
+2 3 spring
+2 6 red penguin
+2 6 hammer
+
+# 1 3 level Heist
+# 2 2 level Disguise
+# 2 4 level Drop
+# 2 5 level Tango
+# 2 6 level Storm
+# 3 2 level ???
+# 3 3 level Jackhammer
+# 3 5 level ???
+# 6 1 level ???
+# 6 3 level ???
+# 6 7 level ???

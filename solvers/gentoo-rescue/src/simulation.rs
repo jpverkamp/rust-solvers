@@ -246,6 +246,7 @@ impl Map {
                     // - Put them back (overlapping, it's fine)
                     // - Let them move now
 
+                    let starting_location = self.critters[critter_index].location();
                     let other_location = self.critters[other_critter].location();
                     self.critters[other_critter].move_to(Point { x: -10, y: -10 });
 
@@ -268,6 +269,12 @@ impl Map {
                     {
                         tracing::debug!("other critter couldn't move, escaping");
                         self.critters[other_critter].escape();
+                    }
+
+                    // Special case: if you bounced into the space the hammer came from
+                    if self.critters[other_critter].location() == starting_location {
+                        tracing::debug!("bounced into a hammer, bro");
+                        self.critters[critter_index].escape();
                     }
                 }
                 Some(ThingKind::Crutch | ThingKind::Bomb | ThingKind::Sublevel) | None => {
