@@ -32,5 +32,5 @@
 # 1 7 level Mjolnir
 # 3 1 level Moonwalk
 # 3 6 level ???
-# 3 3 export
-# 3 6 level ???
+# 4 3 export
+# 4 6 level Foreboding
