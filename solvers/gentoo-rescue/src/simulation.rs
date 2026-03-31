@@ -246,21 +246,39 @@ impl Map {
                     // - Put them back (overlapping, it's fine)
                     // - Let them move now
 
-                    let starting_location = self.critters[critter_index].location();
                     let other_location = self.critters[other_critter].location();
-                    self.critters[other_critter].move_to(Point { x: -10, y: -10 });
+
+                    // Special case:
+                    // If you have 1 2| with 1 having a hammer and 2 a spring then move 1 R
+                    // The spring will fly off rather than bounce, you get . 1|
+                    if self.critters[other_critter].carrying() == Some(ThingKind::Spring)
+                        && matches!(
+                            self.wall_at(other_location, direction),
+                            WallKind::Solid | WallKind::Color(_) | WallKind::Cracked
+                        )
+                    {
+                        // TODO: Handle color walls
+                        tracing::debug!("other critter is carrying a spring and there's a wall");
+                        self.critters[other_critter].escape();
+                    }
+
+                    if !self.critters[other_critter].escaped() {
+                        self.critters[other_critter].move_to(Point { x: -10, y: -10 });
+                    }
 
                     self.try_move_one(critter_index, direction, depth + 1, true);
 
                     self.teleport_cooldown = false;
                     self.maybe_do_teleport(critter_index, direction);
 
-                    self.critters[other_critter].move_to(other_location);
-                    if self.try_move(other_critter, direction, false) {
-                        // The other could move, all is well
-                    } else {
-                        // The other couldn't move, remove it
-                        self.critters[other_critter].escape();
+                    if !self.critters[other_critter].escaped() {
+                        self.critters[other_critter].move_to(other_location);
+                        if self.try_move(other_critter, direction, false) {
+                            // The other could move, all is well
+                        } else {
+                            // The other couldn't move, remove it
+                            self.critters[other_critter].escape();
+                        }
                     }
 
                     // If both are now occupying the same space, the other one should escape too
@@ -269,12 +287,6 @@ impl Map {
                     {
                         tracing::debug!("other critter couldn't move, escaping");
                         self.critters[other_critter].escape();
-                    }
-
-                    // Special case: if you bounced into the space the hammer came from
-                    if self.critters[other_critter].location() == starting_location {
-                        tracing::debug!("bounced into a hammer, bro");
-                        self.critters[critter_index].escape();
                     }
                 }
                 Some(ThingKind::Crutch | ThingKind::Bomb | ThingKind::Sublevel) | None => {

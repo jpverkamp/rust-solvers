@@ -33,9 +33,9 @@ x*.x..x
 # 2 4 level Drop
 # 2 5 level Tango
 # 2 6 level Storm
-# 3 2 level ???
+# 3 2 level Flutter
 # 3 3 level Jackhammer
-# 3 5 level ???
+# 3 5 level Free
 # 6 1 level ???
-# 6 3 level ???
+6 3 level Cleanup
 # 6 7 level ???

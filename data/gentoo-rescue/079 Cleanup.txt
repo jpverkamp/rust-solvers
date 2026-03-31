@@ -1,0 +1,24 @@
+# Gentoo Rescue/Inception/Foreboding/Cleanup
+
+~....
+..*.*
+..~~~
+
+.|...|
+|....|
+..|...
+
+.----
+.....
+-.---
+.-...
+
+1 5 yellow penguin
+2 1 hammer
+2 2 green penguin
+2 2 hammer
+2 3 blue penguin
+2 3 spring
+2 4 hammer
+3 1 green nest
+# TODO: 1 2| where 1 has a hammer and 2 has a spring with 1 R leads to . 1|
