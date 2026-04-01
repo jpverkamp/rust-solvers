@@ -231,7 +231,7 @@ impl Map {
             match self.critters[critter_index].carrying() {
                 Some(ThingKind::Spring) => {
                     tracing::debug!("bounced off another critter");
-                    self.try_move_one(critter_index, direction.flip(), depth + 1, false);
+                    self.try_move_one(critter_index, direction.flip(), depth + 1, true);
                 }
                 Some(ThingKind::Hammer) => {
                     tracing::debug!("hammered off another critter");
