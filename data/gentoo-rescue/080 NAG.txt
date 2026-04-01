@@ -1,0 +1,26 @@
+# Gentoo Rescue/Inception/Foreboding/NAG
+
+~...~
+.....
+.....
+~...~
+
+.|..|.
+|....|
+|....|
+.|..|.
+
+.---.
+-...-
+.....
+-...-
+.---.
+
+2 2 grey nest
+2 3 grey penguin
+2 3 spring
+3 2 grey penguin
+3 2 spring
+3 3 blue penguin
+3 3 hammer
+3 4 grey nest

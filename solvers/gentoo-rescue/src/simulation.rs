@@ -251,11 +251,16 @@ impl Map {
                     // Special case:
                     // If you have 1 2| with 1 having a hammer and 2 a spring then move 1 R
                     // The spring will fly off rather than bounce, you get . 1|
+                    // Same if the next thing over is a critter
                     if self.critters[other_critter].carrying() == Some(ThingKind::Spring)
                         && matches!(
                             self.wall_at(other_location, direction),
                             WallKind::Solid | WallKind::Color(_) | WallKind::Cracked
                         )
+                        || self
+                            .critters
+                            .iter()
+                            .any(|c| c.location() == other_location + direction.into())
                     {
                         // TODO: Handle color walls
                         tracing::debug!("other critter is carrying a spring and there's a wall");
