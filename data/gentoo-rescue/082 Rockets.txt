@@ -1,0 +1,23 @@
+# Gentoo Rescue/Transition/Liftoff/Rockets
+
+.......
+...~~~~
+~~~~...
+.......
+
+|......|
+|..|....
+....|..|
+|......|
+
+-------
+...----
+---.---
+----...
+-------
+
+1 1 green penguin
+1 2 rocket
+1 7 green nest
+4 6 rocket
+4 7 blue seal

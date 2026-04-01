@@ -1,0 +1,45 @@
+# Gentoo Rescue/Transition/Liftoff
+
+~......~~
+~~.~....~
+***......
+~~.~....~
+~......~~
+
+.~.r...|..
+....|...|.
+:.b.....y|
+....|...|.
+.|.g...|..
+
+.------..
+.---...-.
+----....-
+----....-
+.---...-.
+.------..
+
+1 5 yellow seal
+2 5 rocket
+4 5 rocket
+4 8 blue seal
+5 2 green seal
+5 7 red seal
+
+# 1 2 level ???
+# 1 5 level Rockets
+# 1 6 level ???
+# 2 3 level ???
+# 2 5 level ???
+# 3 1 level ???
+# 3 2 level ???
+# 3 4 level ???
+# 3 5 level ???
+# 3 6 level ???
+# 3 9 level ???
+# 4 5 level ???
+# 4 6 level ???
+# 4 8 level Frenzy
+# 5 3 level ???
+# 5 5 level ???
+# 5 7 level Propulsion

@@ -57,6 +57,19 @@ impl Map {
             return false;
         }
 
+        // If we're carrying a rocket, the first thing that happens is pushing anything behind us
+        if first_call && self.critters[critter_index].carrying() == Some(ThingKind::Rocket) {
+            let behind_location = self.critters[critter_index].location() - direction.into();
+            if let Some(other_critter) = self
+                .critters
+                .iter()
+                .position(|c| c.location() == behind_location)
+            {
+                tracing::debug!("rocketing off another critter behind us");
+                self.try_move_one(other_critter, direction.flip(), 0, false);
+            }
+        }
+
         // Take steps until we should not move any more
         let original_state = self.clone(); // TODO: Expensive...
         while self.try_move_one(critter_index, direction, 0, false) {}
@@ -155,6 +168,10 @@ impl Map {
                 if self.critters[critter_index].carrying() == Some(ThingKind::Spring) {
                     tracing::debug!("bounced off a wall");
                     self.try_move_one(critter_index, direction.flip(), depth + 1, true);
+                    self.maybe_do_teleport(critter_index, direction.flip());
+                } else if self.critters[critter_index].carrying() == Some(ThingKind::Rocket) {
+                    tracing::debug!("rocketed off a wall");
+                    self.critters[critter_index].escape();
                 } else {
                     tracing::debug!("hit wall");
                 }
@@ -171,6 +188,9 @@ impl Map {
                         tracing::debug!("bounced off a mis-matched colored wall");
                         self.try_move_one(critter_index, direction.flip(), depth + 1, true);
                         self.maybe_do_teleport(critter_index, direction.flip());
+                    } else if self.critters[critter_index].carrying() == Some(ThingKind::Rocket) {
+                        tracing::debug!("rocketed off a mis-matched colored wall");
+                        self.critters[critter_index].escape();
                     } else {
                         tracing::debug!("hit colored wall");
                     }
@@ -188,6 +208,12 @@ impl Map {
                         tracing::debug!("bounced off a wall");
                         self.try_move_one(critter_index, direction.flip(), depth + 1, false);
                         self.maybe_do_teleport(critter_index, direction.flip());
+                        return false;
+                    }
+                    Some(ThingKind::Rocket) => {
+                        // TODO: Does this break the wall? I assume so
+                        tracing::debug!("rocketed off a wall");
+                        self.critters[critter_index].escape();
                         return false;
                     }
                     Some(ThingKind::Hammer) => {
@@ -222,7 +248,11 @@ impl Map {
                     }
                 }
                 Some(
-                    ThingKind::Spring | ThingKind::Hammer | ThingKind::Crutch | ThingKind::Sublevel,
+                    ThingKind::Spring
+                    | ThingKind::Hammer
+                    | ThingKind::Crutch
+                    | ThingKind::Sublevel
+                    | ThingKind::Rocket,
                 )
                 | None => {}
             }
@@ -293,6 +323,10 @@ impl Map {
                         tracing::debug!("other critter couldn't move, escaping");
                         self.critters[other_critter].escape();
                     }
+                }
+                Some(ThingKind::Rocket) => {
+                    tracing::debug!("rocketed off another critter");
+                    self.critters[critter_index].escape();
                 }
                 Some(ThingKind::Crutch | ThingKind::Bomb | ThingKind::Sublevel) | None => {
                     tracing::debug!("hit another critter");

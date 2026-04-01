@@ -7,6 +7,7 @@ pub(crate) enum ThingKind {
     Crutch,
     Bomb,
     Sublevel,
+    Rocket,
 }
 
 impl TryFrom<&str> for ThingKind {
@@ -19,6 +20,7 @@ impl TryFrom<&str> for ThingKind {
             "crutch" => Ok(ThingKind::Crutch),
             "bomb" => Ok(ThingKind::Bomb),
             "level" => Ok(ThingKind::Sublevel),
+            "rocket" => Ok(ThingKind::Rocket),
             _ => Err(()),
         }
     }
