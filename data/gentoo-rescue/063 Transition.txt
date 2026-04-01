@@ -30,7 +30,7 @@ r....|.|.
 4 3 teleport 5 8
 4 5 gray penguin
 # 4 5 mask
-# 5 8 rocket
+5 8 rocket
 
 toggle C wall 1 5 right
 toggle C wall 3 1 right

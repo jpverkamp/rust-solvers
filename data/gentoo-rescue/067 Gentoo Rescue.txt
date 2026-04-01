@@ -24,7 +24,7 @@
 
 3 9 green penguin
 4 7 red penguin
-# 6 1 rocket
+6 1 rocket
 6 7 red nest
 6 10 yellow penguin
 

@@ -161,68 +161,56 @@ impl Map {
             }
         }
 
+        // Bumped into a wall, check what kind
+        // hit_wall will be true if we hit any kind of wall
+        // force_continue will be true iff we should keep moving (hammer into a cracked wall)
         let wall = self.wall_at(me.location(), direction);
+        let mut hit_wall = false;
+        let mut force_continue = false;
+
         match wall {
             WallKind::Empty => {}
             WallKind::Solid => {
-                if self.critters[critter_index].carrying() == Some(ThingKind::Spring) {
-                    tracing::debug!("bounced off a wall");
-                    self.try_move_one(critter_index, direction.flip(), depth + 1, true);
-                    self.maybe_do_teleport(critter_index, direction.flip());
-                } else if self.critters[critter_index].carrying() == Some(ThingKind::Rocket) {
-                    tracing::debug!("rocketed off a wall");
-                    self.critters[critter_index].escape();
-                } else {
-                    tracing::debug!("hit wall");
-                }
-
-                // Either way, don't keep moving
-                return false;
+                hit_wall = true;
             }
             WallKind::Color(c) => {
-                if c == me.color() {
-                    // Go right through my own colored walls!
-                } else {
-                    // Treat every other color as solid
-                    if self.critters[critter_index].carrying() == Some(ThingKind::Spring) {
-                        tracing::debug!("bounced off a mis-matched colored wall");
-                        self.try_move_one(critter_index, direction.flip(), depth + 1, true);
-                        self.maybe_do_teleport(critter_index, direction.flip());
-                    } else if self.critters[critter_index].carrying() == Some(ThingKind::Rocket) {
-                        tracing::debug!("rocketed off a mis-matched colored wall");
-                        self.critters[critter_index].escape();
-                    } else {
-                        tracing::debug!("hit colored wall");
-                    }
-
-                    // Either way, don't keep moving
-                    return false;
-                }
+                hit_wall = c != me.color();
             }
             WallKind::Cracked => {
+                hit_wall = true;
+
                 tracing::debug!("hit a cracked wall, breaking it");
                 self.break_wall(me.location(), direction);
 
-                match self.critters[critter_index].carrying() {
-                    Some(ThingKind::Spring) => {
-                        tracing::debug!("bounced off a wall");
-                        self.try_move_one(critter_index, direction.flip(), depth + 1, false);
-                        self.maybe_do_teleport(critter_index, direction.flip());
-                        return false;
-                    }
-                    Some(ThingKind::Rocket) => {
-                        // TODO: Does this break the wall? I assume so
-                        tracing::debug!("rocketed off a wall");
-                        self.critters[critter_index].escape();
-                        return false;
-                    }
-                    Some(ThingKind::Hammer) => {
-                        tracing::debug!("smashed right on through it");
-                    }
-                    Some(ThingKind::Crutch | ThingKind::Bomb | ThingKind::Sublevel) | None => {
-                        return false;
-                    }
+                if self.critters[critter_index].carrying() == Some(ThingKind::Hammer) {
+                    tracing::debug!("broke the wall with a hammer, keep going");
+                    force_continue = true;
                 }
+            }
+        }
+
+        if hit_wall {
+            match self.critters[critter_index].carrying() {
+                Some(ThingKind::Spring) => {
+                    tracing::debug!("bounced off a wall");
+                    self.try_move_one(critter_index, direction.flip(), depth + 1, true);
+                    self.maybe_do_teleport(critter_index, direction.flip());
+                }
+                Some(ThingKind::Rocket) => {
+                    tracing::debug!("rocketed off a wall");
+                    self.critters[critter_index].escape();
+                }
+                Some(
+                    ThingKind::Hammer | ThingKind::Crutch | ThingKind::Bomb | ThingKind::Sublevel,
+                )
+                | None => {
+                    // no special behavior
+                    // hammer is handled with force_continue
+                }
+            }
+
+            if !force_continue {
+                return false;
             }
         }
 
