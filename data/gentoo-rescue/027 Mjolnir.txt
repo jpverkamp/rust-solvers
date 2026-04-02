@@ -1,3 +1,5 @@
+# Gentoo Rescue/Inception/Mjolnir 
+
 ~~~~~....
 ~~~~~....
 ......*x.
@@ -31,3 +33,16 @@
 3 4 hammer
 3 5 gray penguin
 3 5 hammer
+
+# 1 6 level March
+# 1 7 level Frozen
+# 1 8 level Smash
+# 2 6 level Trail
+# 2 7 level Bash
+# 2 8 level Preservation
+# 3 6 level Nails
+# 4 7 level Spin
+# 4 8 level Propagation
+# 4 9 level Brake
+# 5 4 level ???
+# 5 7 level Stomp

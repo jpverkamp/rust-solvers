@@ -231,7 +231,7 @@ impl From<&str> for Map {
 
         // Skip any leading # comment or empty lines
         while let Some(&line) = lines.peek() {
-            if line.is_empty() || line.starts_with('#') {
+            if line.trim().is_empty() || line.starts_with('#') {
                 lines.next();
             } else {
                 break;
@@ -243,7 +243,7 @@ impl From<&str> for Map {
         let mut tiles = vec![];
 
         while let Some(line) = lines.next()
-            && !line.is_empty()
+            && !line.trim().is_empty()
         {
             if width.is_none() {
                 width = Some(line.len());

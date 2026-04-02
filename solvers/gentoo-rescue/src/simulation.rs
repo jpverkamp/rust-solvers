@@ -285,14 +285,13 @@ impl Map {
                     // The spring will fly off rather than bounce, you get . 1|
                     // Same if the next thing over is a critter
                     if self.critters[other_critter].carrying() == Some(ThingKind::Spring)
-                        && matches!(
+                        && (matches!(
                             self.wall_at(other_location, direction),
                             WallKind::Solid | WallKind::Color(_) | WallKind::Cracked
-                        )
-                        || self
+                        ) || self
                             .critters
                             .iter()
-                            .any(|c| c.location() == other_location + direction.into())
+                            .any(|c| c.location() == other_location + direction.into()))
                     {
                         // TODO: Handle color walls
                         tracing::debug!(
