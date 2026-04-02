@@ -1,0 +1,26 @@
+# Gentoo Rescue/Transition/Liftoff/Discard
+
+~~~.~
+.....
+~....
+~~..~
+
+...||.
+....:|
+.|...|
+..|.|.
+
+...-.
+.--.-
+.....
+.-..-
+..--.
+
+2 1 green penguin
+2 1 green nest
+2 2 red nest
+2 3 red penguin
+2 3 rocket
+2 5 bomb
+3 3 yellow nest
+4 3 yellow penguin

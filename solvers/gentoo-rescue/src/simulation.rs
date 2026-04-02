@@ -66,7 +66,11 @@ impl Map {
                 .position(|c| c.location() == behind_location)
             {
                 tracing::debug!("rocketing off another critter behind us");
-                self.try_move_one(other_critter, direction.flip(), 0, false);
+                let moved = self.try_move_one(other_critter, direction.flip(), 0, false);
+                if !moved {
+                    tracing::debug!("but it couldn't move, it escapes instead");
+                    self.critters[other_critter].escape();
+                }
             }
         }
 
