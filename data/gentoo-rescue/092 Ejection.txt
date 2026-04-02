@@ -1,0 +1,22 @@
+# Gentoo Rescue/Transition/Liftoff/Ejection
+
+~...
+~**.
+...*
+
+.|..|
+.|..|
+|..||
+
+.---
+....
+-...
+----
+
+1 2 yellow penguin
+2 2 rocket
+2 4 blue seal
+2 4 rocket
+3 1 red seal
+3 3 green seal
+3 4 hammer

@@ -1,0 +1,30 @@
+# Gentoo Rescue/Transition/Liftoff/Deflection
+
+~~*~..
+...*..
+......
+*...**
+~.*~~~
+
+..|||.|
+|.....|
+|...w.|
+|.....|
+.|.|...
+
+..-.--
+--.-..
+......
+w...ww
+-..---
+.--...
+
+1 3 crutch
+1 5 green penguin
+1 6 spring
+2 3 green nest
+3 3 yellow seal
+4 1 bomb
+4 3 rocket
+4 6 spring
+5 3 hammer

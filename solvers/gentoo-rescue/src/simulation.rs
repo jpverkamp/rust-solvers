@@ -81,16 +81,23 @@ impl Map {
                 continue;
             }
 
-            match self.tile_at(self.critters[index].location()) {
-                Tile::Water | Tile::CrackedFloor => {
-                    tracing::debug!(
-                        "Critter {:?} ended up on {:?}, escaping",
-                        self.critters[index],
-                        self.tile_at(self.critters[index].location())
-                    );
-                    self.critters[index].escape();
-                }
-                _ => {}
+            if self.is_water(self.critters[index].location()) {
+                tracing::debug!(
+                    "Critter {:?} ended up on {:?}, escaping",
+                    self.critters[index],
+                    self.tile_at(self.critters[index].location())
+                );
+                self.critters[index].escape();
+            }
+
+            // This one I'm not sure how we got into this state, but some levels need it
+            if self.tile_at(self.critters[index].location()) == Tile::CrackedFloor {
+                tracing::debug!(
+                    "Critter {:?} ended up on {:?}, escaping",
+                    self.critters[index],
+                    self.tile_at(self.critters[index].location())
+                );
+                self.critters[index].escape();
             }
         }
 
@@ -123,7 +130,10 @@ impl Map {
         let me = self.critters[critter_index];
 
         match self.tile_at(me.location()) {
-            Tile::Water => {
+            Tile::Water
+            | Tile::Nest {
+                open_floor: true, ..
+            } => {
                 // If we're on water, don't move
                 if ignore_water {
                     // Picked up a hammer on a cracked floor that broke
@@ -281,7 +291,9 @@ impl Map {
                             .any(|c| c.location() == other_location + direction.into())
                     {
                         // TODO: Handle color walls
-                        tracing::debug!("other critter is carrying a spring and there's a wall");
+                        tracing::debug!(
+                            "other critter is carrying a spring and there's a wall/critter behind them, escaping"
+                        );
                         self.critters[other_critter].escape();
                     }
 
@@ -289,7 +301,24 @@ impl Map {
                         self.critters[other_critter].move_to(Point { x: -10, y: -10 });
                     }
 
-                    self.try_move_one(critter_index, direction, depth + 1, true);
+                    // Special case:
+                    // If they critter you run into has a rocket, the hammer will be pushed back
+                    // This is equivalent to not moving, so just don't do anything in that case
+                    // Otherwise, move into their spot
+                    // The HACK deals with hammering a critter into a rocket; which is just weird
+                    if self.critters[other_critter].carrying() == Some(ThingKind::Rocket) {
+                        tracing::debug!("other critter is carrying a rocket, stopped by exhaust");
+                    } else if self.thing_at(other_location) == Some(ThingKind::Rocket)
+                        || self.thing_at(other_location + direction.into())
+                            == Some(ThingKind::Rocket)
+                    {
+                        tracing::debug!(
+                            "HACK: there's a rocket that the hammered critter should have picked up"
+                        )
+                    } else {
+                        tracing::debug!("moving into other critter's spot");
+                        self.try_move_one(critter_index, direction, depth + 1, true);
+                    }
 
                     self.teleport_cooldown = false;
                     self.maybe_do_teleport(critter_index, direction);

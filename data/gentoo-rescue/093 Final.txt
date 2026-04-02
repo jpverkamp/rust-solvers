@@ -1,0 +1,27 @@
+# Gentoo Rescue/Transition/Liftoff/Final
+
+~FF.~
+FF..F
+~FF..
+~...F
+
+.|..|.
+|....|
+.|...|
+.|...|
+
+.---.
+-...-
+-....
+.....
+.----
+
+2 3 yellow seal
+2 3 rocket
+3 4 blue seal
+3 4 rocket
+4 2 grey penguin
+4 2 grey nest
+4 4 red seal
+4 4 rocket
+toggle F floor 4 2

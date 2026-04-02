@@ -97,6 +97,18 @@ impl Map {
         self.tiles[index]
     }
 
+    // Return if a tile should be treated as water
+    pub(crate) fn is_water(&self, p: Point) -> bool {
+        matches!(
+            self.tile_at(p),
+            Tile::Water
+                | Tile::Nest {
+                    open_floor: true,
+                    ..
+                }
+        )
+    }
+
     // Break the floor at a given location
     pub(crate) fn break_floor(&mut self, p: Point) {
         assert!(
@@ -166,8 +178,26 @@ impl Map {
         self.tiles[index] = match self.tiles[index] {
             Tile::Floor => Tile::Water,
             Tile::Water => Tile::Floor,
+            Tile::Nest {
+                color,
+                dusty,
+                open_floor,
+            } => Tile::Nest {
+                color,
+                dusty,
+                open_floor: !open_floor,
+            },
             other => {
                 unimplemented!("Can only toggle floor/water tiles, but tile at {p:?} is {other:?}")
+            }
+        };
+
+        // If the new tile is water and something was standing on it, fall into the water
+        if self.is_water(p) {
+            for critter in &mut self.critters {
+                if critter.location() == p {
+                    critter.escape();
+                }
             }
         }
     }
@@ -187,6 +217,11 @@ impl Map {
                 ),
             }
         }
+    }
+
+    // Fetch the thing at a tile (if any)
+    pub(crate) fn thing_at(&self, p: Point) -> Option<ThingKind> {
+        self.things.iter().find(|t| t.location == p).map(|t| t.kind)
     }
 }
 
@@ -323,6 +358,7 @@ impl From<&str> for Map {
                 if let Tile::Nest {
                     color: nest_color,
                     dusty,
+                    ..
                 } = &mut tile
                 {
                     *nest_color = color;

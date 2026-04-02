@@ -11,6 +11,7 @@ pub enum Tile {
     Nest {
         color: Color,
         dusty: bool,
+        open_floor: bool,
     },
     Wall,
     Dust,
@@ -40,6 +41,7 @@ impl TryFrom<&str> for Tile {
             "nest" => Ok(Tile::Nest {
                 color: Color::default(),
                 dusty: false,
+                open_floor: false, // Used for a toggle floor under a nest
             }),
             _ => Err(()),
         }
@@ -52,7 +54,12 @@ impl From<Tile> for char {
             Tile::Water => '~',
             Tile::Floor => '.',
             Tile::CrackedFloor => 'x',
-            Tile::Nest { .. } => 'o', // TODO: Support this somehow?
+            Tile::Nest {
+                open_floor: false, ..
+            } => 'o', // TODO: Support colors somehow?
+            Tile::Nest {
+                open_floor: true, ..
+            } => '∅',
             Tile::Wall => '#',
             Tile::Dust => '*',
             Tile::Teleport(_) => '§',

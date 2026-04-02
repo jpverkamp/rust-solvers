@@ -1,0 +1,32 @@
+# Gentoo Rescue/Transition/Liftoff/Extinction
+
+~....~~
+.......
+~~....~
+
+........
+........
+........
+
+.......
+.......
+.......
+.......
+
+1 2 grey seal
+1 4 grey seal
+1 5 grey seal
+2 2 grey seal
+2 4 grey seal
+2 7 grey seal
+3 3 grey seal
+3 4 grey seal
+3 5 grey seal
+3 6 grey seal
+1 2 rocket
+1 3 rocket
+2 1 rocket
+2 7 rocket
+2 3 blue nest
+2 5 blue penguin
+2 5 hammer
