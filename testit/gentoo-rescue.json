@@ -1,320 +1,283 @@
 {
   "results": {
-    "data/gentoo-rescue/001 Movement.txt": [
-      "2 1 Red Penguin               DRDRURULULD\n"
-    ],
-    "data/gentoo-rescue/002 Landing.txt": [
-      "3 3 Red Penguin               LURDRUL\n"
-    ],
-    "data/gentoo-rescue/003 Assistance.txt": [
-      "2 1 Blue Penguin              URDLU\n1 4 Red Penguin               L\n"
-    ],
-    "data/gentoo-rescue/004 Conjunction.txt": [
-      "2 1 Blue Penguin              U\n1 4 Yellow Penguin            LDRU\n1 1 Blue Penguin              RDR\n1 3 Yellow Penguin            L\n2 3 Blue Penguin              U\n"
-    ],
-    "data/gentoo-rescue/005 Blockers.txt": [
-      "1 2 Yellow Penguin            R\n1 4 Red Penguin               D\n3 4 Green Penguin             L\n2 1 Blue Penguin              RD\n3 1 Green Penguin             R\n3 3 Blue Penguin              UL\n"
-    ],
-    "data/gentoo-rescue/006 Escape.txt": [
-      "4 4 Blue Seal                 U\n2 1 Yellow Seal               RD\n2 4 Blue Seal                 L\n3 3 Yellow Seal               U\n2 1 Blue Seal                 R\n2 3 Yellow Seal               DL\n2 2 Blue Seal                 U\n3 2 Yellow Seal               U\n"
-    ],
-    "data/gentoo-rescue/007 Return.txt": [
-      "2 4 Green Seal                LDR\n1 3 Red Penguin               LD\n3 5 Green Seal                LU\n3 2 Red Penguin               R\n2 3 Green Seal                D\n3 5 Red Penguin               L\n3 3 Green Seal                URU\n"
-    ],
-    "data/gentoo-rescue/008 Separation.txt": [
-      "2 1 Blue Penguin              U\n3 1 Green Penguin             RURRDLUL\n1 1 Blue Penguin              RD\n1 5 Green Penguin             LD\n3 1 Blue Penguin              R\n",
-      "2 1 Blue Penguin              RU\n3 1 Green Penguin             URDLUL\n1 1 Blue Penguin              RDR\n1 5 Green Penguin             LD\n3 1 Blue Penguin              R\n"
-    ],
-    "data/gentoo-rescue/009 Skipping.txt": [
-      "4 7 Green Penguin             ULD\n1 1 Blue Penguin              R\n4 5 Green Penguin             L\n"
-    ],
-    "data/gentoo-rescue/010 Retrograde.txt": [
-      "4 3 Green Penguin             ULULDLULDL\n"
-    ],
-    "data/gentoo-rescue/011 Unbounded.txt": [
-      "2 2 Blue Penguin              LLUURRULUR\n"
-    ],
-    "data/gentoo-rescue/012 Twist.txt": [
-      "3 2 Blue Penguin              UL\n2 1 Yellow Penguin            RD\n2 3 Blue Penguin w/Spring     RD\n3 2 Yellow Penguin            UR\n1 2 Blue Penguin w/Spring     UR\n2 3 Yellow Penguin            LDR\n"
-    ],
-    "data/gentoo-rescue/013 Recoil.txt": [
-      "1 4 Blue Penguin              URU\n2 5 Green Penguin             DL\n3 3 Blue Penguin w/Spring     R\n3 4 Green Penguin             LUL\n3 2 Blue Penguin w/Spring     D\n",
-      "1 4 Blue Penguin w/Spring     URU\n2 5 Green Penguin             DL\n3 3 Blue Penguin w/Spring     R\n3 4 Green Penguin             LUL\n3 2 Blue Penguin w/Spring     D\n"
-    ],
-    "data/gentoo-rescue/014 Lean.txt": [
-      "1 7 Green Penguin             LDR\n2 2 Blue Penguin              DR\n3 2 Green Penguin             U\n2 6 Yellow Penguin            U\n1 6 Blue Penguin w/Spring     L\n1 2 Green Penguin             D\n2 4 Red Penguin               U\n1 4 Blue Penguin w/Spring     L\n",
-      "1 7 Green Penguin             LDR\n2 2 Blue Penguin w/Spring     DR\n3 2 Green Penguin             U\n2 6 Yellow Penguin w/Spring   U\n1 6 Blue Penguin w/Spring     L\n1 2 Green Penguin             D\n2 4 Red Penguin w/Spring      U\n1 4 Blue Penguin w/Spring     L\n",
-      "1 7 Green Penguin             LDR\n2 2 Blue Penguin w/Spring     DR\n3 2 Green Penguin             U\n2 6 Yellow Penguin w/Spring   U\n1 6 Blue Penguin w/Spring     L\n2 4 Red Penguin w/Spring      U\n1 2 Green Penguin             D\n1 4 Blue Penguin w/Spring     L\n"
-    ],
-    "data/gentoo-rescue/015 Ometa.txt": [
-      "2 2 Red Seal                  DDRRULDLUL\n"
-    ],
-    "data/gentoo-rescue/016 Escort.txt": [
-      "3 3 Yellow Penguin            R\n3 4 Blue Penguin              L\n3 2 Yellow Penguin w/Spring   R\n3 3 Blue Penguin              L\n3 1 Yellow Penguin w/Spring   ULD\n3 2 Blue Penguin              UL\n1 2 Yellow Penguin w/Spring   D\n2 1 Blue Penguin              UR\n2 2 Yellow Penguin w/Spring   U\n1 2 Blue Penguin              LD\n3 2 Yellow Penguin w/Spring   L\n3 1 Blue Penguin              R\n3 3 Yellow Penguin w/Spring   L\n3 2 Blue Penguin              R\n3 4 Yellow Penguin w/Spring   L\n3 3 Blue Penguin              R\n3 5 Yellow Penguin w/Spring   L\n3 4 Blue Penguin              RU\n",
-      "3 3 Yellow Penguin w/Spring   R\n3 4 Blue Penguin              L\n3 2 Yellow Penguin w/Spring   R\n3 3 Blue Penguin              L\n3 1 Yellow Penguin w/Spring   ULD\n3 2 Blue Penguin              UL\n1 2 Yellow Penguin w/Spring   D\n2 1 Blue Penguin              UR\n2 2 Yellow Penguin w/Spring   U\n1 2 Blue Penguin              LD\n3 2 Yellow Penguin w/Spring   L\n3 1 Blue Penguin              R\n3 3 Yellow Penguin w/Spring   L\n3 2 Blue Penguin              R\n3 4 Yellow Penguin w/Spring   L\n3 3 Blue Penguin              R\n3 5 Yellow Penguin w/Spring   L\n3 4 Blue Penguin              RU\n",
-      "3 3 Yellow Penguin w/Spring   R\n3 4 Blue Penguin              L\n3 2 Yellow Penguin w/Spring   R\n3 3 Blue Penguin              L\n3 1 Yellow Penguin w/Spring   ULD\n3 2 Blue Penguin              ULU\n1 2 Yellow Penguin w/Spring   D\n1 1 Blue Penguin              R\n2 2 Yellow Penguin w/Spring   U\n1 2 Blue Penguin              LD\n3 2 Yellow Penguin w/Spring   L\n3 1 Blue Penguin              R\n3 3 Yellow Penguin w/Spring   L\n3 2 Blue Penguin              R\n3 4 Yellow Penguin w/Spring   L\n3 3 Blue Penguin              R\n3 5 Yellow Penguin w/Spring   L\n3 4 Blue Penguin              RU\n"
-    ],
-    "data/gentoo-rescue/017 Nails.txt": [
-      "1 1 Green Penguin             D\n4 7 Yellow Penguin            L\n2 1 Green Penguin             RUR\n"
-    ],
-    "data/gentoo-rescue/018 Spin.txt": [
-      "1 2 Red Penguin               D\n2 1 Yellow Penguin            URD\n3 2 Red Penguin w/Hammer      ULU\n1 2 Yellow Penguin            D\n1 1 Red Penguin w/Hammer      R\n3 2 Yellow Penguin            U\n1 2 Red Penguin w/Hammer      D\n3 2 Yellow Penguin            R\n",
-      "1 2 Red Penguin w/Hammer      D\n2 1 Yellow Penguin            URD\n3 2 Red Penguin w/Hammer      ULU\n1 2 Yellow Penguin            D\n1 1 Red Penguin w/Hammer      R\n3 2 Yellow Penguin            U\n1 2 Red Penguin w/Hammer      D\n3 2 Yellow Penguin            R\n"
-    ],
-    "data/gentoo-rescue/019 Stomp.txt": [
-      "1 1 Red Penguin               D\n1 6 Yellow Penguin            L\n3 1 Red Penguin               U\n3 5 Green Seal                L\n3 3 Blue Penguin              R\n2 1 Red Penguin               R\n3 4 Blue Penguin w/Hammer     ULURD\n",
-      "1 1 Red Penguin               D\n1 6 Yellow Penguin            L\n3 1 Red Penguin               U\n3 5 Green Seal                L\n3 3 Blue Penguin w/Hammer     R\n2 1 Red Penguin               R\n3 4 Blue Penguin w/Hammer     ULURD\n"
-    ],
-    "data/gentoo-rescue/020 Bash.txt": [
-      "2 3 Green Penguin             R\n1 2 Red Penguin               RDLRUL\n3 4 Green Penguin             UL\n1 2 Red Penguin w/Hammer      R\n1 4 Green Penguin             DLUL\n",
-      "2 3 Green Penguin             R\n1 2 Red Penguin w/Hammer      RDLRUL\n3 4 Green Penguin             UL\n1 2 Red Penguin w/Hammer      R\n1 4 Green Penguin             DLUL\n"
-    ],
-    "data/gentoo-rescue/021 Preservation.txt": [
-      "1 5 Green Penguin             DLU\n2 2 Red Penguin w/Hammer      RDLU\n2 2 Green Penguin w/Hammer    LDR\n3 3 Red Penguin w/Hammer      UR\n",
-      "1 5 Green Penguin w/Hammer    DLU\n2 2 Red Penguin w/Hammer      RDLU\n2 2 Green Penguin w/Hammer    LDR\n3 3 Red Penguin w/Hammer      UR\n"
-    ],
-    "data/gentoo-rescue/022 Trail.txt": [
-      "2 3 Red Penguin               R\n2 6 Green Penguin             L\n2 4 Red Penguin w/Hammer      RU\n2 6 Green Penguin             L\n1 5 Red Penguin w/Hammer      D\n2 1 Green Penguin             R\n2 5 Red Penguin w/Hammer      L\n2 1 Green Penguin             R\n2 4 Red Penguin w/Hammer      L\n2 1 Green Penguin             R\n2 3 Red Penguin w/Hammer      LU\n",
-      "2 3 Red Penguin w/Hammer      R\n2 6 Green Penguin             L\n2 4 Red Penguin w/Hammer      RU\n2 6 Green Penguin             L\n1 5 Red Penguin w/Hammer      D\n2 1 Green Penguin             R\n2 5 Red Penguin w/Hammer      L\n2 1 Green Penguin             R\n2 4 Red Penguin w/Hammer      L\n2 1 Green Penguin             R\n2 3 Red Penguin w/Hammer      LU\n"
-    ],
-    "data/gentoo-rescue/023 March.txt": [
-      "1 2 Blue Seal                 R\n2 1 Red Penguin               URDLU\n1 5 Blue Seal                 L\n1 1 Red Penguin w/Hammer      R\n1 5 Blue Seal                 L\n1 2 Red Penguin w/Hammer      R\n1 5 Blue Seal                 LD\n1 3 Red Penguin w/Hammer      RDULD\n2 4 Blue Seal                 L\n2 1 Red Penguin w/Hammer      R\n2 5 Blue Seal                 LD\n"
-    ],
-    "data/gentoo-rescue/024 Smash.txt": [
-      "1 5 Blue Seal                 L\n1 2 Green Penguin             RD\n1 5 Blue Seal                 D\n1 1 Yellow Penguin            R\n2 3 Green Penguin w/Hammer    UL\n1 5 Yellow Penguin            L\n1 1 Green Penguin w/Hammer    R\n1 5 Yellow Penguin            LD\n1 2 Green Penguin w/Hammer    R\n2 5 Blue Seal                 L\n1 5 Green Penguin w/Hammer    DL\n",
-      "1 5 Blue Seal                 L\n1 2 Green Penguin w/Hammer    R\n1 5 Blue Seal                 D\n1 3 Green Penguin w/Hammer    D\n1 1 Yellow Penguin            R\n2 5 Blue Seal                 L\n2 3 Green Penguin w/Hammer    UL\n1 5 Yellow Penguin            L\n1 1 Green Penguin w/Hammer    R\n1 5 Yellow Penguin            LD\n1 2 Green Penguin w/Hammer    RDL\n",
-      "1 5 Blue Seal                 L\n1 2 Green Penguin w/Hammer    R\n1 5 Blue Seal                 D\n1 3 Green Penguin w/Hammer    D\n1 1 Yellow Penguin            R\n2 3 Green Penguin w/Hammer    UL\n1 5 Yellow Penguin            L\n1 1 Green Penguin w/Hammer    R\n1 5 Yellow Penguin            LD\n2 5 Blue Seal                 L\n1 2 Green Penguin w/Hammer    RDL\n"
-    ],
-    "data/gentoo-rescue/025 Propagation.txt": [
-      "3 5 Red Penguin               U\n3 3 Green Penguin             RU\n1 5 Red Penguin w/Hammer      D\n3 5 Green Penguin             L\n1 5 Yellow Penguin w/Hammer   D\n3 3 Green Penguin             R\n3 5 Red Penguin w/Hammer      U\n3 4 Green Penguin             U\n1 5 Yellow Penguin w/Hammer   RDL\n",
-      "1 5 Yellow Penguin w/Hammer   R\n3 5 Red Penguin w/Hammer      U\n3 3 Green Penguin             RU\n1 5 Red Penguin w/Hammer      D\n1 6 Yellow Penguin w/Hammer   L\n3 5 Green Penguin             L\n1 5 Yellow Penguin w/Hammer   D\n3 3 Green Penguin             R\n3 5 Red Penguin w/Hammer      U\n1 5 Yellow Penguin w/Hammer   RD\n3 4 Green Penguin             U\n2 6 Yellow Penguin w/Hammer   L\n"
-    ],
-    "data/gentoo-rescue/026 Frozen.txt": [
-      "3 2 Blue Seal                 LU\n1 1 Red Penguin               DRU\n3 1 Blue Seal                 U\n1 4 Red Penguin w/Hammer      LD\n1 1 Blue Seal                 DR\n2 3 Red Penguin w/Hammer      L\n3 2 Blue Seal                 U\n2 1 Red Penguin w/Hammer      DRU\n",
-      "3 2 Blue Seal                 LU\n1 1 Red Penguin w/Hammer      DR\n3 1 Blue Seal                 U\n2 4 Red Penguin w/Hammer      ULD\n1 1 Blue Seal                 D\n2 3 Red Penguin w/Hammer      L\n3 1 Blue Seal                 R\n2 1 Red Penguin w/Hammer      D\n3 2 Blue Seal                 U\n3 1 Red Penguin w/Hammer      RU\n"
-    ],
-    "data/gentoo-rescue/027 Mjolnir.txt": [
-      "3 6 Yellow Penguin            DRUUR\n5 9 Blue Penguin              U\n1 9 Yellow Penguin w/Hammer   D\n5 9 Blue Penguin              U\n2 9 Yellow Penguin w/Hammer   DLLL\n"
-    ],
-    "data/gentoo-rescue/028 Inception.txt": [
-      "2 1 Blue Penguin              U\n2 9 Red Penguin               LRU\n3 1 Blue Penguin w/Spring     RULU\n1 9 Red Penguin w/Hammer      LD\n5 3 Blue Penguin w/Spring     R\n3 7 Red Penguin w/Hammer      RDL\n5 5 Blue Penguin w/Spring     R\n5 7 Red Penguin w/Hammer      L\n5 4 Blue Penguin w/Spring     R\n5 6 Red Penguin w/Hammer      L\n",
-      "2 1 Blue Penguin w/Spring     U\n2 9 Red Penguin               LRU\n3 1 Blue Penguin w/Spring     RULU\n1 9 Red Penguin w/Hammer      LD\n5 3 Blue Penguin w/Spring     R\n3 7 Red Penguin w/Hammer      RDL\n5 5 Blue Penguin w/Spring     R\n5 7 Red Penguin w/Hammer      L\n5 4 Blue Penguin w/Spring     R\n5 6 Red Penguin w/Hammer      L\n",
-      "2 9 Red Penguin               LRULDR\n2 1 Blue Penguin w/Spring     URUL\n3 8 Red Penguin w/Hammer      D\n4 3 Blue Penguin w/Spring     UR\n5 8 Red Penguin w/Hammer      L\n5 5 Blue Penguin w/Spring     R\n5 7 Red Penguin w/Hammer      L\n5 4 Blue Penguin w/Spring     R\n5 6 Red Penguin w/Hammer      L\n"
-    ],
-    "data/gentoo-rescue/029 Thinking.txt": [
-      "2 3 Red Penguin               R\n2 2 Blue Penguin              RD\n2 1 Green Penguin             RU\n2 5 Red Penguin               L\n4 4 Blue Penguin              UR\n1 4 Green Penguin             L\n2 1 Red Penguin               RD\n2 5 Blue Penguin              U\n4 4 Red Penguin               R\n"
-    ],
-    "data/gentoo-rescue/030 Inertia.txt": [
-      "4 3 Blue Penguin              LU\n2 3 Green Seal                RDL\n1 2 Blue Penguin              D\n4 2 Green Seal                RU\n3 2 Blue Penguin              LURD\n2 4 Green Seal                LDR\n"
-    ],
-    "data/gentoo-rescue/031 While.txt": [
-      "1 2 Red Seal                  R\n1 1 Blue Penguin              RD\n2 2 Yellow Penguin            R\n2 1 Green Penguin             R\n2 4 Yellow Penguin            D\n2 5 Blue Penguin              L\n3 4 Yellow Penguin            L\n2 4 Blue Penguin              DL\n2 3 Green Penguin             U\n1 6 Red Seal                  LD\n1 3 Green Penguin             D\n3 2 Blue Penguin              D\n3 3 Green Penguin             LDR\n3 4 Red Seal                  LDRDR\n"
-    ],
-    "data/gentoo-rescue/032 Ricochet.txt": [
-      "1 1 Green Penguin             DRDRUR\n3 1 Red Penguin               R\n4 3 Green Penguin w/Spring    DL\n3 4 Red Penguin               L\n3 2 Green Penguin w/Spring    R\n3 7 Blue Penguin              L\n3 1 Green Penguin w/Spring    D\n3 3 Red Penguin               L\n3 6 Blue Penguin              R\n3 1 Red Penguin               D\n",
-      "1 1 Green Penguin             DRDR\n3 7 Blue Penguin              L\n4 4 Green Penguin             U\n3 1 Red Penguin               R\n4 4 Green Penguin w/Spring    RDL\n3 4 Red Penguin               L\n3 2 Green Penguin w/Spring    RD\n3 6 Blue Penguin              R\n3 3 Red Penguin               LD\n"
-    ],
-    "data/gentoo-rescue/033 Turn.txt": [
-      "4 5 Green Penguin             LULD\n4 2 Blue Penguin              RUL\n3 2 Green Penguin             LDR\n"
-    ],
-    "data/gentoo-rescue/034 Momentum.txt": [
-      "4 2 Green Penguin             UR\n2 3 Red Penguin               LD\n2 1 Green Penguin w/Spring    L\n4 2 Red Penguin               UR\n2 2 Green Penguin w/Spring    DR\n3 3 Red Penguin               UL\n3 1 Green Penguin w/Spring    U\n",
-      "4 2 Green Penguin w/Spring    UR\n2 3 Red Penguin               LD\n2 1 Green Penguin w/Spring    L\n4 2 Red Penguin               UR\n2 2 Green Penguin w/Spring    DR\n3 3 Red Penguin               UL\n3 1 Green Penguin w/Spring    U\n"
-    ],
-    "data/gentoo-rescue/035 Quake.txt": [
-      "3 2 Red Seal                  LU\n3 3 Green Penguin             LUR\n1 1 Red Seal                  RL\n2 4 Green Penguin             L\n2 1 Red Seal                  URL\n2 2 Green Penguin             U\n"
-    ],
-    "data/gentoo-rescue/036 Interruption.txt": [
-      "2 1 Green Penguin             R\n3 1 Blue Penguin              U\n2 3 Green Penguin             LD\n2 1 Blue Penguin              RD\n4 2 Green Penguin             L\n4 3 Blue Penguin              L\n4 4 Green Penguin             L\n4 5 Blue Penguin              L\n4 6 Green Penguin             U\n4 7 Blue Penguin              U\n3 6 Green Penguin             L\n3 7 Blue Penguin              D\n3 1 Green Penguin             DUD\n"
-    ],
-    "data/gentoo-rescue/037 Four.txt": [
-      "2 2 Blue Seal                 U\n5 5 Green Penguin             LD\n1 2 Blue Seal                 LU\n5 3 Green Penguin             LD\n3 4 Blue Seal                 L\n4 5 Green Penguin             U\n"
-    ],
-    "data/gentoo-rescue/038 EY0.txt": [
-      "3 1 Blue Penguin              D\n4 4 Red Penguin               RUL\n4 1 Blue Penguin              RULD\n2 1 Red Penguin               RDL\n4 2 Blue Penguin w/Hammer     URDL\n4 1 Red Penguin               R\n4 3 Blue Penguin w/Hammer     UL\n"
-    ],
-    "data/gentoo-rescue/039 Wormhole.txt": [
-      "2 2 Green Penguin             D\n4 2 Red Penguin               RDR\n2 6 Yellow Penguin            DL\n3 2 Green Penguin             DR\n4 4 Blue Penguin              U\n"
-    ],
-    "data/gentoo-rescue/040 Leap.txt": [
-      "2 1 Red Seal                  DR\n4 4 Green Seal                UDRUDL\n4 3 Red Seal                  ULR\n"
-    ],
-    "data/gentoo-rescue/041 Flow.txt": [
-      "2 4 Green Penguin             ULD\n2 3 Red Penguin               U\n2 1 Green Penguin w/Hammer    RL\n1 3 Red Penguin               DR\n2 5 Green Penguin w/Hammer    DRUL\n2 5 Red Penguin               D\n2 4 Green Penguin w/Hammer    U\n",
-      "2 4 Green Penguin w/Hammer    ULD\n2 3 Red Penguin               U\n2 1 Green Penguin w/Hammer    RL\n1 3 Red Penguin               DR\n2 5 Green Penguin w/Hammer    DRUL\n2 5 Red Penguin               D\n2 4 Green Penguin w/Hammer    U\n"
-    ],
-    "data/gentoo-rescue/042 Lemniscate.txt": [
-      "2 2 Yellow Penguin            R\n3 2 Blue Seal                 U\n3 1 Green Seal                R\n2 2 Blue Seal                 RU\n3 2 Green Seal                U\n2 5 Yellow Penguin            L\n1 4 Blue Seal                 D\n2 3 Yellow Penguin            U\n2 2 Green Seal                R\n2 4 Blue Seal                 U\n2 3 Green Seal                U\n4 9 Yellow Penguin            LU\n5 9 Green Seal                L\n"
-    ],
-    "data/gentoo-rescue/043 Crutches.txt": [
-      "1 1 Red Penguin               RRR\n4 7 Yellow Penguin            U\n1 4 Red Penguin w/Crutch      R\n3 7 Yellow Penguin            LD\n1 5 Red Penguin w/Crutch      R\n4 5 Yellow Penguin            L\n1 6 Red Penguin w/Crutch      R\n",
-      "1 1 Red Penguin               RRR\n4 7 Yellow Penguin            U\n1 4 Red Penguin w/Crutch      R\n3 7 Yellow Penguin            LD\n1 5 Red Penguin w/Crutch      RR\n4 5 Yellow Penguin            L\n",
-      "1 1 Red Penguin               RRRRRR\n4 7 Yellow Penguin            ULDL\n",
-      "1 1 Red Penguin               RRR\n4 7 Yellow Penguin            U\n1 4 Red Penguin w/Crutch      R\n3 7 Yellow Penguin            LDL\n1 5 Red Penguin w/Crutch      RR\n"
-    ],
-    "data/gentoo-rescue/044 Stop.txt": [
-      "2 2 Yellow Penguin            U\n4 3 Red Penguin               R\n1 2 Yellow Penguin            RDLDR\n4 5 Red Penguin               U\n4 4 Yellow Penguin w/Crutch   RUU\n1 5 Red Penguin               L\n2 5 Yellow Penguin w/Crutch   UL\n1 2 Red Penguin               R\n1 4 Yellow Penguin w/Crutch   RDDDLL\n1 3 Red Penguin               D\n4 3 Yellow Penguin w/Crutch   RRUUL\n",
-      "2 2 Yellow Penguin            U\n4 3 Red Penguin               R\n1 2 Yellow Penguin            RDLD\n4 5 Red Penguin               U\n4 3 Yellow Penguin w/Crutch   RRU\n1 5 Red Penguin               L\n3 5 Yellow Penguin w/Crutch   UUL\n1 2 Red Penguin               R\n1 4 Yellow Penguin w/Crutch   RDDDLL\n1 3 Red Penguin               D\n4 3 Yellow Penguin w/Crutch   RRUUL\n",
-      "2 2 Yellow Penguin            U\n4 3 Red Penguin               R\n1 2 Yellow Penguin            RDL\n4 5 Red Penguin               U\n3 3 Yellow Penguin w/Crutch   DRR\n1 5 Red Penguin               L\n4 5 Yellow Penguin w/Crutch   UUUL\n1 2 Red Penguin               R\n1 4 Yellow Penguin w/Crutch   RDDDLL\n1 3 Red Penguin               D\n4 3 Yellow Penguin w/Crutch   RRUUL\n",
-      "2 2 Yellow Penguin            U\n4 3 Red Penguin               R\n1 2 Yellow Penguin            RDLDR\n4 5 Red Penguin               U\n4 4 Yellow Penguin w/Crutch   R\n1 5 Red Penguin               L\n4 5 Yellow Penguin w/Crutch   UUUL\n1 2 Red Penguin               R\n1 4 Yellow Penguin w/Crutch   RDDDLL\n1 3 Red Penguin               D\n4 3 Yellow Penguin w/Crutch   RRUUL\n"
-    ],
-    "data/gentoo-rescue/045 Step.txt": [
-      "4 5 Yellow Penguin w/Crutch   UULL\n3 2 Red Penguin w/Hammer      RU\n1 3 Yellow Penguin w/Crutch   RD\n2 3 Red Penguin w/Hammer      R\n2 5 Yellow Penguin w/Crutch   D\n2 4 Red Penguin w/Hammer      DR\n3 6 Yellow Penguin w/Crutch   DL\n3 5 Red Penguin w/Hammer      DLLLL\n5 5 Yellow Penguin w/Crutch   URUR\n",
-      "4 5 Yellow Penguin w/Crutch   UU\n3 2 Red Penguin w/Hammer      R\n2 5 Yellow Penguin w/Crutch   LL\n3 3 Red Penguin w/Hammer      U\n1 3 Yellow Penguin w/Crutch   RD\n2 3 Red Penguin w/Hammer      R\n2 5 Yellow Penguin w/Crutch   D\n2 4 Red Penguin w/Hammer      DR\n3 6 Yellow Penguin w/Crutch   DL\n3 5 Red Penguin w/Hammer      DL\n5 5 Yellow Penguin w/Crutch   UURR\n4 4 Red Penguin w/Hammer      LLL\n"
-    ],
-    "data/gentoo-rescue/046 Nudge.txt": [
-      "2 1 Red Penguin               UR\n3 4 Yellow Penguin            U\n1 5 Red Penguin w/Hammer      L\n1 1 Yellow Penguin            DR\n1 4 Red Penguin w/Hammer      L\n2 2 Yellow Penguin w/Crutch   U\n1 1 Red Penguin w/Hammer      R\n1 3 Yellow Penguin w/Crutch   RDR\n"
-    ],
-    "data/gentoo-rescue/047 Blockade.txt": [
-      "2 1 Red Penguin w/Hammer      RLURRLDRRUR\n"
-    ],
-    "data/gentoo-rescue/048 Threading.txt": [
-      "2 3 Red Penguin               LR\n1 2 Yellow Penguin            D\n2 3 Red Penguin w/Crutch      LU\n3 2 Yellow Penguin w/Crutch   URD\n1 2 Red Penguin w/Crutch      D\n1 1 Green Penguin             R\n2 2 Red Penguin w/Crutch      R\n1 2 Green Penguin             D\n2 3 Red Penguin w/Crutch      LUL\n3 2 Green Penguin             U\n3 3 Yellow Penguin w/Crutch   ULD\n1 2 Green Penguin             D\n1 1 Red Penguin w/Crutch      R\n2 2 Green Penguin             R\n1 2 Red Penguin w/Crutch      D\n",
-      "2 3 Red Penguin               LR\n1 2 Yellow Penguin            D\n2 3 Red Penguin w/Crutch      LU\n3 2 Yellow Penguin w/Crutch   URD\n1 2 Red Penguin w/Crutch      DR\n1 1 Green Penguin             RD\n2 3 Red Penguin w/Crutch      LUL\n3 2 Green Penguin             U\n3 3 Yellow Penguin w/Crutch   ULD\n1 2 Green Penguin             DR\n1 1 Red Penguin w/Crutch      RD\n"
-    ],
-    "data/gentoo-rescue/049 Stride.txt": [
-      "3 2 Red Penguin w/Hammer      RRRDU\n4 6 Blue Penguin w/Crutch     L\n2 5 Red Penguin w/Hammer      LDL\n4 5 Blue Penguin w/Crutch     L\n4 3 Red Penguin w/Hammer      L\n4 4 Blue Penguin w/Crutch     L\n4 2 Red Penguin w/Hammer      R\n4 4 Blue Penguin w/Crutch     U\n4 3 Red Penguin w/Hammer      U\n3 4 Blue Penguin w/Crutch     L\n2 3 Red Penguin w/Hammer      DR\n4 3 Blue Penguin w/Crutch     RU\n3 6 Red Penguin w/Hammer      L\n3 3 Blue Penguin w/Crutch     UR\n3 4 Red Penguin w/Hammer      UU\n",
-      "3 2 Red Penguin w/Hammer      RRRDULD\n4 6 Blue Penguin w/Crutch     L\n4 4 Red Penguin w/Hammer      L\n4 5 Blue Penguin w/Crutch     L\n4 3 Red Penguin w/Hammer      L\n4 4 Blue Penguin w/Crutch     L\n4 2 Red Penguin w/Hammer      RU\n4 4 Blue Penguin w/Crutch     UL\n2 3 Red Penguin w/Hammer      DR\n4 3 Blue Penguin w/Crutch     UR\n3 6 Red Penguin w/Hammer      L\n3 3 Blue Penguin w/Crutch     URU\n3 4 Red Penguin w/Hammer      U\n"
-    ],
-    "data/gentoo-rescue/050 Barrier.txt": [
-      "3 5 Yellow Penguin            D\n2 3 Green Penguin             R\n2 5 Red Penguin               D\n2 4 Green Penguin             DL\n4 5 Yellow Penguin            L\n4 1 Green Penguin w/Crutch    UUR\n4 2 Yellow Penguin            UR\n3 5 Red Penguin               ULU\n",
-      "3 5 Yellow Penguin            D\n2 3 Green Penguin             R\n2 5 Red Penguin               D\n2 4 Green Penguin             DL\n4 5 Yellow Penguin            L\n4 1 Green Penguin w/Crutch    URU\n4 2 Yellow Penguin            UR\n3 5 Red Penguin               ULU\n"
-    ],
-    "data/gentoo-rescue/051 Transfer.txt": [
-      "4 1 Red Penguin               RULDRLRRLLDDRRUL\n"
-    ],
-    "data/gentoo-rescue/052 Paralyze.txt": [
-      "2 7 Yellow Penguin            LDD\n2 3 Red Penguin               RU\n4 5 Yellow Penguin w/Crutch   U\n1 4 Red Penguin w/Crutch      R\n3 5 Yellow Penguin w/Crutch   L\n1 3 Blue Seal                 RDR\n3 4 Yellow Penguin w/Crutch   U\n2 7 Blue Seal                 LD\n2 4 Yellow Penguin w/Crutch   R\n4 5 Blue Seal                 ULL\n2 5 Yellow Penguin w/Crutch   LU\n4 2 Green Penguin             U\n3 1 Blue Seal w/Crutch        RD\n1 2 Green Penguin             D\n1 4 Yellow Penguin w/Crutch   L\n4 2 Blue Seal w/Crutch        L\n3 2 Green Penguin             R\n1 3 Yellow Penguin w/Crutch   L\n"
-    ],
-    "data/gentoo-rescue/053 Detonation.txt": [
-      "2 1 Red Penguin w/Bomb        U\n2 3 Green Penguin w/Bomb      L\n1 1 Red Penguin w/Bomb        R\n2 1 Green Penguin w/Bomb      U\n1 2 Red Penguin w/Bomb        D\n1 1 Green Penguin w/Bomb      R\n2 2 Red Penguin w/Bomb        L\n1 2 Green Penguin w/Bomb      D\n"
-    ],
-    "data/gentoo-rescue/054 Trigger.txt": [
-      "1 1 Blue Penguin w/Bomb       DR\n3 1 Green Penguin             U\n2 3 Blue Penguin w/Bomb       ULD\n1 1 Green Penguin             R\n2 2 Blue Penguin w/Bomb       U\n1 3 Green Penguin             DL\n1 2 Blue Penguin w/Bomb       L\n"
-    ],
-    "data/gentoo-rescue/055 Planted.txt": [
-      "3 2 Blue Penguin              LU\n1 4 Red Penguin               R\n1 1 Blue Penguin              RD\n1 5 Red Penguin               L\n2 4 Blue Penguin              U\n1 1 Red Penguin               RD\n1 4 Blue Penguin              L\n4 3 Red Penguin w/Hammer      UR\n1 1 Blue Penguin              R\n1 5 Red Penguin w/Hammer      L\n1 1 Blue Penguin              RDR\n1 4 Red Penguin w/Hammer      D\n4 4 Blue Penguin              LU\n"
-    ],
-    "data/gentoo-rescue/056 Abort.txt": [
-      "3 3 Red Seal w/Spring         LU\n4 2 Blue Penguin w/Bomb       RULD\n2 2 Red Seal w/Spring         L\n4 3 Blue Penguin w/Bomb       U\n2 3 Red Seal w/Spring         U\n3 3 Blue Penguin w/Bomb       L\n"
-    ],
-    "data/gentoo-rescue/057 Breach.txt": [
-      "1 3 Red Seal                  DL\n3 3 Yellow Seal               ULRDLUR\n"
-    ],
-    "data/gentoo-rescue/058 Flare.txt": [
-      "3 6 Yellow Penguin            LUR\n3 7 Blue Seal                 L\n2 7 Green Seal                D\n3 1 Blue Seal                 U\n3 7 Green Seal                L\n2 5 Yellow Penguin w/Bomb     D\n2 1 Blue Seal                 R\n4 5 Yellow Penguin w/Bomb     UL\n3 1 Green Seal                DR\n2 5 Blue Seal                 D\n"
-    ],
-    "data/gentoo-rescue/059 Exodus.txt": [
-      "2 3 Red Seal                  DU\n3 2 Green Seal                RL\n2 4 Yellow Seal               D\n2 3 Red Seal w/Spring         D\n2 2 Blue Seal                 R\n3 2 Green Seal w/Spring       U\n3 3 Red Seal w/Spring         U\n2 6 Blue Seal                 L\n2 3 Red Seal w/Spring         L\n2 2 Green Seal w/Spring       DRU\n2 4 Blue Seal                 D\n"
-    ],
-    "data/gentoo-rescue/060 ON.txt": [
-      "2 2 Red Penguin w/Bomb        RD\n2 5 Blue Penguin              L\n3 4 Red Penguin w/Bomb        ULU\n2 2 Blue Penguin              R\n2 1 Green Penguin             RD\n2 5 Blue Penguin              L\n1 3 Red Penguin w/Bomb        DR\n3 4 Green Penguin             U\n2 1 Blue Penguin              RU\n2 4 Green Penguin             D\n2 5 Red Penguin w/Bomb        L\n1 3 Blue Penguin              D\n3 4 Green Penguin             UR\n2 1 Red Penguin w/Bomb        R\n2 3 Blue Penguin              RD\n"
-    ],
-    "data/gentoo-rescue/061 Clear.txt": [
-      "2 3 Yellow Seal w/Bomb        D\n2 4 Red Seal                  LD\n2 1 Green Seal                R\n1 3 Blue Seal                 LD\n2 4 Green Seal                L\n3 2 Red Seal                  R\n2 2 Blue Seal                 D\n3 6 Red Seal                  DU\n3 2 Blue Seal                 RDU\n4 3 Yellow Seal w/Bomb        U\n2 3 Green Seal                UL\n3 3 Yellow Seal w/Bomb        R\n1 2 Green Seal                D\n3 6 Yellow Seal w/Bomb        D\n3 2 Green Seal                RD\n"
-    ],
-    "data/gentoo-rescue/062 Breakout.txt": [
-      "4 4 Yellow Seal               U\n4 5 Red Seal                  L\n2 4 Yellow Seal               L\n4 3 Green Seal                U\n4 2 Blue Seal                 R\n4 4 Red Seal                  RU\n2 3 Green Seal w/Hammer       D\n3 5 Red Seal                  LU\n4 3 Green Seal w/Hammer       UL\n",
-      "4 4 Yellow Seal               U\n4 5 Red Seal                  L\n2 4 Yellow Seal               L\n4 3 Green Seal                U\n4 2 Blue Seal                 R\n4 4 Red Seal                  RU\n2 3 Green Seal w/Hammer       D\n3 5 Red Seal                  L\n4 3 Green Seal w/Hammer       UUL\n"
-    ],
-    "data/gentoo-rescue/064 Walk.txt": [
-      "3 7 Green Penguin             L\n3 1 Blue Penguin w/Crutch     URU\n3 2 Green Penguin             U\n1 2 Blue Penguin w/Crutch     RDRDRRRRRRU\n2 2 Green Penguin             R\n2 10 Blue Penguin w/Crutch    DDDLDDL\n2 8 Green Penguin w/Spring    D\n7 8 Blue Penguin w/Crutch     RUU\n5 8 Green Penguin w/Spring    R\n5 9 Blue Penguin w/Crutch     RUULLL\n"
-    ],
-    "data/gentoo-rescue/065 WN.txt": [
-      "1 2 Blue Seal w/Crutch        R\n1 4 Red Penguin w/Hammer      LD\n2 1 Yellow Penguin            RDL\n1 2 Blue Seal w/Crutch        D\n2 3 Red Penguin w/Hammer      L\n2 1 Blue Seal w/Crutch        DR\n2 2 Red Penguin w/Hammer      D\n4 2 Blue Seal w/Crutch        R\n3 2 Red Penguin w/Hammer      DR\n4 1 Yellow Penguin w/Hammer   R\n4 4 Red Penguin w/Hammer      U\n"
-    ],
-    "data/gentoo-rescue/066 Compulsion.txt": [
-      "3 3 Red Penguin w/Hammer      DLURDLULDRULRULDRLDUU\n"
-    ],
-    "data/gentoo-rescue/069 Ground Rules.txt": [
+    "data/gentoo-rescue/Ground Rules.txt": [
       "1 4 Red Penguin               LDRRURDRD\n"
     ],
-    "data/gentoo-rescue/070 Foreboding.txt": [
-      "2 6 Red Penguin w/Hammer      D\n2 3 Blue Seal w/Spring        RD\n3 6 Red Penguin w/Hammer      L\n3 3 Blue Seal w/Spring        URDL\n3 5 Red Penguin w/Hammer      UL\n",
-      "2 6 Red Penguin w/Hammer      D\n2 3 Blue Seal w/Spring        R\n3 6 Red Penguin w/Hammer      ULU\n2 3 Blue Seal w/Spring        R\n1 5 Red Penguin w/Hammer      D\n3 5 Blue Seal w/Spring        UR\n2 5 Red Penguin w/Hammer      D\n4 4 Blue Seal w/Spring        U\n4 5 Red Penguin w/Hammer      L\n5 4 Blue Seal w/Spring        UR\n"
+    "data/gentoo-rescue/Ground Rules/Assistance.txt": [
+      "2 1 Blue Penguin              URDLU\n1 4 Red Penguin               L\n"
     ],
-    "data/gentoo-rescue/071 Storm.txt": [
-      "3 4 Blue Penguin              UL\n3 3 Yellow Penguin            RULD\n1 1 Blue Penguin              R\n4 2 Yellow Penguin            UL\n1 4 Blue Penguin              L\n1 1 Yellow Penguin            D\n"
+    "data/gentoo-rescue/Ground Rules/Blockers.txt": [
+      "1 2 Yellow Penguin            R\n1 4 Red Penguin               D\n3 4 Green Penguin             L\n2 1 Blue Penguin              RD\n3 1 Green Penguin             R\n3 3 Blue Penguin              UL\n"
     ],
-    "data/gentoo-rescue/072 Jackhammer.txt": [
-      "2 2 Yellow Seal               L\n1 1 Green Penguin             RLU\n2 1 Yellow Seal               URDUL\n2 2 Green Penguin w/Spring    D\n1 1 Yellow Seal w/Hammer      R\n1 3 Green Penguin w/Spring    LU\n1 2 Yellow Seal w/Hammer      RD\n1 4 Green Penguin w/Spring    UL\n",
-      "2 2 Yellow Seal               UR\n1 1 Green Penguin             D\n1 3 Yellow Seal w/Spring      LU\n2 1 Green Penguin             URDUL\n2 2 Yellow Seal w/Spring      D\n1 1 Green Penguin w/Hammer    R\n1 3 Yellow Seal w/Spring      LU\n1 2 Green Penguin w/Hammer    R\n2 4 Yellow Seal w/Spring      L\n1 4 Green Penguin w/Hammer    DR\n"
+    "data/gentoo-rescue/Ground Rules/Conjunction.txt": [
+      "2 1 Blue Penguin              U\n1 4 Yellow Penguin            LDRU\n1 1 Blue Penguin              RDR\n1 3 Yellow Penguin            L\n2 3 Blue Penguin              U\n"
     ],
-    "data/gentoo-rescue/073 Heist.txt": [
-      "2 4 Blue Penguin              DR\n4 5 Green Penguin             UR\n3 7 Blue Penguin              U\n1 7 Green Penguin             LDR\n2 7 Blue Penguin              ULDR\n2 5 Green Penguin w/Spring    D\n2 4 Blue Penguin              DL\n3 5 Green Penguin w/Spring    L\n3 1 Blue Penguin              R\n3 3 Green Penguin w/Spring    RU\n"
+    "data/gentoo-rescue/Ground Rules/Escape.txt": [
+      "4 4 Blue Seal                 U\n2 1 Yellow Seal               RD\n2 4 Blue Seal                 L\n3 3 Yellow Seal               U\n2 1 Blue Seal                 R\n2 3 Yellow Seal               DL\n2 2 Blue Seal                 U\n3 2 Yellow Seal               U\n"
     ],
-    "data/gentoo-rescue/074 Drop.txt": [
-      "3 5 Yellow Penguin            ULDRURDLULULU\n"
+    "data/gentoo-rescue/Ground Rules/Landing.txt": [
+      "3 3 Red Penguin               LURDRUL\n"
     ],
-    "data/gentoo-rescue/075 Disguise.txt": [
-      "3 4 Blue Penguin              DL\n3 2 Red Seal w/Spring         DL\n4 1 Blue Penguin              R\n4 3 Red Seal w/Spring         L\n4 2 Blue Penguin              LURDL\n4 4 Red Seal w/Spring         U\n3 1 Blue Penguin              R\n3 4 Red Seal w/Spring         L\n"
+    "data/gentoo-rescue/Ground Rules/Movement.txt": [
+      "2 1 Red Penguin               DRDRURULULD\n"
     ],
-    "data/gentoo-rescue/076 Tango.txt": [
-      "1 1 Blue Penguin w/Spring     UL\n1 2 Green Penguin w/Hammer    LD\n2 2 Blue Penguin w/Spring     D\n2 1 Green Penguin w/Hammer    RU\n1 2 Blue Penguin w/Spring     UR\n1 4 Green Penguin w/Hammer    DL\n2 2 Blue Penguin w/Spring     R\n2 3 Green Penguin w/Hammer    RU\n2 1 Blue Penguin w/Spring     D\n",
-      "1 1 Blue Penguin w/Spring     UL\n1 2 Green Penguin w/Hammer    LD\n2 2 Blue Penguin w/Spring     D\n2 1 Green Penguin w/Hammer    R\n1 2 Blue Penguin w/Spring     U\n2 4 Green Penguin w/Hammer    U\n2 2 Blue Penguin w/Spring     R\n1 4 Green Penguin w/Hammer    DL\n2 2 Blue Penguin w/Spring     R\n2 3 Green Penguin w/Hammer    RU\n2 1 Blue Penguin w/Spring     D\n"
+    "data/gentoo-rescue/Ground Rules/Return.txt": [
+      "2 4 Green Seal                LDR\n1 3 Red Penguin               LD\n3 5 Green Seal                LU\n3 2 Red Penguin               R\n2 3 Green Seal                D\n3 5 Red Penguin               L\n3 3 Green Seal                URU\n"
     ],
-    "data/gentoo-rescue/077 Free.txt": [
-      "2 2 Red Seal                  D\n2 4 Green Penguin             DLR\n3 1 Red Seal                  R\n3 5 Green Penguin w/Hammer    L\n3 1 Red Seal                  R\n3 4 Green Penguin w/Hammer    UL\n2 1 Yellow Penguin w/Hammer   DR\n3 5 Red Seal                  LU\n3 3 Yellow Penguin w/Hammer   R\n2 4 Red Seal                  D\n3 5 Yellow Penguin w/Hammer   L\n3 1 Red Seal                  R\n3 4 Yellow Penguin w/Hammer   L\n3 1 Red Seal                  RUR\n3 3 Yellow Penguin w/Hammer   U\n"
+    "data/gentoo-rescue/Ground Rules/Separation.txt": [
+      "2 1 Blue Penguin              RU\n3 1 Green Penguin             URDLUL\n1 1 Blue Penguin              RDR\n1 5 Green Penguin             LD\n3 1 Blue Penguin              R\n"
     ],
-    "data/gentoo-rescue/078 Flutter.txt": [
-      "1 4 Yellow Penguin            D\n2 5 Blue Penguin              D\n2 4 Yellow Penguin w/Hammer   R\n3 5 Blue Penguin              U\n2 6 Yellow Penguin w/Hammer   DL\n2 5 Blue Penguin w/Spring     DL\n3 5 Yellow Penguin w/Hammer   U\n1 4 Blue Penguin w/Spring     R\n1 5 Yellow Penguin w/Hammer   D\n1 3 Blue Penguin w/Spring     U\n3 5 Yellow Penguin w/Hammer   RUL\n"
+    "data/gentoo-rescue/Inception.txt": [
+      "2 9 Red Penguin               LRULDR\n2 1 Blue Penguin w/Spring     URUL\n3 8 Red Penguin w/Hammer      D\n4 3 Blue Penguin w/Spring     UR\n5 8 Red Penguin w/Hammer      L\n5 5 Blue Penguin w/Spring     R\n5 7 Red Penguin w/Hammer      L\n5 4 Blue Penguin w/Spring     R\n5 6 Red Penguin w/Hammer      L\n"
     ],
-    "data/gentoo-rescue/079 Cleanup.txt": [
+    "data/gentoo-rescue/Inception/Foreboding.txt": [
+      "2 6 Red Penguin w/Hammer      D\n2 3 Blue Seal w/Spring        RD\n3 6 Red Penguin w/Hammer      L\n3 3 Blue Seal w/Spring        URDL\n3 5 Red Penguin w/Hammer      UL\n"
+    ],
+    "data/gentoo-rescue/Inception/Foreboding/Cleanup.txt": [
       "2 2 Green Penguin w/Hammer    U\n1 5 Yellow Penguin            L\n1 2 Green Penguin w/Hammer    R\n1 5 Yellow Penguin            L\n1 3 Green Penguin w/Hammer    RD\n1 5 Yellow Penguin            L\n2 4 Green Penguin w/Hammer    U\n1 2 Yellow Penguin            D\n1 4 Green Penguin w/Hammer    L\n3 2 Yellow Penguin            UL\n1 2 Green Penguin w/Hammer    R\n2 1 Yellow Penguin w/Hammer   R\n2 4 Blue Penguin w/Spring     D\n1 5 Green Penguin w/Hammer    L\n1 3 Blue Penguin w/Spring     RU\n1 4 Green Penguin w/Hammer    L\n2 2 Blue Penguin w/Spring     UR\n1 2 Green Penguin w/Hammer    DL\n"
     ],
-    "data/gentoo-rescue/080 NAG.txt": [
+    "data/gentoo-rescue/Inception/Foreboding/Disguise.txt": [
+      "3 4 Blue Penguin              DL\n3 2 Red Seal w/Spring         DL\n4 1 Blue Penguin              R\n4 3 Red Seal w/Spring         L\n4 2 Blue Penguin              LURDL\n4 4 Red Seal w/Spring         U\n3 1 Blue Penguin              R\n3 4 Red Seal w/Spring         L\n"
+    ],
+    "data/gentoo-rescue/Inception/Foreboding/Drop.txt": [
+      "3 5 Yellow Penguin            ULDRURDLULULU\n"
+    ],
+    "data/gentoo-rescue/Inception/Foreboding/Flutter.txt": [
+      "1 4 Yellow Penguin            D\n2 5 Blue Penguin              D\n2 4 Yellow Penguin w/Hammer   R\n3 5 Blue Penguin              U\n2 6 Yellow Penguin w/Hammer   DL\n2 5 Blue Penguin w/Spring     DL\n3 5 Yellow Penguin w/Hammer   U\n1 4 Blue Penguin w/Spring     R\n1 5 Yellow Penguin w/Hammer   D\n1 3 Blue Penguin w/Spring     U\n3 5 Yellow Penguin w/Hammer   RUL\n"
+    ],
+    "data/gentoo-rescue/Inception/Foreboding/Free.txt": [
+      "2 2 Red Seal                  D\n2 4 Green Penguin             DLR\n3 1 Red Seal                  R\n3 5 Green Penguin w/Hammer    L\n3 1 Red Seal                  R\n3 4 Green Penguin w/Hammer    UL\n2 1 Yellow Penguin w/Hammer   DR\n3 5 Red Seal                  LU\n3 3 Yellow Penguin w/Hammer   R\n2 4 Red Seal                  D\n3 5 Yellow Penguin w/Hammer   L\n3 1 Red Seal                  R\n3 4 Yellow Penguin w/Hammer   L\n3 1 Red Seal                  RUR\n3 3 Yellow Penguin w/Hammer   U\n"
+    ],
+    "data/gentoo-rescue/Inception/Foreboding/Heist.txt": [
+      "2 4 Blue Penguin              DR\n4 5 Green Penguin             UR\n3 7 Blue Penguin              U\n1 7 Green Penguin             LDR\n2 7 Blue Penguin              ULDR\n2 5 Green Penguin w/Spring    D\n2 4 Blue Penguin              DL\n3 5 Green Penguin w/Spring    L\n3 1 Blue Penguin              R\n3 3 Green Penguin w/Spring    RU\n"
+    ],
+    "data/gentoo-rescue/Inception/Foreboding/Jackhammer.txt": [
+      "2 2 Yellow Seal               UR\n1 1 Green Penguin             D\n1 3 Yellow Seal w/Spring      LU\n2 1 Green Penguin             URDUL\n2 2 Yellow Seal w/Spring      D\n1 1 Green Penguin w/Hammer    R\n1 3 Yellow Seal w/Spring      LU\n1 2 Green Penguin w/Hammer    R\n2 4 Yellow Seal w/Spring      L\n1 4 Green Penguin w/Hammer    DR\n"
+    ],
+    "data/gentoo-rescue/Inception/Foreboding/NAG.txt": [
       "3 3 Blue Penguin w/Hammer     DLUDRULDLDRDRUDLURDL\n"
     ],
-    "data/gentoo-rescue/081 Liftoff.txt": [
-      "1 5 Yellow Seal               R\n5 7 Red Seal                  U\n5 2 Green Seal                RU\n2 7 Red Seal                  R\n1 7 Yellow Seal               D\n3 7 Green Seal                R\n4 8 Blue Seal w/Rocket        D\n2 8 Red Seal                  DL\n2 7 Yellow Seal               L\n"
+    "data/gentoo-rescue/Inception/Foreboding/Storm.txt": [
+      "3 4 Blue Penguin              UL\n3 3 Yellow Penguin            RULD\n1 1 Blue Penguin              R\n4 2 Yellow Penguin            UL\n1 4 Blue Penguin              L\n1 1 Yellow Penguin            D\n"
     ],
-    "data/gentoo-rescue/082 Rockets.txt": [
-      "1 1 Green Penguin             DRUR\n4 7 Blue Seal                 L\n"
+    "data/gentoo-rescue/Inception/Foreboding/Tango.txt": [
+      "1 1 Blue Penguin w/Spring     UL\n1 2 Green Penguin w/Hammer    LD\n2 2 Blue Penguin w/Spring     D\n2 1 Green Penguin w/Hammer    R\n1 2 Blue Penguin w/Spring     U\n2 4 Green Penguin w/Hammer    U\n2 2 Blue Penguin w/Spring     R\n1 4 Green Penguin w/Hammer    DL\n2 2 Blue Penguin w/Spring     R\n2 3 Green Penguin w/Hammer    RU\n2 1 Blue Penguin w/Spring     D\n"
     ],
-    "data/gentoo-rescue/083 Frenzy.txt": [
-      "3 3 Green Penguin             U\n1 3 Yellow Penguin w/Crutch   DL\n3 1 Blue Penguin              UR\n1 1 Red Penguin w/Crutch      D\n2 3 Blue Penguin              L\n"
+    "data/gentoo-rescue/Inception/Mjolnir.txt": [
+      "3 6 Yellow Penguin            DRUUR\n5 9 Blue Penguin              U\n1 9 Yellow Penguin w/Hammer   D\n5 9 Blue Penguin              U\n2 9 Yellow Penguin w/Hammer   DLLL\n"
     ],
-    "data/gentoo-rescue/084 Propulsion.txt": [
-      "3 5 Blue Penguin w/Rocket     R\n3 3 Green Penguin w/Rocket    D\n1 4 Yellow Penguin w/Rocket   R\n2 2 Red Penguin w/Rocket      U\n"
+    "data/gentoo-rescue/Inception/Mjolnir/Bash.txt": [
+      "2 3 Green Penguin             R\n1 2 Red Penguin w/Hammer      RDLRUL\n3 4 Green Penguin             UL\n1 2 Red Penguin w/Hammer      R\n1 4 Green Penguin             DLUL\n"
     ],
-    "data/gentoo-rescue/085 Deflection.txt": [
-      "3 3 Yellow Seal               LURU\n1 5 Green Penguin             R\n2 6 Yellow Seal w/Spring      U\n1 6 Green Penguin             D\n3 6 Yellow Seal w/Spring      RUL\n2 6 Green Penguin             L\n2 2 Yellow Seal w/Spring      URUU\n"
-    ],
-    "data/gentoo-rescue/086 Prune.txt": [
-      "3 2 Green Penguin             R\n2 4 Red Penguin               DL\n4 4 Yellow Penguin            U\n3 1 Red Penguin               R\n1 4 Yellow Penguin            D\n3 4 Red Penguin               L\n3 5 Green Penguin             L\n2 4 Yellow Penguin            L\n3 2 Green Penguin             U\n"
-    ],
-    "data/gentoo-rescue/087 UU.txt": [
-      "6 4 Blue Seal                 ULDLRDRDLURULUL\n"
-    ],
-    "data/gentoo-rescue/088 Defusal.txt": [
-      "4 1 Yellow Penguin            DR\n5 4 Green Penguin             U\n3 4 Red Penguin               L\n4 4 Green Penguin             UDDL\n5 3 Yellow Penguin            U\n4 5 Red Penguin               LDL\n4 3 Yellow Penguin            DL\n5 1 Red Penguin               U\n3 3 Green Penguin w/Crutch    RURR\n2 1 Red Penguin               R\n2 6 Green Penguin w/Crutch    DLUR\n5 2 Yellow Penguin            U\n"
-    ],
-    "data/gentoo-rescue/089 Rubber.txt": [
-      "4 4 Yellow Penguin            LU\n3 5 Green Penguin             DL\n1 2 Yellow Penguin            DR\n4 2 Green Penguin             U\n3 3 Yellow Penguin            LDR\n1 2 Green Penguin             D\n4 5 Yellow Penguin            U\n4 2 Green Penguin             RUL\n2 3 Blue Seal w/Rocket        R\n2 4 Green Penguin             U\n1 5 Yellow Penguin            D\n",
-      "4 4 Yellow Penguin            LU\n3 5 Green Penguin             DL\n1 2 Yellow Penguin            DR\n4 2 Green Penguin             U\n3 3 Yellow Penguin            LDR\n1 2 Green Penguin             D\n4 5 Yellow Penguin            U\n4 2 Green Penguin             RUL\n2 3 Blue Seal w/Rocket        R\n1 5 Yellow Penguin            D\n2 4 Green Penguin             U\n"
-    ],
-    "data/gentoo-rescue/090 Extinction.txt": [
-      "2 5 Blue Penguin w/Hammer     RDLULLDRUL\n"
-    ],
-    "data/gentoo-rescue/091 Balance.txt": [
-      "4 3 Yellow Seal               R\n3 2 Blue Penguin              DRU\n4 5 Yellow Seal               L\n1 4 Blue Penguin              DR\n4 2 Yellow Seal               RU\n1 1 Red Penguin w/Hammer      R\n4 5 Blue Penguin              LUR\n"
-    ],
-    "data/gentoo-rescue/093 Final.txt": [
-      "4 4 Red Seal w/Rocket         D\n2 3 Yellow Seal w/Rocket      R\n2 4 Blue Seal w/Rocket        U\n",
-      "3 4 Blue Seal w/Rocket        U\n2 3 Yellow Seal w/Rocket      L\n"
-    ],
-    "data/gentoo-rescue/094 Discard.txt": [
-      "2 1 Green Penguin             RDR\n4 3 Yellow Penguin            U\n3 5 Green Penguin             L\n3 3 Yellow Penguin            D\n3 4 Green Penguin             U\n4 3 Yellow Penguin            RURD\n1 4 Green Penguin             DLU\n4 4 Yellow Penguin            LU\n2 3 Red Penguin w/Rocket      RL\n"
-    ],
-    "data/gentoo-rescue/095 Countdown.txt": [
-      "2 5 Green Seal w/Rocket       DLL\n2 3 Red Seal w/Rocket         UR\n2 4 Blue Seal w/Rocket        D\n"
-    ],
-    "data/gentoo-rescue/096 Brake.txt": [
+    "data/gentoo-rescue/Inception/Mjolnir/Brake.txt": [
       "3 2 Yellow Seal               UR\n1 2 Green Penguin w/Hammer    DLU\n2 4 Yellow Seal               L\n2 1 Green Penguin w/Hammer    R\n2 4 Yellow Seal               LU\n2 2 Green Penguin w/Hammer    UR\n"
     ],
-    "data/gentoo-rescue/test.txt": [
-      "1 1 Green Penguin             L\n",
-      "1 1 Green Penguin w/Spring    L\n"
+    "data/gentoo-rescue/Inception/Mjolnir/Frozen.txt": [
+      "3 2 Blue Seal                 LU\n1 1 Red Penguin w/Hammer      DR\n3 1 Blue Seal                 U\n2 4 Red Penguin w/Hammer      ULD\n1 1 Blue Seal                 D\n2 3 Red Penguin w/Hammer      L\n3 1 Blue Seal                 R\n2 1 Red Penguin w/Hammer      D\n3 2 Blue Seal                 U\n3 1 Red Penguin w/Hammer      RU\n"
+    ],
+    "data/gentoo-rescue/Inception/Mjolnir/March.txt": [
+      "1 2 Blue Seal                 R\n2 1 Red Penguin               URDLU\n1 5 Blue Seal                 L\n1 1 Red Penguin w/Hammer      R\n1 5 Blue Seal                 L\n1 2 Red Penguin w/Hammer      R\n1 5 Blue Seal                 LD\n1 3 Red Penguin w/Hammer      RDULD\n2 4 Blue Seal                 L\n2 1 Red Penguin w/Hammer      R\n2 5 Blue Seal                 LD\n"
+    ],
+    "data/gentoo-rescue/Inception/Mjolnir/Nails.txt": [
+      "1 1 Green Penguin             D\n4 7 Yellow Penguin            L\n2 1 Green Penguin             RUR\n"
+    ],
+    "data/gentoo-rescue/Inception/Mjolnir/Preservation.txt": [
+      "1 5 Green Penguin w/Hammer    DLU\n2 2 Red Penguin w/Hammer      RDLU\n2 2 Green Penguin w/Hammer    LDR\n3 3 Red Penguin w/Hammer      UR\n"
+    ],
+    "data/gentoo-rescue/Inception/Mjolnir/Propagation.txt": [
+      "1 5 Yellow Penguin w/Hammer   R\n3 5 Red Penguin w/Hammer      U\n3 3 Green Penguin             RU\n1 5 Red Penguin w/Hammer      D\n1 6 Yellow Penguin w/Hammer   L\n3 5 Green Penguin             L\n1 5 Yellow Penguin w/Hammer   D\n3 3 Green Penguin             R\n3 5 Red Penguin w/Hammer      U\n1 5 Yellow Penguin w/Hammer   RD\n3 4 Green Penguin             U\n2 6 Yellow Penguin w/Hammer   L\n"
+    ],
+    "data/gentoo-rescue/Inception/Mjolnir/Smash.txt": [
+      "1 5 Blue Seal                 L\n1 2 Green Penguin w/Hammer    R\n1 5 Blue Seal                 D\n1 3 Green Penguin w/Hammer    D\n1 1 Yellow Penguin            R\n2 3 Green Penguin w/Hammer    UL\n1 5 Yellow Penguin            L\n1 1 Green Penguin w/Hammer    R\n1 5 Yellow Penguin            LD\n2 5 Blue Seal                 L\n1 2 Green Penguin w/Hammer    RDL\n"
+    ],
+    "data/gentoo-rescue/Inception/Mjolnir/Spin.txt": [
+      "1 2 Red Penguin w/Hammer      D\n2 1 Yellow Penguin            URD\n3 2 Red Penguin w/Hammer      ULU\n1 2 Yellow Penguin            D\n1 1 Red Penguin w/Hammer      R\n3 2 Yellow Penguin            U\n1 2 Red Penguin w/Hammer      D\n3 2 Yellow Penguin            R\n"
+    ],
+    "data/gentoo-rescue/Inception/Mjolnir/Stomp.txt": [
+      "1 1 Red Penguin               D\n1 6 Yellow Penguin            L\n3 1 Red Penguin               U\n3 5 Green Seal                L\n3 3 Blue Penguin w/Hammer     R\n2 1 Red Penguin               R\n3 4 Blue Penguin w/Hammer     ULURD\n"
+    ],
+    "data/gentoo-rescue/Inception/Mjolnir/Trail.txt": [
+      "2 3 Red Penguin w/Hammer      R\n2 6 Green Penguin             L\n2 4 Red Penguin w/Hammer      RU\n2 6 Green Penguin             L\n1 5 Red Penguin w/Hammer      D\n2 1 Green Penguin             R\n2 5 Red Penguin w/Hammer      L\n2 1 Green Penguin             R\n2 4 Red Penguin w/Hammer      L\n2 1 Green Penguin             R\n2 3 Red Penguin w/Hammer      LU\n"
+    ],
+    "data/gentoo-rescue/Inception/Moonwalk/Escort.txt": [
+      "3 3 Yellow Penguin w/Spring   R\n3 4 Blue Penguin              L\n3 2 Yellow Penguin w/Spring   R\n3 3 Blue Penguin              L\n3 1 Yellow Penguin w/Spring   ULD\n3 2 Blue Penguin              ULU\n1 2 Yellow Penguin w/Spring   D\n1 1 Blue Penguin              R\n2 2 Yellow Penguin w/Spring   U\n1 2 Blue Penguin              LD\n3 2 Yellow Penguin w/Spring   L\n3 1 Blue Penguin              R\n3 3 Yellow Penguin w/Spring   L\n3 2 Blue Penguin              R\n3 4 Yellow Penguin w/Spring   L\n3 3 Blue Penguin              R\n3 5 Yellow Penguin w/Spring   L\n3 4 Blue Penguin              RU\n"
+    ],
+    "data/gentoo-rescue/Inception/Moonwalk/Lean.txt": [
+      "1 7 Green Penguin             LDR\n2 2 Blue Penguin w/Spring     DR\n3 2 Green Penguin             U\n2 6 Yellow Penguin w/Spring   U\n1 6 Blue Penguin w/Spring     L\n2 4 Red Penguin w/Spring      U\n1 2 Green Penguin             D\n1 4 Blue Penguin w/Spring     L\n"
+    ],
+    "data/gentoo-rescue/Inception/Moonwalk/Ometa.txt": [
+      "2 2 Red Seal                  DDRRULDLUL\n"
+    ],
+    "data/gentoo-rescue/Inception/Moonwalk/Recoil.txt": [
+      "1 4 Blue Penguin w/Spring     URU\n2 5 Green Penguin             DL\n3 3 Blue Penguin w/Spring     R\n3 4 Green Penguin             LUL\n3 2 Blue Penguin w/Spring     D\n"
+    ],
+    "data/gentoo-rescue/Inception/Moonwalk/Retrograde.txt": [
+      "4 3 Green Penguin             ULULDLULDL\n"
+    ],
+    "data/gentoo-rescue/Inception/Moonwalk/Skipping.txt": [
+      "4 7 Green Penguin             ULD\n1 1 Blue Penguin              R\n4 5 Green Penguin             L\n"
+    ],
+    "data/gentoo-rescue/Inception/Moonwalk/Torsion.txt": [
+      "3 1 Blue Penguin              R\n3 3 Yellow Penguin            L\n3 1 Blue Penguin w/Spring     DLD\n3 2 Yellow Penguin            UL\n1 2 Blue Penguin w/Spring     UL\n2 1 Yellow Penguin            RUR\n2 3 Blue Penguin w/Spring     U\n1 3 Yellow Penguin            DL\n"
+    ],
+    "data/gentoo-rescue/Inception/Moonwalk/Twist.txt": [
+      "3 2 Blue Penguin              UL\n2 1 Yellow Penguin            RD\n2 3 Blue Penguin w/Spring     RD\n3 2 Yellow Penguin            UR\n1 2 Blue Penguin w/Spring     UR\n2 3 Yellow Penguin            LDR\n"
+    ],
+    "data/gentoo-rescue/Inception/Moonwalk/Unbounded.txt": [
+      "2 2 Blue Penguin              LLUURRULUR\n"
+    ],
+    "data/gentoo-rescue/Transition/Flare.txt": [
+      "3 6 Yellow Penguin            LUR\n3 7 Blue Seal                 L\n2 7 Green Seal                D\n3 1 Blue Seal                 U\n3 7 Green Seal                L\n2 5 Yellow Penguin w/Bomb     D\n2 1 Blue Seal                 R\n4 5 Yellow Penguin w/Bomb     UL\n3 1 Green Seal                DR\n2 5 Blue Seal                 D\n"
+    ],
+    "data/gentoo-rescue/Transition/Flare/Abort.txt": [
+      "3 3 Red Seal w/Spring         LU\n4 2 Blue Penguin w/Bomb       RULD\n2 2 Red Seal w/Spring         L\n4 3 Blue Penguin w/Bomb       U\n2 3 Red Seal w/Spring         U\n3 3 Blue Penguin w/Bomb       L\n"
+    ],
+    "data/gentoo-rescue/Transition/Flare/Breach.txt": [
+      "1 3 Red Seal                  DL\n3 3 Yellow Seal               ULRDLUR\n"
+    ],
+    "data/gentoo-rescue/Transition/Flare/Breakout.txt": [
+      "4 4 Yellow Seal               U\n4 5 Red Seal                  L\n2 4 Yellow Seal               L\n4 3 Green Seal                U\n4 2 Blue Seal                 R\n4 4 Red Seal                  RU\n2 3 Green Seal w/Hammer       D\n3 5 Red Seal                  LU\n4 3 Green Seal w/Hammer       UL\n"
+    ],
+    "data/gentoo-rescue/Transition/Flare/Clear.txt": [
+      "2 3 Yellow Seal w/Bomb        D\n2 4 Red Seal                  LD\n2 1 Green Seal                R\n1 3 Blue Seal                 LD\n2 4 Green Seal                L\n3 2 Red Seal                  R\n2 2 Blue Seal                 D\n3 6 Red Seal                  DU\n3 2 Blue Seal                 RDU\n4 3 Yellow Seal w/Bomb        U\n2 3 Green Seal                UL\n3 3 Yellow Seal w/Bomb        R\n1 2 Green Seal                D\n3 6 Yellow Seal w/Bomb        D\n3 2 Green Seal                RD\n"
+    ],
+    "data/gentoo-rescue/Transition/Flare/Detonation.txt": [
+      "2 1 Red Penguin w/Bomb        U\n2 3 Green Penguin w/Bomb      L\n1 1 Red Penguin w/Bomb        R\n2 1 Green Penguin w/Bomb      U\n1 2 Red Penguin w/Bomb        D\n1 1 Green Penguin w/Bomb      R\n2 2 Red Penguin w/Bomb        L\n1 2 Green Penguin w/Bomb      D\n"
+    ],
+    "data/gentoo-rescue/Transition/Flare/Exodus.txt": [
+      "2 3 Red Seal                  DU\n3 2 Green Seal                RL\n2 4 Yellow Seal               D\n2 3 Red Seal w/Spring         D\n2 2 Blue Seal                 R\n3 2 Green Seal w/Spring       U\n3 3 Red Seal w/Spring         U\n2 6 Blue Seal                 L\n2 3 Red Seal w/Spring         L\n2 2 Green Seal w/Spring       DRU\n2 4 Blue Seal                 D\n"
+    ],
+    "data/gentoo-rescue/Transition/Flare/ON.txt": [
+      "2 2 Red Penguin w/Bomb        RD\n2 5 Blue Penguin              L\n3 4 Red Penguin w/Bomb        ULU\n2 2 Blue Penguin              R\n2 1 Green Penguin             RD\n2 5 Blue Penguin              L\n1 3 Red Penguin w/Bomb        DR\n3 4 Green Penguin             U\n2 1 Blue Penguin              RU\n2 4 Green Penguin             D\n2 5 Red Penguin w/Bomb        L\n1 3 Blue Penguin              D\n3 4 Green Penguin             UR\n2 1 Red Penguin w/Bomb        R\n2 3 Blue Penguin              RD\n"
+    ],
+    "data/gentoo-rescue/Transition/Flare/Planted.txt": [
+      "3 2 Blue Penguin              LU\n1 4 Red Penguin               R\n1 1 Blue Penguin              RD\n1 5 Red Penguin               L\n2 4 Blue Penguin              U\n1 1 Red Penguin               RD\n1 4 Blue Penguin              L\n4 3 Red Penguin w/Hammer      UR\n1 1 Blue Penguin              R\n1 5 Red Penguin w/Hammer      L\n1 1 Blue Penguin              RDR\n1 4 Red Penguin w/Hammer      D\n4 4 Blue Penguin              LU\n"
+    ],
+    "data/gentoo-rescue/Transition/Flare/Trigger.txt": [
+      "1 1 Blue Penguin w/Bomb       DR\n3 1 Green Penguin             U\n2 3 Blue Penguin w/Bomb       ULD\n1 1 Green Penguin             R\n2 2 Blue Penguin w/Bomb       U\n1 3 Green Penguin             DL\n1 2 Blue Penguin w/Bomb       L\n"
+    ],
+    "data/gentoo-rescue/Transition/Lemniscate.txt": [
+      "2 2 Yellow Penguin            R\n3 2 Blue Seal                 U\n3 1 Green Seal                R\n2 2 Blue Seal                 RU\n3 2 Green Seal                U\n2 5 Yellow Penguin            L\n1 4 Blue Seal                 D\n2 3 Yellow Penguin            U\n2 2 Green Seal                R\n2 4 Blue Seal                 U\n2 3 Green Seal                U\n4 9 Yellow Penguin            LU\n5 9 Green Seal                L\n"
+    ],
+    "data/gentoo-rescue/Transition/Lemniscate/EY0.txt": [
+      "3 1 Blue Penguin              D\n4 4 Red Penguin               RUL\n4 1 Blue Penguin              RULD\n2 1 Red Penguin               RDL\n4 2 Blue Penguin w/Hammer     URDL\n4 1 Red Penguin               R\n4 3 Blue Penguin w/Hammer     UL\n"
+    ],
+    "data/gentoo-rescue/Transition/Lemniscate/Flow.txt": [
+      "2 4 Green Penguin w/Hammer    ULD\n2 3 Red Penguin               U\n2 1 Green Penguin w/Hammer    RL\n1 3 Red Penguin               DR\n2 5 Green Penguin w/Hammer    DRUL\n2 5 Red Penguin               D\n2 4 Green Penguin w/Hammer    U\n"
+    ],
+    "data/gentoo-rescue/Transition/Lemniscate/Four.txt": [
+      "2 2 Blue Seal                 U\n5 5 Green Penguin             LD\n1 2 Blue Seal                 LU\n5 3 Green Penguin             LD\n3 4 Blue Seal                 L\n4 5 Green Penguin             U\n"
+    ],
+    "data/gentoo-rescue/Transition/Lemniscate/Inertia.txt": [
+      "4 3 Blue Penguin              LU\n2 3 Green Seal                RDL\n1 2 Blue Penguin              D\n4 2 Green Seal                RU\n3 2 Blue Penguin              LURD\n2 4 Green Seal                LDR\n"
+    ],
+    "data/gentoo-rescue/Transition/Lemniscate/Interruption.txt": [
+      "2 1 Green Penguin             R\n3 1 Blue Penguin              U\n2 3 Green Penguin             LD\n2 1 Blue Penguin              RD\n4 2 Green Penguin             L\n4 3 Blue Penguin              L\n4 4 Green Penguin             L\n4 5 Blue Penguin              L\n4 6 Green Penguin             U\n4 7 Blue Penguin              U\n3 6 Green Penguin             L\n3 7 Blue Penguin              D\n3 1 Green Penguin             DUD\n"
+    ],
+    "data/gentoo-rescue/Transition/Lemniscate/Leap.txt": [
+      "2 1 Red Seal                  DR\n4 4 Green Seal                UDRUDL\n4 3 Red Seal                  ULR\n"
+    ],
+    "data/gentoo-rescue/Transition/Lemniscate/Momentum.txt": [
+      "4 2 Green Penguin w/Spring    UR\n2 3 Red Penguin               LD\n2 1 Green Penguin w/Spring    L\n4 2 Red Penguin               UR\n2 2 Green Penguin w/Spring    DR\n3 3 Red Penguin               UL\n3 1 Green Penguin w/Spring    U\n"
+    ],
+    "data/gentoo-rescue/Transition/Lemniscate/Quake.txt": [
+      "3 2 Red Seal                  LU\n3 3 Green Penguin             LUR\n1 1 Red Seal                  RL\n2 4 Green Penguin             L\n2 1 Red Seal                  URL\n2 2 Green Penguin             U\n"
+    ],
+    "data/gentoo-rescue/Transition/Lemniscate/Ricochet.txt": [
+      "1 1 Green Penguin             DRDR\n3 7 Blue Penguin              L\n4 4 Green Penguin             U\n3 1 Red Penguin               R\n4 4 Green Penguin w/Spring    RDL\n3 4 Red Penguin               L\n3 2 Green Penguin w/Spring    RD\n3 6 Blue Penguin              R\n3 3 Red Penguin               LD\n"
+    ],
+    "data/gentoo-rescue/Transition/Lemniscate/Thinking.txt": [
+      "2 3 Red Penguin               R\n2 2 Blue Penguin              RD\n2 1 Green Penguin             RU\n2 5 Red Penguin               L\n4 4 Blue Penguin              UR\n1 4 Green Penguin             L\n2 1 Red Penguin               RD\n2 5 Blue Penguin              U\n4 4 Red Penguin               R\n"
+    ],
+    "data/gentoo-rescue/Transition/Lemniscate/Turn.txt": [
+      "4 5 Green Penguin             LULD\n4 2 Blue Penguin              RUL\n3 2 Green Penguin             LDR\n"
+    ],
+    "data/gentoo-rescue/Transition/Lemniscate/While.txt": [
+      "1 2 Red Seal                  R\n1 1 Blue Penguin              RD\n2 2 Yellow Penguin            R\n2 1 Green Penguin             R\n2 4 Yellow Penguin            D\n2 5 Blue Penguin              L\n3 4 Yellow Penguin            L\n2 4 Blue Penguin              DL\n2 3 Green Penguin             U\n1 6 Red Seal                  LD\n1 3 Green Penguin             D\n3 2 Blue Penguin              D\n3 3 Green Penguin             LDR\n3 4 Red Seal                  LDRDR\n"
+    ],
+    "data/gentoo-rescue/Transition/Lemniscate/Wormhole.txt": [
+      "2 2 Green Penguin             D\n4 2 Red Penguin               RDR\n2 6 Yellow Penguin            DL\n3 2 Green Penguin             DR\n4 4 Blue Penguin              U\n"
+    ],
+    "data/gentoo-rescue/Transition/Liftoff.txt": [
+      "1 5 Yellow Seal               R\n5 7 Red Seal                  U\n5 2 Green Seal                RU\n2 7 Red Seal                  R\n1 7 Yellow Seal               D\n3 7 Green Seal                R\n4 8 Blue Seal w/Rocket        D\n2 8 Red Seal                  DL\n2 7 Yellow Seal               L\n"
+    ],
+    "data/gentoo-rescue/Transition/Liftoff/Balance.txt": [
+      "4 3 Yellow Seal               R\n3 2 Blue Penguin              DRU\n4 5 Yellow Seal               L\n1 4 Blue Penguin              DR\n4 2 Yellow Seal               RU\n1 1 Red Penguin w/Hammer      R\n4 5 Blue Penguin              LUR\n"
+    ],
+    "data/gentoo-rescue/Transition/Liftoff/Countdown.txt": [
+      "2 5 Green Seal w/Rocket       DLL\n2 3 Red Seal w/Rocket         UR\n2 4 Blue Seal w/Rocket        D\n"
+    ],
+    "data/gentoo-rescue/Transition/Liftoff/Deflection.txt": [
+      "3 3 Yellow Seal               LURU\n1 5 Green Penguin             R\n2 6 Yellow Seal w/Spring      U\n1 6 Green Penguin             D\n3 6 Yellow Seal w/Spring      RUL\n2 6 Green Penguin             L\n2 2 Yellow Seal w/Spring      URUU\n"
+    ],
+    "data/gentoo-rescue/Transition/Liftoff/Defusal.txt": [
+      "4 1 Yellow Penguin            DR\n5 4 Green Penguin             U\n3 4 Red Penguin               L\n4 4 Green Penguin             UDDL\n5 3 Yellow Penguin            U\n4 5 Red Penguin               LDL\n4 3 Yellow Penguin            DL\n5 1 Red Penguin               U\n3 3 Green Penguin w/Crutch    RURR\n2 1 Red Penguin               R\n2 6 Green Penguin w/Crutch    DLUR\n5 2 Yellow Penguin            U\n"
+    ],
+    "data/gentoo-rescue/Transition/Liftoff/Discard.txt": [
+      "2 1 Green Penguin             RDR\n4 3 Yellow Penguin            U\n3 5 Green Penguin             L\n3 3 Yellow Penguin            D\n3 4 Green Penguin             U\n4 3 Yellow Penguin            RURD\n1 4 Green Penguin             DLU\n4 4 Yellow Penguin            LU\n2 3 Red Penguin w/Rocket      RL\n"
+    ],
+    "data/gentoo-rescue/Transition/Liftoff/Extinction.txt": [
+      "2 5 Blue Penguin w/Hammer     RDLULLDRUL\n"
+    ],
+    "data/gentoo-rescue/Transition/Liftoff/Final.txt": [
+      "4 4 Red Seal w/Rocket         D\n2 3 Yellow Seal w/Rocket      R\n2 4 Blue Seal w/Rocket        U\n"
+    ],
+    "data/gentoo-rescue/Transition/Liftoff/Frenzy.txt": [
+      "3 3 Green Penguin             U\n1 3 Yellow Penguin w/Crutch   DL\n3 1 Blue Penguin              UR\n1 1 Red Penguin w/Crutch      D\n2 3 Blue Penguin              L\n"
+    ],
+    "data/gentoo-rescue/Transition/Liftoff/Propulsion.txt": [
+      "3 5 Blue Penguin w/Rocket     R\n3 3 Green Penguin w/Rocket    D\n1 4 Yellow Penguin w/Rocket   R\n2 2 Red Penguin w/Rocket      U\n"
+    ],
+    "data/gentoo-rescue/Transition/Liftoff/Prune.txt": [
+      "3 2 Green Penguin             R\n2 4 Red Penguin               DL\n4 4 Yellow Penguin            U\n3 1 Red Penguin               R\n1 4 Yellow Penguin            D\n3 4 Red Penguin               L\n3 5 Green Penguin             L\n2 4 Yellow Penguin            L\n3 2 Green Penguin             U\n"
+    ],
+    "data/gentoo-rescue/Transition/Liftoff/Rockets.txt": [
+      "1 1 Green Penguin             DRUR\n4 7 Blue Seal                 L\n"
+    ],
+    "data/gentoo-rescue/Transition/Liftoff/Rubber.txt": [
+      "4 4 Yellow Penguin            LU\n3 5 Green Penguin             DL\n1 2 Yellow Penguin            DR\n4 2 Green Penguin             U\n3 3 Yellow Penguin            LDR\n1 2 Green Penguin             D\n4 5 Yellow Penguin            U\n4 2 Green Penguin             RUL\n2 3 Blue Seal w/Rocket        R\n1 5 Yellow Penguin            D\n2 4 Green Penguin             U\n"
+    ],
+    "data/gentoo-rescue/Transition/Liftoff/UU.txt": [
+      "6 4 Blue Seal                 ULDLRDRDLURULUL\n"
+    ],
+    "data/gentoo-rescue/Transition/Walk.txt": [
+      "3 7 Green Penguin             L\n3 1 Blue Penguin w/Crutch     URU\n3 2 Green Penguin             U\n1 2 Blue Penguin w/Crutch     RDRDRRRRRRU\n2 2 Green Penguin             R\n2 10 Blue Penguin w/Crutch    DDDLDDL\n2 8 Green Penguin w/Spring    D\n7 8 Blue Penguin w/Crutch     RUU\n5 8 Green Penguin w/Spring    R\n5 9 Blue Penguin w/Crutch     RUULLL\n"
+    ],
+    "data/gentoo-rescue/Transition/Walk/Barrier.txt": [
+      "3 5 Yellow Penguin            D\n2 3 Green Penguin             R\n2 5 Red Penguin               D\n2 4 Green Penguin             DL\n4 5 Yellow Penguin            L\n4 1 Green Penguin w/Crutch    UUR\n4 2 Yellow Penguin            UR\n3 5 Red Penguin               ULU\n"
+    ],
+    "data/gentoo-rescue/Transition/Walk/Blockade.txt": [
+      "2 1 Red Penguin w/Hammer      RLURRLDRRUR\n"
+    ],
+    "data/gentoo-rescue/Transition/Walk/Compulsion.txt": [
+      "3 3 Red Penguin w/Hammer      DLURDLULDRULRULDRLDUU\n"
+    ],
+    "data/gentoo-rescue/Transition/Walk/Crutches.txt": [
+      "1 1 Red Penguin               RRR\n4 7 Yellow Penguin            U\n1 4 Red Penguin w/Crutch      R\n3 7 Yellow Penguin            LDL\n1 5 Red Penguin w/Crutch      RR\n"
+    ],
+    "data/gentoo-rescue/Transition/Walk/Nudge.txt": [
+      "2 1 Red Penguin               UR\n3 4 Yellow Penguin            U\n1 5 Red Penguin w/Hammer      L\n1 1 Yellow Penguin            DR\n1 4 Red Penguin w/Hammer      L\n2 2 Yellow Penguin w/Crutch   U\n1 1 Red Penguin w/Hammer      R\n1 3 Yellow Penguin w/Crutch   RDR\n"
+    ],
+    "data/gentoo-rescue/Transition/Walk/Paralyze.txt": [
+      "2 7 Yellow Penguin            LDD\n2 3 Red Penguin               RU\n4 5 Yellow Penguin w/Crutch   U\n1 4 Red Penguin w/Crutch      R\n3 5 Yellow Penguin w/Crutch   L\n1 3 Blue Seal                 RDR\n3 4 Yellow Penguin w/Crutch   U\n2 7 Blue Seal                 LD\n2 4 Yellow Penguin w/Crutch   R\n4 5 Blue Seal                 ULL\n2 5 Yellow Penguin w/Crutch   LU\n4 2 Green Penguin             U\n3 1 Blue Seal w/Crutch        RD\n1 2 Green Penguin             D\n1 4 Yellow Penguin w/Crutch   L\n4 2 Blue Seal w/Crutch        L\n3 2 Green Penguin             R\n1 3 Yellow Penguin w/Crutch   L\n"
+    ],
+    "data/gentoo-rescue/Transition/Walk/Step.txt": [
+      "4 5 Yellow Penguin w/Crutch   UU\n3 2 Red Penguin w/Hammer      R\n2 5 Yellow Penguin w/Crutch   LL\n3 3 Red Penguin w/Hammer      U\n1 3 Yellow Penguin w/Crutch   RD\n2 3 Red Penguin w/Hammer      R\n2 5 Yellow Penguin w/Crutch   D\n2 4 Red Penguin w/Hammer      DR\n3 6 Yellow Penguin w/Crutch   DL\n3 5 Red Penguin w/Hammer      DL\n5 5 Yellow Penguin w/Crutch   UURR\n4 4 Red Penguin w/Hammer      LLL\n"
+    ],
+    "data/gentoo-rescue/Transition/Walk/Stop.txt": [
+      "2 2 Yellow Penguin            U\n4 3 Red Penguin               R\n1 2 Yellow Penguin            RDLDR\n4 5 Red Penguin               U\n4 4 Yellow Penguin w/Crutch   R\n1 5 Red Penguin               L\n4 5 Yellow Penguin w/Crutch   UUUL\n1 2 Red Penguin               R\n1 4 Yellow Penguin w/Crutch   RDDDLL\n1 3 Red Penguin               D\n4 3 Yellow Penguin w/Crutch   RRUUL\n"
+    ],
+    "data/gentoo-rescue/Transition/Walk/Stride.txt": [
+      "3 2 Red Penguin w/Hammer      RRRDU\n4 6 Blue Penguin w/Crutch     L\n2 5 Red Penguin w/Hammer      LDL\n4 5 Blue Penguin w/Crutch     L\n4 3 Red Penguin w/Hammer      L\n4 4 Blue Penguin w/Crutch     L\n4 2 Red Penguin w/Hammer      R\n4 4 Blue Penguin w/Crutch     U\n4 3 Red Penguin w/Hammer      U\n3 4 Blue Penguin w/Crutch     L\n2 3 Red Penguin w/Hammer      DR\n4 3 Blue Penguin w/Crutch     RU\n3 6 Red Penguin w/Hammer      L\n3 3 Blue Penguin w/Crutch     UR\n3 4 Red Penguin w/Hammer      UU\n"
+    ],
+    "data/gentoo-rescue/Transition/Walk/Threading.txt": [
+      "2 3 Red Penguin               LR\n1 2 Yellow Penguin            D\n2 3 Red Penguin w/Crutch      LU\n3 2 Yellow Penguin w/Crutch   URD\n1 2 Red Penguin w/Crutch      D\n1 1 Green Penguin             R\n2 2 Red Penguin w/Crutch      R\n1 2 Green Penguin             D\n2 3 Red Penguin w/Crutch      LUL\n3 2 Green Penguin             U\n3 3 Yellow Penguin w/Crutch   ULD\n1 2 Green Penguin             D\n1 1 Red Penguin w/Crutch      R\n2 2 Green Penguin             R\n1 2 Red Penguin w/Crutch      D\n"
+    ],
+    "data/gentoo-rescue/Transition/Walk/Transfer.txt": [
+      "4 1 Red Penguin               RULDRLRRLLDDRRUL\n"
+    ],
+    "data/gentoo-rescue/Transition/Walk/WN.txt": [
+      "1 2 Blue Seal w/Crutch        R\n1 4 Red Penguin w/Hammer      LD\n2 1 Yellow Penguin            RDL\n1 2 Blue Seal w/Crutch        D\n2 3 Red Penguin w/Hammer      L\n2 1 Blue Seal w/Crutch        DR\n2 2 Red Penguin w/Hammer      D\n4 2 Blue Seal w/Crutch        R\n3 2 Red Penguin w/Hammer      DR\n4 1 Yellow Penguin w/Hammer   R\n4 4 Red Penguin w/Hammer      U\n"
     ]
   },
   "metadata": {
@@ -330,377 +293,377 @@
     "timeout": 60
   },
   "timing": {
-    "data/gentoo-rescue/001 Movement.txt": {
-      "fastest": 8,
-      "most_recent": 194
+    "data/gentoo-rescue/Ground Rules.txt": {
+      "fastest": 9,
+      "most_recent": 15
     },
-    "data/gentoo-rescue/002 Landing.txt": {
-      "fastest": 5,
-      "most_recent": 13
+    "data/gentoo-rescue/Ground Rules/Assistance.txt": {
+      "fastest": 15,
+      "most_recent": 180
     },
-    "data/gentoo-rescue/003 Assistance.txt": {
-      "fastest": 5,
-      "most_recent": 14
+    "data/gentoo-rescue/Ground Rules/Blockers.txt": {
+      "fastest": 31,
+      "most_recent": 34
     },
-    "data/gentoo-rescue/004 Conjunction.txt": {
-      "fastest": 6,
-      "most_recent": 8
+    "data/gentoo-rescue/Ground Rules/Conjunction.txt": {
+      "fastest": 9,
+      "most_recent": 9
     },
-    "data/gentoo-rescue/005 Blockers.txt": {
-      "fastest": 23,
-      "most_recent": 31
+    "data/gentoo-rescue/Ground Rules/Escape.txt": {
+      "fastest": 10,
+      "most_recent": 10
     },
-    "data/gentoo-rescue/006 Escape.txt": {
-      "fastest": 5,
+    "data/gentoo-rescue/Ground Rules/Landing.txt": {
+      "fastest": 7,
       "most_recent": 7
     },
-    "data/gentoo-rescue/007 Return.txt": {
-      "fastest": 6,
-      "most_recent": 195
+    "data/gentoo-rescue/Ground Rules/Movement.txt": {
+      "fastest": 8,
+      "most_recent": 180
     },
-    "data/gentoo-rescue/008 Separation.txt": {
-      "fastest": 7,
-      "most_recent": 28
-    },
-    "data/gentoo-rescue/009 Skipping.txt": {
-      "fastest": 4,
-      "most_recent": 9
-    },
-    "data/gentoo-rescue/010 Retrograde.txt": {
-      "fastest": 5,
-      "most_recent": 188
-    },
-    "data/gentoo-rescue/011 Unbounded.txt": {
-      "fastest": 5,
-      "most_recent": 20
-    },
-    "data/gentoo-rescue/012 Twist.txt": {
-      "fastest": 5,
-      "most_recent": 15
-    },
-    "data/gentoo-rescue/013 Recoil.txt": {
-      "fastest": 6,
-      "most_recent": 187
-    },
-    "data/gentoo-rescue/014 Lean.txt": {
-      "fastest": 12,
-      "most_recent": 28
-    },
-    "data/gentoo-rescue/015 Ometa.txt": {
-      "fastest": 6,
-      "most_recent": 9
-    },
-    "data/gentoo-rescue/016 Escort.txt": {
-      "fastest": 6,
-      "most_recent": 9
-    },
-    "data/gentoo-rescue/017 Nails.txt": {
-      "fastest": 7,
-      "most_recent": 12
-    },
-    "data/gentoo-rescue/018 Spin.txt": {
-      "fastest": 5,
-      "most_recent": 13
-    },
-    "data/gentoo-rescue/019 Stomp.txt": {
-      "fastest": 9,
-      "most_recent": 14
-    },
-    "data/gentoo-rescue/020 Bash.txt": {
-      "fastest": 9,
-      "most_recent": 12
-    },
-    "data/gentoo-rescue/021 Preservation.txt": {
-      "fastest": 7,
-      "most_recent": 16
-    },
-    "data/gentoo-rescue/022 Trail.txt": {
-      "fastest": 7,
+    "data/gentoo-rescue/Ground Rules/Return.txt": {
+      "fastest": 10,
       "most_recent": 10
     },
-    "data/gentoo-rescue/023 March.txt": {
-      "fastest": 10,
-      "most_recent": 12
-    },
-    "data/gentoo-rescue/024 Smash.txt": {
-      "fastest": 9,
-      "most_recent": 25
-    },
-    "data/gentoo-rescue/025 Propagation.txt": {
-      "fastest": 20,
-      "most_recent": 208
-    },
-    "data/gentoo-rescue/026 Frozen.txt": {
-      "fastest": 10,
-      "most_recent": 18
-    },
-    "data/gentoo-rescue/027 Mjolnir.txt": {
-      "fastest": 9,
-      "most_recent": 12
-    },
-    "data/gentoo-rescue/028 Inception.txt": {
-      "fastest": 10,
-      "most_recent": 13
-    },
-    "data/gentoo-rescue/029 Thinking.txt": {
-      "fastest": 14,
+    "data/gentoo-rescue/Ground Rules/Separation.txt": {
+      "fastest": 13,
       "most_recent": 17
     },
-    "data/gentoo-rescue/030 Inertia.txt": {
-      "fastest": 9,
+    "data/gentoo-rescue/Inception.txt": {
+      "fastest": 14,
+      "most_recent": 15
+    },
+    "data/gentoo-rescue/Inception/Foreboding.txt": {
+      "fastest": 13,
+      "most_recent": 15
+    },
+    "data/gentoo-rescue/Inception/Foreboding/Cleanup.txt": {
+      "fastest": 12,
+      "most_recent": 15
+    },
+    "data/gentoo-rescue/Inception/Foreboding/Disguise.txt": {
+      "fastest": 16,
       "most_recent": 16
     },
-    "data/gentoo-rescue/031 While.txt": {
-      "fastest": 860,
-      "most_recent": 1039
+    "data/gentoo-rescue/Inception/Foreboding/Drop.txt": {
+      "fastest": 10,
+      "most_recent": 184
     },
-    "data/gentoo-rescue/032 Ricochet.txt": {
-      "fastest": 38,
-      "most_recent": 62
+    "data/gentoo-rescue/Inception/Foreboding/Flutter.txt": {
+      "fastest": 20,
+      "most_recent": 27
     },
-    "data/gentoo-rescue/033 Turn.txt": {
-      "fastest": 8,
-      "most_recent": 23
+    "data/gentoo-rescue/Inception/Foreboding/Free.txt": {
+      "fastest": 23,
+      "most_recent": 27
     },
-    "data/gentoo-rescue/034 Momentum.txt": {
-      "fastest": 8,
+    "data/gentoo-rescue/Inception/Foreboding/Heist.txt": {
+      "fastest": 13,
+      "most_recent": 16
+    },
+    "data/gentoo-rescue/Inception/Foreboding/Jackhammer.txt": {
+      "fastest": 12,
       "most_recent": 49
     },
-    "data/gentoo-rescue/035 Quake.txt": {
-      "fastest": 6,
-      "most_recent": 37
+    "data/gentoo-rescue/Inception/Foreboding/NAG.txt": {
+      "fastest": 16,
+      "most_recent": 29
     },
-    "data/gentoo-rescue/036 Interruption.txt": {
-      "fastest": 12,
-      "most_recent": 24
+    "data/gentoo-rescue/Inception/Foreboding/Storm.txt": {
+      "fastest": 10,
+      "most_recent": 184
     },
-    "data/gentoo-rescue/037 Four.txt": {
-      "fastest": 9,
-      "most_recent": 194
+    "data/gentoo-rescue/Inception/Foreboding/Tango.txt": {
+      "fastest": 11,
+      "most_recent": 11
     },
-    "data/gentoo-rescue/038 EY0.txt": {
-      "fastest": 206,
-      "most_recent": 243
-    },
-    "data/gentoo-rescue/039 Wormhole.txt": {
-      "fastest": 42,
-      "most_recent": 57
-    },
-    "data/gentoo-rescue/040 Leap.txt": {
-      "fastest": 7,
+    "data/gentoo-rescue/Inception/Mjolnir.txt": {
+      "fastest": 11,
       "most_recent": 13
     },
-    "data/gentoo-rescue/041 Flow.txt": {
-      "fastest": 10,
-      "most_recent": 14
+    "data/gentoo-rescue/Inception/Mjolnir/Bash.txt": {
+      "fastest": 13,
+      "most_recent": 13
     },
-    "data/gentoo-rescue/042 Lemniscate.txt": {
-      "fastest": 180,
-      "most_recent": 242
-    },
-    "data/gentoo-rescue/043 Crutches.txt": {
+    "data/gentoo-rescue/Inception/Mjolnir/Brake.txt": {
       "fastest": 9,
-      "most_recent": 10
-    },
-    "data/gentoo-rescue/044 Stop.txt": {
-      "fastest": 13,
-      "most_recent": 20
-    },
-    "data/gentoo-rescue/045 Step.txt": {
-      "fastest": 22,
-      "most_recent": 32
-    },
-    "data/gentoo-rescue/046 Nudge.txt": {
-      "fastest": 9,
-      "most_recent": 16
-    },
-    "data/gentoo-rescue/047 Blockade.txt": {
-      "fastest": 13,
-      "most_recent": 26
-    },
-    "data/gentoo-rescue/048 Threading.txt": {
-      "fastest": 12,
-      "most_recent": 21
-    },
-    "data/gentoo-rescue/049 Stride.txt": {
-      "fastest": 1039,
-      "most_recent": 1423
-    },
-    "data/gentoo-rescue/050 Barrier.txt": {
-      "fastest": 36,
-      "most_recent": 46
-    },
-    "data/gentoo-rescue/051 Transfer.txt": {
-      "fastest": 7,
-      "most_recent": 17
-    },
-    "data/gentoo-rescue/052 Paralyze.txt": {
-      "fastest": 28208,
-      "most_recent": 29478
-    },
-    "data/gentoo-rescue/053 Detonation.txt": {
-      "fastest": 8,
-      "most_recent": 195
-    },
-    "data/gentoo-rescue/054 Trigger.txt": {
-      "fastest": 6,
-      "most_recent": 21
-    },
-    "data/gentoo-rescue/055 Planted.txt": {
-      "fastest": 13,
-      "most_recent": 196
-    },
-    "data/gentoo-rescue/056 Abort.txt": {
-      "fastest": 6,
-      "most_recent": 19
-    },
-    "data/gentoo-rescue/057 Breach.txt": {
-      "fastest": 10,
       "most_recent": 12
     },
-    "data/gentoo-rescue/058 Flare.txt": {
-      "fastest": 111,
-      "most_recent": 121
-    },
-    "data/gentoo-rescue/059 Exodus.txt": {
-      "fastest": 280,
-      "most_recent": 301
-    },
-    "data/gentoo-rescue/060 ON.txt": {
+    "data/gentoo-rescue/Inception/Mjolnir/Frozen.txt": {
       "fastest": 10,
-      "most_recent": 14
+      "most_recent": 10
     },
-    "data/gentoo-rescue/061 Clear.txt": {
-      "fastest": 632,
-      "most_recent": 844
+    "data/gentoo-rescue/Inception/Mjolnir/March.txt": {
+      "fastest": 178,
+      "most_recent": 183
     },
-    "data/gentoo-rescue/062 Breakout.txt": {
-      "fastest": 1358,
-      "most_recent": 1358
-    },
-    "data/gentoo-rescue/064 Walk.txt": {
-      "fastest": 56,
-      "most_recent": 76
-    },
-    "data/gentoo-rescue/065 WN.txt": {
-      "fastest": 37,
-      "most_recent": 40
-    },
-    "data/gentoo-rescue/066 Compulsion.txt": {
+    "data/gentoo-rescue/Inception/Mjolnir/Nails.txt": {
       "fastest": 9,
       "most_recent": 9
     },
-    "data/gentoo-rescue/069 Ground Rules.txt": {
-      "fastest": 8,
-      "most_recent": 16
+    "data/gentoo-rescue/Inception/Mjolnir/Preservation.txt": {
+      "fastest": 11,
+      "most_recent": 183
     },
-    "data/gentoo-rescue/070 Foreboding.txt": {
-      "fastest": 12,
-      "most_recent": 17
+    "data/gentoo-rescue/Inception/Mjolnir/Propagation.txt": {
+      "fastest": 25,
+      "most_recent": 27
     },
-    "data/gentoo-rescue/071 Storm.txt": {
+    "data/gentoo-rescue/Inception/Mjolnir/Smash.txt": {
+      "fastest": 13,
+      "most_recent": 14
+    },
+    "data/gentoo-rescue/Inception/Mjolnir/Spin.txt": {
       "fastest": 8,
+      "most_recent": 180
+    },
+    "data/gentoo-rescue/Inception/Mjolnir/Stomp.txt": {
+      "fastest": 13,
+      "most_recent": 13
+    },
+    "data/gentoo-rescue/Inception/Mjolnir/Trail.txt": {
+      "fastest": 10,
+      "most_recent": 14
+    },
+    "data/gentoo-rescue/Inception/Moonwalk/Escort.txt": {
+      "fastest": 9,
+      "most_recent": 9
+    },
+    "data/gentoo-rescue/Inception/Moonwalk/Lean.txt": {
+      "fastest": 14,
+      "most_recent": 19
+    },
+    "data/gentoo-rescue/Inception/Moonwalk/Ometa.txt": {
+      "fastest": 11,
+      "most_recent": 180
+    },
+    "data/gentoo-rescue/Inception/Moonwalk/Recoil.txt": {
+      "fastest": 10,
       "most_recent": 11
     },
-    "data/gentoo-rescue/072 Jackhammer.txt": {
-      "fastest": 11,
+    "data/gentoo-rescue/Inception/Moonwalk/Retrograde.txt": {
+      "fastest": 9,
+      "most_recent": 14
+    },
+    "data/gentoo-rescue/Inception/Moonwalk/Skipping.txt": {
+      "fastest": 10,
+      "most_recent": 184
+    },
+    "data/gentoo-rescue/Inception/Moonwalk/Torsion.txt": {
+      "fastest": 10,
+      "most_recent": 13
+    },
+    "data/gentoo-rescue/Inception/Moonwalk/Twist.txt": {
+      "fastest": 9,
+      "most_recent": 11
+    },
+    "data/gentoo-rescue/Inception/Moonwalk/Unbounded.txt": {
+      "fastest": 12,
+      "most_recent": 180
+    },
+    "data/gentoo-rescue/Transition/Flare.txt": {
+      "fastest": 109,
+      "most_recent": 109
+    },
+    "data/gentoo-rescue/Transition/Flare/Abort.txt": {
+      "fastest": 10,
+      "most_recent": 11
+    },
+    "data/gentoo-rescue/Transition/Flare/Breach.txt": {
+      "fastest": 14,
       "most_recent": 15
     },
-    "data/gentoo-rescue/073 Heist.txt": {
-      "fastest": 12,
-      "most_recent": 197
+    "data/gentoo-rescue/Transition/Flare/Breakout.txt": {
+      "fastest": 1351,
+      "most_recent": 1392
     },
-    "data/gentoo-rescue/074 Drop.txt": {
-      "fastest": 7,
-      "most_recent": 18
+    "data/gentoo-rescue/Transition/Flare/Clear.txt": {
+      "fastest": 624,
+      "most_recent": 712
     },
-    "data/gentoo-rescue/075 Disguise.txt": {
-      "fastest": 12,
-      "most_recent": 12
+    "data/gentoo-rescue/Transition/Flare/Detonation.txt": {
+      "fastest": 18,
+      "most_recent": 181
     },
-    "data/gentoo-rescue/076 Tango.txt": {
-      "fastest": 9,
-      "most_recent": 10
+    "data/gentoo-rescue/Transition/Flare/Exodus.txt": {
+      "fastest": 311,
+      "most_recent": 339
     },
-    "data/gentoo-rescue/077 Free.txt": {
-      "fastest": 17,
-      "most_recent": 26
-    },
-    "data/gentoo-rescue/078 Flutter.txt": {
-      "fastest": 17,
-      "most_recent": 26
-    },
-    "data/gentoo-rescue/079 Cleanup.txt": {
-      "fastest": 12,
-      "most_recent": 24
-    },
-    "data/gentoo-rescue/080 NAG.txt": {
-      "fastest": 9,
-      "most_recent": 20
-    },
-    "data/gentoo-rescue/081 Liftoff.txt": {
-      "fastest": 19,
-      "most_recent": 413
-    },
-    "data/gentoo-rescue/082 Rockets.txt": {
-      "fastest": 7,
-      "most_recent": 42
-    },
-    "data/gentoo-rescue/083 Frenzy.txt": {
-      "fastest": 10,
-      "most_recent": 56
-    },
-    "data/gentoo-rescue/084 Propulsion.txt": {
-      "fastest": 9,
-      "most_recent": 18
-    },
-    "data/gentoo-rescue/085 Deflection.txt": {
-      "fastest": 15,
-      "most_recent": 24
-    },
-    "data/gentoo-rescue/086 Prune.txt": {
-      "fastest": 55,
-      "most_recent": 86
-    },
-    "data/gentoo-rescue/087 UU.txt": {
-      "fastest": 9,
-      "most_recent": 48
-    },
-    "data/gentoo-rescue/088 Defusal.txt": {
-      "fastest": 1591,
-      "most_recent": 1591
-    },
-    "data/gentoo-rescue/089 Rubber.txt": {
-      "fastest": 27,
-      "most_recent": 69
-    },
-    "data/gentoo-rescue/090 Extinction.txt": {
+    "data/gentoo-rescue/Transition/Flare/ON.txt": {
       "fastest": 16,
-      "most_recent": 17
+      "most_recent": 73
     },
-    "data/gentoo-rescue/091 Balance.txt": {
+    "data/gentoo-rescue/Transition/Flare/Planted.txt": {
       "fastest": 21,
+      "most_recent": 47
+    },
+    "data/gentoo-rescue/Transition/Flare/Trigger.txt": {
+      "fastest": 15,
+      "most_recent": 25
+    },
+    "data/gentoo-rescue/Transition/Lemniscate.txt": {
+      "fastest": 203,
+      "most_recent": 336
+    },
+    "data/gentoo-rescue/Transition/Lemniscate/EY0.txt": {
+      "fastest": 238,
+      "most_recent": 287
+    },
+    "data/gentoo-rescue/Transition/Lemniscate/Flow.txt": {
+      "fastest": 17,
       "most_recent": 22
     },
-    "data/gentoo-rescue/093 Final.txt": {
+    "data/gentoo-rescue/Transition/Lemniscate/Four.txt": {
+      "fastest": 13,
+      "most_recent": 27
+    },
+    "data/gentoo-rescue/Transition/Lemniscate/Inertia.txt": {
+      "fastest": 11,
+      "most_recent": 42
+    },
+    "data/gentoo-rescue/Transition/Lemniscate/Interruption.txt": {
+      "fastest": 15,
+      "most_recent": 34
+    },
+    "data/gentoo-rescue/Transition/Lemniscate/Leap.txt": {
+      "fastest": 10,
+      "most_recent": 10
+    },
+    "data/gentoo-rescue/Transition/Lemniscate/Momentum.txt": {
+      "fastest": 8,
+      "most_recent": 8
+    },
+    "data/gentoo-rescue/Transition/Lemniscate/Quake.txt": {
+      "fastest": 10,
+      "most_recent": 12
+    },
+    "data/gentoo-rescue/Transition/Lemniscate/Ricochet.txt": {
+      "fastest": 46,
+      "most_recent": 53
+    },
+    "data/gentoo-rescue/Transition/Lemniscate/Thinking.txt": {
+      "fastest": 15,
+      "most_recent": 30
+    },
+    "data/gentoo-rescue/Transition/Lemniscate/Turn.txt": {
       "fastest": 9,
-      "most_recent": 39
+      "most_recent": 42
     },
-    "data/gentoo-rescue/094 Discard.txt": {
-      "fastest": 44,
-      "most_recent": 44
+    "data/gentoo-rescue/Transition/Lemniscate/While.txt": {
+      "fastest": 955,
+      "most_recent": 1069
     },
-    "data/gentoo-rescue/095 Countdown.txt": {
-      "fastest": 60,
-      "most_recent": 83
+    "data/gentoo-rescue/Transition/Lemniscate/Wormhole.txt": {
+      "fastest": 50,
+      "most_recent": 69
     },
-    "data/gentoo-rescue/096 Brake.txt": {
+    "data/gentoo-rescue/Transition/Liftoff.txt": {
+      "fastest": 356,
+      "most_recent": 373
+    },
+    "data/gentoo-rescue/Transition/Liftoff/Balance.txt": {
+      "fastest": 19,
+      "most_recent": 22
+    },
+    "data/gentoo-rescue/Transition/Liftoff/Countdown.txt": {
+      "fastest": 31,
+      "most_recent": 51
+    },
+    "data/gentoo-rescue/Transition/Liftoff/Deflection.txt": {
+      "fastest": 23,
+      "most_recent": 46
+    },
+    "data/gentoo-rescue/Transition/Liftoff/Defusal.txt": {
+      "fastest": 1597,
+      "most_recent": 1855
+    },
+    "data/gentoo-rescue/Transition/Liftoff/Discard.txt": {
+      "fastest": 37,
+      "most_recent": 63
+    },
+    "data/gentoo-rescue/Transition/Liftoff/Extinction.txt": {
+      "fastest": 15,
+      "most_recent": 20
+    },
+    "data/gentoo-rescue/Transition/Liftoff/Final.txt": {
+      "fastest": 10,
+      "most_recent": 16
+    },
+    "data/gentoo-rescue/Transition/Liftoff/Frenzy.txt": {
+      "fastest": 13,
+      "most_recent": 48
+    },
+    "data/gentoo-rescue/Transition/Liftoff/Propulsion.txt": {
+      "fastest": 8,
+      "most_recent": 86
+    },
+    "data/gentoo-rescue/Transition/Liftoff/Prune.txt": {
       "fastest": 56,
-      "most_recent": 56
+      "most_recent": 86
     },
-    "data/gentoo-rescue/test.txt": {
-      "fastest": 5,
-      "most_recent": 18
+    "data/gentoo-rescue/Transition/Liftoff/Rockets.txt": {
+      "fastest": 10,
+      "most_recent": 16
+    },
+    "data/gentoo-rescue/Transition/Liftoff/Rubber.txt": {
+      "fastest": 31,
+      "most_recent": 41
+    },
+    "data/gentoo-rescue/Transition/Liftoff/UU.txt": {
+      "fastest": 13,
+      "most_recent": 34
+    },
+    "data/gentoo-rescue/Transition/Walk.txt": {
+      "fastest": 83,
+      "most_recent": 100
+    },
+    "data/gentoo-rescue/Transition/Walk/Barrier.txt": {
+      "fastest": 61,
+      "most_recent": 99
+    },
+    "data/gentoo-rescue/Transition/Walk/Blockade.txt": {
+      "fastest": 16,
+      "most_recent": 16
+    },
+    "data/gentoo-rescue/Transition/Walk/Compulsion.txt": {
+      "fastest": 13,
+      "most_recent": 13
+    },
+    "data/gentoo-rescue/Transition/Walk/Crutches.txt": {
+      "fastest": 14,
+      "most_recent": 14
+    },
+    "data/gentoo-rescue/Transition/Walk/Nudge.txt": {
+      "fastest": 10,
+      "most_recent": 26
+    },
+    "data/gentoo-rescue/Transition/Walk/Paralyze.txt": {
+      "fastest": 29270,
+      "most_recent": 29270
+    },
+    "data/gentoo-rescue/Transition/Walk/Step.txt": {
+      "fastest": 26,
+      "most_recent": 66
+    },
+    "data/gentoo-rescue/Transition/Walk/Stop.txt": {
+      "fastest": 22,
+      "most_recent": 22
+    },
+    "data/gentoo-rescue/Transition/Walk/Stride.txt": {
+      "fastest": 1130,
+      "most_recent": 1159
+    },
+    "data/gentoo-rescue/Transition/Walk/Threading.txt": {
+      "fastest": 33,
+      "most_recent": 33
+    },
+    "data/gentoo-rescue/Transition/Walk/Transfer.txt": {
+      "fastest": 12,
+      "most_recent": 17
+    },
+    "data/gentoo-rescue/Transition/Walk/WN.txt": {
+      "fastest": 44,
+      "most_recent": 49
     }
   }
 }

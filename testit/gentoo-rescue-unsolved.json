@@ -1,0 +1,16 @@
+{
+  "results": {},
+  "metadata": {
+    "command": "./target/release/gentoo-rescue",
+    "directory": null,
+    "files": "data/gentoo-rescue/**/*.txt-unsolved"
+  },
+  "options": {
+    "stdout_mode": "Both",
+    "stderr_mode": "Print",
+    "env": [],
+    "preserve_env": false,
+    "timeout": 60
+  },
+  "timing": {}
+}
