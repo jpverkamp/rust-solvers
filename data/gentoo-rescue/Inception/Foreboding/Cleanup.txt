@@ -1,5 +1,3 @@
-# Gentoo Rescue/Inception/Foreboding/Cleanup
-
 ~....
 ..*.*
 ..~~~
