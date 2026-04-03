@@ -1,0 +1,35 @@
+~~.~~~~~~
+.........
+.........
+.........
+~~.~~~~~~
+
+..........
+|..w.....|
+|..w.....|
+|..w.....|
+..........
+
+.........
+--......-
+...-----.
+...-----.
+--......-
+.........
+
+1 3 teleport 5 3
+5 3 teleport 1 3
+3 1 red penguin
+3 1 hammer
+2 3 grey penguin
+3 3 grey penguin
+4 2 grey penguin
+4 3 grey penguin
+2 9 grey seal
+2 9 bomb
+3 9 grey seal
+3 9 bomb
+4 8 grey seal
+4 8 bomb
+4 9 grey seal
+4 9 bomb

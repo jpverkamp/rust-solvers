@@ -442,7 +442,10 @@ impl Map {
                 return None;
             }
 
-            if self.used_teleports.contains(&(direction, me.location())) {
+            if self
+                .used_teleports
+                .contains(&(direction, me.location(), critter_index))
+            {
                 tracing::debug!("teleport loop detected, not using teleport LAUNCHING");
                 self.critters[critter_index].escape();
                 return Some(false);
@@ -457,7 +460,8 @@ impl Map {
                 None => {
                     // Teleport there and keep going!
                     tracing::debug!("teleporting to {target:?}");
-                    self.used_teleports.push((direction, me.location()));
+                    self.used_teleports
+                        .push((direction, me.location(), critter_index));
                     self.teleport_cooldown = true;
                     self.critters[critter_index].move_to(target);
                     return Some(true);

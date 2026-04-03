@@ -46,7 +46,7 @@ pub(crate) struct Map {
 
     // Current state of teleporters
     // Used to detect infinite loops and avoid double teleports
-    pub(crate) used_teleports: Vec<(Direction, Point)>,
+    pub(crate) used_teleports: Vec<(Direction, Point, usize)>,
     pub(crate) teleport_cooldown: bool,
 }
 

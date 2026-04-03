@@ -1,0 +1,23 @@
+~..*..
+~...~.
+......
+~~..~~
+
+......|
+...|..|
+......|
+..|.|..
+
+.-..--
+......
+......
+.-..--
+..--..
+
+1 2 red penguin
+2 4 grey penguin
+2 4 blue nest
+2 4 bomb
+3 1 teleport 1 4
+3 6 green penguin
+4 4 blue penguin
