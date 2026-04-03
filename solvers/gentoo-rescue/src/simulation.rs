@@ -54,7 +54,28 @@ impl Map {
                 Tile::Dust | Tile::Nest { dusty: true, .. }
             )
         {
-            return false;
+            // Special case: if you're carrying a rocket, you can propel (but not move)
+            if self.critters[critter_index].carrying() == Some(ThingKind::Rocket) {
+                let propel_direction = direction.flip();
+
+                if let Some(other_index) = self.critters.iter().position(|c| {
+                    c.location()
+                        == self.critters[critter_index].location() + propel_direction.into()
+                }) {
+                    if self.try_move_one(other_index, propel_direction, 0, false) {
+                        tracing::debug!("propelled off another critter");
+                        return true;
+                    } else {
+                        tracing::debug!(
+                            "propelled off another critter, but it couldn't move, escaping"
+                        );
+                        self.critters[other_index].escape();
+                        return true;
+                    }
+                }
+            } else {
+                return false;
+            }
         }
 
         // If we're carrying a rocket, the first thing that happens is pushing anything behind us
@@ -560,10 +581,6 @@ impl State<Global, Step> for Map {
             }
 
             if self.critters[critter_index].color() == Color::Gray {
-                continue;
-            }
-
-            if self.tile_at(self.critters[critter_index].location()) == Tile::Dust {
                 continue;
             }
 

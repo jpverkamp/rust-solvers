@@ -85,6 +85,7 @@ fn main() {
                 for critter in map.critters.iter() {
                     println!("{critter}");
                 }
+                println!("Is solved: {:?}", map.is_solved(&()));
                 println!();
             }
         }
