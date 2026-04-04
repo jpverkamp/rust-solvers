@@ -17,6 +17,7 @@ pub enum Tile {
     Dust,
     Teleport(Point),
     Toggle(char),
+    Recur,
 }
 
 impl From<char> for Tile {
@@ -28,6 +29,7 @@ impl From<char> for Tile {
             '#' => Tile::Wall,
             '*' => Tile::Dust,
             'A'..='Z' => Tile::Toggle(value),
+            '^' => Tile::Recur,
             _ => unimplemented!("unknown tile {value}"),
         }
     }
@@ -64,6 +66,7 @@ impl From<Tile> for char {
             Tile::Dust => '*',
             Tile::Teleport(_) => '§',
             Tile::Toggle(c) => c,
+            Tile::Recur => '^',
         }
     }
 }

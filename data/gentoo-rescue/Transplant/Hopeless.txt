@@ -1,0 +1,13 @@
+.xxxx.
+.~~~~.
+
+|.::::|
+||...||
+
+------
+.----.
+-....-
+
+2 1 red penguin
+2 6 red nest
+import red hammer

@@ -159,6 +159,35 @@ fn main() {
                     );
                     last_critter_index = usize::MAX;
                 }
+                simulation::Step::Imports(imports) => {
+                    println!();
+                    for j in 0..map.imports.len() {
+                        if (imports & (1 << j)) != 0 {
+                            let (color, thing) = map.imports[j];
+                            println!("Import {color:?} {thing:?}");
+
+                            // Find the first critter that matches the color and give them the thing
+                            // TODO: This is duplicated code
+                            if let Some(critter) =
+                                map.critters.iter_mut().find(|c| c.color() == color)
+                            {
+                                critter.pick_up(thing);
+                            }
+                        }
+                    }
+                }
+                simulation::Step::Recur(critter_index) => {
+                    println!();
+
+                    let critter = map.critters[critter_index];
+                    println!("Recur {critter}");
+
+                    if let Some(new_map) = map.try_recur(critter_index) {
+                        map = new_map;
+                    } else {
+                        panic!("Simulation failed");
+                    }
+                }
             }
         }
         println!();

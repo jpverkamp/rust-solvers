@@ -6,11 +6,13 @@ type Global = ();
 
 #[derive(Debug, Clone, Copy)]
 pub(crate) enum Step {
+    Imports(usize), // Bitmask of imports to apply
     Move {
         critter_index: usize,
         direction: Direction,
     },
     Swap(usize),
+    Recur(usize),
 }
 
 use crate::model::color::Color;
@@ -169,6 +171,9 @@ impl Map {
             }
             Tile::Teleport(_) | Tile::Toggle(_) => {
                 // Handle elsewhere
+            }
+            Tile::Recur => {
+                // Handled in next_states
             }
         }
 
@@ -511,6 +516,34 @@ impl Map {
         swap.used = true;
         true
     }
+
+    pub(crate) fn try_recur(&self, critter_index: usize) -> Option<Map> {
+        let me = self.critters[critter_index];
+
+        // We have to be standing on a recur tile
+        if self.tile_at(me.location()) != Tile::Recur {
+            return None;
+        }
+
+        // Which means we have to have an initial map
+        let initial_map = self.initial_map.as_ref()?.as_ref();
+
+        // And we have to be holding something different
+        if me.carrying().is_none()
+            || me.carrying() == initial_map.critters[critter_index].carrying()
+        {
+            return None;
+        }
+
+        let mut new_map = initial_map.clone();
+        new_map.critters[critter_index].pick_up(me.carrying().unwrap());
+        tracing::debug!(
+            "Transitioning into sublevel with critter {critter_index} carrying {:?} (was {:?})",
+            new_map.critters[critter_index].carrying(),
+            me.carrying()
+        );
+        Some(new_map)
+    }
 }
 
 impl State<Global, Step> for Map {
@@ -571,6 +604,50 @@ impl State<Global, Step> for Map {
     #[tracing::instrument(skip(self))]
     fn next_states(&self, _: &Global) -> Option<Vec<(i64, Step, Map)>> {
         let mut next_states = vec![];
+
+        // Before we do anything, if we have any available imports apply those
+        // After that, clear the imports since we can only do those at start
+        if !self.imports.is_empty() {
+            // Generate a new state for each combination of imports
+            // Count imports in binary
+            for i in 0..(1 << (1 + self.imports.len())) {
+                let mut new_map = self.clone();
+                for j in 0..self.imports.len() {
+                    if (i & (1 << j)) != 0 {
+                        let (color, thing) = self.imports[j];
+
+                        // Find the first critter that matches the color and give them the thing
+                        // Failing to import is fine, the de-duplication of states will take care of it
+                        // TODO: What if there are multiple of a color?
+                        if let Some(critter) =
+                            new_map.critters.iter_mut().find(|c| c.color() == color)
+                        {
+                            tracing::debug!("Import {thing:?} for {color:?} critter");
+                            critter.pick_up(thing);
+                        } else {
+                            tracing::debug!(
+                                "No critter of color {color:?} to import {thing:?}, skipping import"
+                            );
+                        }
+                    }
+                }
+                new_map.imports.clear();
+                next_states.push((0, Step::Imports(i), new_map));
+            }
+
+            if next_states.len() > 1 {
+                return Some(next_states);
+            }
+        }
+
+        // Next, try recurring
+        if self.initial_map.is_some() {
+            for critter_index in 0..self.critters.len() {
+                if let Some(next_map) = self.try_recur(critter_index) {
+                    next_states.push((1, Step::Recur(critter_index), next_map));
+                }
+            }
+        }
 
         // Try each swap
         for swap_index in 0..self.swaps.len() {

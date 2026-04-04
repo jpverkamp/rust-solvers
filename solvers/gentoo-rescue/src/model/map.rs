@@ -42,6 +42,13 @@ pub(crate) struct Map {
     // Places where you can swap a critter with one from a sublevel
     pub(crate) swaps: Vec<Swap>,
 
+    // Possible imports you can load into the map
+    pub(crate) imports: Vec<(Color, ThingKind)>,
+
+    // Initial state of the map used for recursive levels
+    // Don't contain another version :p
+    pub(crate) initial_map: Option<Box<Map>>,
+
     // === State variables while solving ===
 
     // Current state of teleporters
@@ -267,7 +274,7 @@ impl From<&str> for Map {
         let mut row = 0;
 
         while let Some(line) = lines.next()
-            && !line.is_empty()
+            && !line.trim().is_empty()
         {
             assert_eq!(
                 width + 1,
@@ -287,7 +294,7 @@ impl From<&str> for Map {
         let mut row = 0;
 
         while let Some(line) = lines.next()
-            && !line.is_empty()
+            && !line.trim().is_empty()
         {
             assert_eq!(
                 width,
@@ -313,9 +320,17 @@ impl From<&str> for Map {
         let mut toggle_rules = vec![];
         let mut sublevels = vec![];
         let mut swaps = vec![];
+        let mut imports = vec![];
 
         for line in lines {
-            if line.starts_with('#') || line.is_empty() {
+            // Allow (and ignore) inline comments starting with #
+            let line = if let Some(comment_start) = line.find('#') {
+                line[..comment_start].trim_end()
+            } else {
+                line
+            };
+
+            if line.is_empty() {
                 continue;
             }
 
@@ -328,6 +343,20 @@ impl From<&str> for Map {
             // Toggles always start with "toggle"
             if parts[0] == "toggle" {
                 toggle_rules.push(ToggleRule::from(line));
+                continue;
+            }
+
+            // Imports define a thing a critter can start with
+            if parts[0] == "import" {
+                assert!(
+                    parts.len() == 3,
+                    "Import lines should be in the format 'import color thing', but got {line}"
+                );
+
+                let color = Color::from(parts[1]);
+                let thing_kind = ThingKind::try_from(parts[2])
+                    .expect("Import thing kind should be a valid thing kind");
+                imports.push((color, thing_kind));
                 continue;
             }
 
@@ -422,7 +451,7 @@ impl From<&str> for Map {
             }
         }
 
-        Map {
+        let mut m = Map {
             width,
             height,
             tiles,
@@ -433,9 +462,18 @@ impl From<&str> for Map {
             toggle_rules: Rc::new(toggle_rules),
             sublevels: Rc::new(sublevels),
             swaps,
+            imports,
+            initial_map: None,
 
             used_teleports: vec![],
             teleport_cooldown: false,
+        };
+
+        // Only populate the initial map if we have at least one recursive tile
+        if m.tiles.iter().any(|t| matches!(t, Tile::Recur)) {
+            m.initial_map = Some(Box::new(m.clone()));
         }
+
+        m
     }
 }
