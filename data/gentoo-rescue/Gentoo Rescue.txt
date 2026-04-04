@@ -23,19 +23,23 @@
 3 9 green penguin
 4 7 red penguin
 6 1 rocket
-6 7 red nest
+6 7 red nest            # Only present before The End?
 6 10 yellow penguin
+# 6 9 yellow nest       # Only present after The End?
 
-# 1 7 level ???
-# 3 4 level ???
+# 1 7 level Transplant
+# 3 4 level ??? # This is impossible until beating impossible
 # 3 7 level Transition
 # 4 4 level Impossible
-# 5 4 level ???
+# 5 4 level Accumulation
 # 5 7 level Ground Rules
 # 5 10 level Inception
 # 6 3 level ???
 # 7 2 level ???
-# 7 6 level ???
+# 7 6 level Pass
 
 4 10 swap blue penguin with spring
 4 10 swap red penguin with hammer
+3 7 swap yellow seal with crutch
+3 7 swap red penguin with crutch
+3 7 swap blue seal

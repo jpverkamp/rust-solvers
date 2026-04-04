@@ -78,23 +78,6 @@ impl Map {
             }
         }
 
-        // If we're carrying a rocket, the first thing that happens is pushing anything behind us
-        if first_call && self.critters[critter_index].carrying() == Some(ThingKind::Rocket) {
-            let behind_location = self.critters[critter_index].location() - direction.into();
-            if let Some(other_critter) = self
-                .critters
-                .iter()
-                .position(|c| c.location() == behind_location)
-            {
-                tracing::debug!("rocketing off another critter behind us");
-                let moved = self.try_move_one(other_critter, direction.flip(), 0, false);
-                if !moved {
-                    tracing::debug!("but it couldn't move, it escapes instead");
-                    self.critters[other_critter].escape();
-                }
-            }
-        }
-
         // Take steps until we should not move any more
         let original_state = self.clone(); // TODO: Expensive...
         while self.try_move_one(critter_index, direction, 0, false) {}
@@ -193,6 +176,24 @@ impl Map {
             Some(end_movement) => return end_movement,
             None => {
                 // Didn't teleport
+            }
+        }
+
+        // If we're moving with a rocket and there's something behind us, push them
+        // This mostly applies on the first move but can also apply to hammers and teleports
+        if depth == 0 && self.critters[critter_index].carrying() == Some(ThingKind::Rocket) {
+            let behind_location = self.critters[critter_index].location() - direction.into();
+            if let Some(other_critter) = self
+                .critters
+                .iter()
+                .position(|c| c.location() == behind_location)
+            {
+                tracing::debug!("rocketing off another critter behind us");
+                let moved = self.try_move_one(other_critter, direction.flip(), depth + 1, false);
+                if !moved {
+                    tracing::debug!("but it couldn't move, it escapes instead");
+                    self.critters[other_critter].escape();
+                }
             }
         }
 
@@ -428,7 +429,10 @@ impl Map {
         // If we're carrying a crutch, only move once
         if self.critters[critter_index].carrying() == Some(ThingKind::Crutch) {
             self.maybe_do_teleport(critter_index, direction);
-            return false;
+
+            // Stop moving if we're still carrying a crutch
+            // This happens in Transition: teleport onto something else
+            return self.critters[critter_index].carrying() != Some(ThingKind::Crutch);
         }
 
         true
@@ -464,6 +468,13 @@ impl Map {
                         .push((direction, me.location(), critter_index));
                     self.teleport_cooldown = true;
                     self.critters[critter_index].move_to(target);
+
+                    if let Some(thing) = self.thing_at(target) {
+                        tracing::debug!("teleporting onto {thing:?}, picking it up");
+                        self.critters[critter_index].pick_up(thing);
+                        self.things.retain(|t| t.location != target);
+                    }
+
                     return Some(true);
                 }
             }

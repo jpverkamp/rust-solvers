@@ -29,10 +29,11 @@ r....|.|.
 4 5 gray penguin
 # 4 5 mask
 5 8 rocket
+5 2 yellow seal
 
 toggle C wall 1 5 right
 toggle C wall 3 1 right
-toggle C wall 2 4 down
+toggle C wall 4 2 down
 
 # 1 1 level Lemniscate
 # 1 7 level Flare
