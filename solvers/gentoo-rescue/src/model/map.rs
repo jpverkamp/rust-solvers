@@ -199,6 +199,113 @@ impl Map {
         };
     }
 
+    #[tracing::instrument(skip(self), ret)]
+    pub(crate) fn toss_item(
+        &mut self,
+        tossed_thing: ThingKind,
+        toss_from: Point,
+        direction: Direction,
+        depth: usize,
+    ) {
+        // Bail out if depth > 4: this is an infinite loop of bouncing items
+        // It's 'valid' but should never be on the solution path
+        if depth > 4 {
+            tracing::warn!(
+                "Hit max toss depth when tossing {tossed_thing:?} from {toss_from:?} in direction {direction:?}, likely an infinite loop. Dropping it into the water."
+            );
+            return;
+        }
+
+        // If we were already holding something
+        // Find the next solid wall in the direction we're moving
+        // With a non-water tile one space beyond that
+        // That's where the items goes... (otherwise just into the water with you)
+        let mut drop_point = toss_from;
+        let mut valid_toss = false;
+
+        if depth == 0 {
+            loop {
+                let wall = self.wall_at(drop_point, direction);
+                if matches!(wall, WallKind::Solid) {
+                    drop_point = drop_point + direction.into();
+                    valid_toss = true;
+                    break;
+                } else {
+                    drop_point = drop_point + direction.into();
+                }
+
+                if drop_point.x < 0
+                    || drop_point.x >= self.width as isize
+                    || drop_point.y < 0
+                    || drop_point.y >= self.height as isize
+                {
+                    // Went off the map, just drop it in the water
+                    drop_point = Point { x: -10, y: -10 };
+                    break;
+                }
+            }
+        } else {
+            drop_point = drop_point + direction.into();
+            valid_toss = true;
+        }
+
+        if !valid_toss || self.is_water(drop_point) {
+            tracing::debug!("dropped {tossed_thing:?} into the water at {drop_point:?}");
+            return;
+        }
+
+        // If there's a critter there, give them the item
+        if let Some(other_critter) = self
+            .critters
+            .iter()
+            .position(|c| c.location() == drop_point)
+        {
+            // If they were holding something, recursively toss it one tile clockwise
+            if let Some(old_thing) = self.critters[other_critter].carrying() {
+                tracing::debug!(
+                    "{them:?} was already holding {old_thing:?}, tossing it one tile clockwise",
+                    them = &self.critters[other_critter]
+                );
+                let new_direction = direction.turn_right();
+                self.toss_item(old_thing, drop_point, new_direction, depth + 1);
+            }
+
+            tracing::debug!(
+                "dropped {tossed_thing:?} onto {them:?}, giving it to them",
+                them = &self.critters[other_critter]
+            );
+            self.critters[other_critter].pick_up(tossed_thing);
+
+            return;
+        }
+
+        // If there was already an item there, it gets 'tossed' one tile clockwise
+        if let Some(index) = self.things.iter().position(|t| t.location == drop_point) {
+            tracing::debug!(
+                "{thing:?} was already at {drop_point:?}, tossing it one tile clockwise",
+                thing = &self.things[index]
+            );
+
+            let new_direction = direction.turn_right();
+            let old_thing = self.things[index].kind;
+            self.toss_item(old_thing, drop_point, new_direction, depth + 1);
+
+            // This needs to be done by location since the index might have changed with recursive calls
+            self.things = self
+                .things
+                .iter()
+                .filter(|t| t.location != drop_point)
+                .cloned()
+                .collect();
+        }
+
+        tracing::debug!("dropped {tossed_thing:?} at {drop_point:?}");
+        self.things.push(Thing {
+            kind: tossed_thing,
+            location: drop_point,
+        });
+    }
+
     // Toggle a wall
     pub(crate) fn toggle_wall(&mut self, p: Point, d: Direction) {
         if let Some(wall) = match self.wall_index(p, d) {

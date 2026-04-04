@@ -1,0 +1,16 @@
+.x....
+~~....
+
+|:.|..|
+..|.|.|
+
+--.---
+--.-..
+..----
+
+1 1 blue nest
+1 3 blue penguin
+1 3 crutch
+1 5 green penguin
+1 5 hammer
+2 5 crutch

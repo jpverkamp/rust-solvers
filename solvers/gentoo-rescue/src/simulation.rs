@@ -414,62 +414,8 @@ impl Map {
             let thing = self.things.remove(index);
             tracing::debug!("picked up {thing:?}");
             self.critters[critter_index].pick_up(thing.kind);
-
-            // If we were already holding something
-            // Find the next solid wall in the direction we're moving
-            // With a non-water tile one space beyond that
-            // That's where the items goes... (otherwise just into the water with you)
             if let Some(old_thing) = old_thing {
-                let mut drop_point = dst;
-                let mut found_wall = false;
-
-                loop {
-                    let wall = self.wall_at(drop_point, direction);
-                    if matches!(
-                        wall,
-                        WallKind::Solid | WallKind::Color(_) | WallKind::Cracked
-                    ) {
-                        drop_point = drop_point + direction.into();
-                        found_wall = true;
-                        break;
-                    } else {
-                        drop_point = drop_point + direction.into();
-                    }
-
-                    if drop_point.x < 0
-                        || drop_point.x >= self.width as isize
-                        || drop_point.y < 0
-                        || drop_point.y >= self.height as isize
-                    {
-                        // Went off the map, just drop it in the water
-                        drop_point = Point { x: -10, y: -10 };
-                        break;
-                    }
-                }
-
-                if !found_wall || self.is_water(drop_point) {
-                    tracing::debug!("dropped {old_thing:?} into the water at {drop_point:?}");
-                } else {
-                    // If there's a critter there, give them the item
-                    // TODO: What if they're holding something? Right now, they swap
-                    if let Some(other_critter) = self
-                        .critters
-                        .iter()
-                        .position(|c| c.location() == drop_point)
-                    {
-                        tracing::debug!(
-                            "dropped {old_thing:?} onto {other_critter:?}, giving it to them"
-                        );
-                        self.critters[other_critter].pick_up(old_thing);
-                        return true;
-                    } else {
-                        tracing::debug!("dropped {old_thing:?} at {drop_point:?}");
-                        self.things.push(Thing {
-                            kind: old_thing,
-                            location: drop_point,
-                        });
-                    }
-                }
+                self.toss_item(old_thing, dst, direction, 0);
             }
         }
 
