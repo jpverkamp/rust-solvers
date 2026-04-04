@@ -45,9 +45,8 @@ pub(crate) struct Map {
     // Possible imports you can load into the map
     pub(crate) imports: Vec<(Color, ThingKind)>,
 
-    // Initial state of the map used for recursive levels
-    // Don't contain another version :p
-    pub(crate) initial_map: Option<Box<Map>>,
+    // Allow maps to contain a copy of themselves
+    pub(crate) recur: Option<(Point, Box<Map>)>,
 
     // === State variables while solving ===
 
@@ -321,6 +320,7 @@ impl From<&str> for Map {
         let mut sublevels = vec![];
         let mut swaps = vec![];
         let mut imports = vec![];
+        let mut recur_point = None;
 
         for line in lines {
             // Allow (and ignore) inline comments starting with #
@@ -387,12 +387,17 @@ impl From<&str> for Map {
                 if let Tile::Nest {
                     color: nest_color,
                     dusty,
-                    ..
+                    open_floor,
                 } = &mut tile
                 {
                     *nest_color = color;
+
                     if tiles[index] == Tile::Dust {
                         *dusty = true;
+                    }
+
+                    if tiles[index] == Tile::Water {
+                        *open_floor = true;
                     }
                 }
 
@@ -437,6 +442,8 @@ impl From<&str> for Map {
                     critter,
                     used: false,
                 });
+            } else if parts[2] == "recur" {
+                recur_point = Some(Point::from((col, row)));
             } else {
                 // If we made it this far, it's a bad object (probably?)
                 panic!("Malformed object: {line}");
@@ -463,15 +470,14 @@ impl From<&str> for Map {
             sublevels: Rc::new(sublevels),
             swaps,
             imports,
-            initial_map: None,
+            recur: None,
 
             used_teleports: vec![],
             teleport_cooldown: false,
         };
 
-        // Only populate the initial map if we have at least one recursive tile
-        if m.tiles.iter().any(|t| matches!(t, Tile::Recur)) {
-            m.initial_map = Some(Box::new(m.clone()));
+        if let Some(p) = recur_point {
+            m.recur = Some((p, Box::new(m.clone())));
         }
 
         m

@@ -1,0 +1,20 @@
+~A*ABA
+AAA*~.
+~*AA~~
+
+.|....|
+|..||||
+.|..|||
+
+.-----
+-.-.-.
+--....
+.---.-
+
+1 4 blue penguin
+2 1 crutch
+3 6 blue nest
+3 2 recur
+
+toggle A floor 2 6
+toggle B floor 3 6

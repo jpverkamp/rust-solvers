@@ -1,6 +1,6 @@
 ~..x.
 .....
-....^
+.....
 
 .|.::|
 .....|
@@ -14,3 +14,4 @@
 1 2 blue penguin
 1 5 blue nest
 2 1 hammer
+3 5 recur

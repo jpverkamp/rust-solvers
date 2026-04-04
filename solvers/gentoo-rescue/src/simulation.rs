@@ -520,13 +520,16 @@ impl Map {
     pub(crate) fn try_recur(&self, critter_index: usize) -> Option<Map> {
         let me = self.critters[critter_index];
 
+        // No recursive (we shouldn't have called this)
+        self.recur.as_ref()?;
+
+        let (recur_point, initial_map) = self.recur.as_ref().unwrap();
+        let initial_map = initial_map.as_ref();
+
         // We have to be standing on a recur tile
-        if self.tile_at(me.location()) != Tile::Recur {
+        if me.location() != *recur_point {
             return None;
         }
-
-        // Which means we have to have an initial map
-        let initial_map = self.initial_map.as_ref()?.as_ref();
 
         // And we have to be holding something different
         if me.carrying().is_none()
@@ -641,7 +644,7 @@ impl State<Global, Step> for Map {
         }
 
         // Next, try recurring
-        if self.initial_map.is_some() {
+        if self.recur.is_some() {
             for critter_index in 0..self.critters.len() {
                 if let Some(next_map) = self.try_recur(critter_index) {
                     next_states.push((1, Step::Recur(critter_index), next_map));
