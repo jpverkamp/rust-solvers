@@ -1,0 +1,27 @@
+.....~
+.~....
+.~~~..
+
+|....|.
+|||...|
+||....|
+
+~----.
+.-...-
+......
+-...--
+
+1 4 red nest
+2 1 red penguin
+2 1 hammer
+2 5 green nest
+3 1 recur
+3 6 green penguin
+
+# The hammer isn't actually in the base level;
+# it's been imported from the level above it (and that's the only way to get into this level)
+#
+# To solve it, we need to run Red off the level, then recur with Green
+# In the recursive level, Red doesn't have the hammer!
+#
+# The simulation does handle doing this recursion, but I don' t have a way to 'force' imports yet

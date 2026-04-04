@@ -1,0 +1,25 @@
+~.~~~
+~...~
+.*..~
+.....
+~~~.~
+
+......
+..|.|.
+......
+|....|
+...||.
+
+.....
+..--.
+-....
+.....
+-~-.-
+...-.
+
+1 2 green penguin
+3 2 blue nest
+4 1 blue penguin
+5 4 green nest
+
+# I 'imported' nothing to remove whatever the green was supposed to hold?

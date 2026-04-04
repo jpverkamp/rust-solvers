@@ -49,6 +49,27 @@ fn main() {
                     let swap = &map.swaps[swap_index];
                     log::info!("Using swap {swap_index}: {swap:?}");
                     map.try_swap(swap_index);
+                } else if parts[0].eq_ignore_ascii_case("recur") {
+                    let row = parts[1]
+                        .parse::<isize>()
+                        .expect("Recur lines should be 'recur {row} {col}'");
+                    let col = parts[2]
+                        .parse::<isize>()
+                        .expect("Recur lines should be 'recur {row} {col}'");
+
+                    let index = map
+                        .critters
+                        .iter()
+                        .position(|c| c.location() == (col - 1, row - 1).into())
+                        .expect("No critter at {row} {col}");
+
+                    log::info!("Recurring with critter {index}: {}", map.critters[index]);
+
+                    if let Some(new_map) = map.try_recur(index) {
+                        map = new_map;
+                    } else {
+                        panic!("Failed to recur");
+                    }
                 } else {
                     let row = parts[0]
                         .parse::<isize>()

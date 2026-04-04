@@ -82,7 +82,24 @@ impl Map {
 
         // Take steps until we should not move any more
         let original_state = self.clone(); // TODO: Expensive...
-        while self.try_move_one(critter_index, direction, 0, false) {}
+        while self.try_move_one(critter_index, direction, 0, false) {
+            // After each 'tick' check if anything fell in the water
+            // This finally comes up in Transplant/Y when an number number moving at once is safe
+            for index in 0..self.critters.len() {
+                if self.critters[index].escaped() {
+                    continue;
+                }
+
+                if self.is_water(self.critters[index].location()) {
+                    tracing::debug!(
+                        "Critter {:?} ended up on {:?}, escaping",
+                        self.critters[index],
+                        self.tile_at(self.critters[index].location())
+                    );
+                    self.critters[index].escape();
+                }
+            }
+        }
 
         // HACK: Escape any animals that ended up on water or cracked floor after movement
         // I'm not sure how we ended up in this state; it's probably crutches returning early
@@ -392,11 +409,35 @@ impl Map {
         self.critters[critter_index].move_to(dst);
 
         // Moved onto a thing, pick it up
-        // If we were already holding something, chuck our current thing into the water
         if let Some(index) = self.things.iter().position(|t| t.location == dst) {
+            let old_thing = self.critters[critter_index].carrying();
             let thing = self.things.remove(index);
             tracing::debug!("picked up {thing:?}");
             self.critters[critter_index].pick_up(thing.kind);
+
+            // If we were already holding something
+            // And there's a wall in the direction we're moving
+            // It gets thrown forward one space instead of disappearing
+            if let Some(old_thing) = old_thing
+                && matches!(
+                    self.wall_at(me.location() + direction.into(), direction),
+                    WallKind::Solid | WallKind::Color(_) | WallKind::Cracked
+                ) {
+                    // BUTTTTTTT... if that space is water, it just gets lost instead of thrown
+                    // This mostly preserves previous solutions, no critter could pick that up (?)
+                    let drop_location = dst + direction.into();
+                    if !self.is_water(drop_location) {
+                        tracing::debug!(
+                            "but there's a wall in the way and we're already holding something, tossing the old thing"
+                        );
+
+                        tracing::debug!("tossed {old_thing:?} at {drop_location:?}");
+                        self.things.push(Thing {
+                            kind: old_thing,
+                            location: drop_location,
+                        });
+                    }
+                }
         }
 
         // If we moved onto a toggle, trigger any matching rules
@@ -531,15 +572,14 @@ impl Map {
             return None;
         }
 
-        // And we have to be holding something different
-        if me.carrying().is_none()
-            || me.carrying() == initial_map.critters[critter_index].carrying()
-        {
-            return None;
+        let mut new_map = initial_map.clone();
+
+        if me.carrying().is_none() {
+            new_map.critters[critter_index].drop();
+        } else {
+            new_map.critters[critter_index].pick_up(me.carrying().unwrap());
         }
 
-        let mut new_map = initial_map.clone();
-        new_map.critters[critter_index].pick_up(me.carrying().unwrap());
         tracing::debug!(
             "Transitioning into sublevel with critter {critter_index} carrying {:?} (was {:?})",
             new_map.critters[critter_index].carrying(),

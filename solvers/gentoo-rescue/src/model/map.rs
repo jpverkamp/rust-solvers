@@ -197,15 +197,6 @@ impl Map {
                 unimplemented!("Can only toggle floor/water tiles, but tile at {p:?} is {other:?}")
             }
         };
-
-        // If the new tile is water and something was standing on it, fall into the water
-        if self.is_water(p) {
-            for critter in &mut self.critters {
-                if critter.location() == p {
-                    critter.escape();
-                }
-            }
-        }
     }
 
     // Toggle a wall

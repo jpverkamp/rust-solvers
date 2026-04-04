@@ -1,0 +1,12 @@
+.*~.
+
+|.|||
+
+--.-
+--.-
+
+1 1 red seal
+1 2 green penguin
+1 4 blue seal
+1 4 rocket
+import green bomb

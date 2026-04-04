@@ -1,0 +1,33 @@
+D~D~.
+DDD.~
+DDDD~
+DDDDD
+~DDD~
+
+||||..
+|...|.
+|.....
+|....|
+.|..|.
+
+-.-..
+.-.-.
+...-.
+....-
+-...-
+.---.
+
+1 5 gray penguin
+1 5 gray nest
+2 1 green seal
+2 1 rocket
+2 3 red seal
+2 3 rocket
+2 4 recur
+3 3 blue seal
+3 3 rocket
+3 4 bomb
+4 2 yellow seal
+4 2 rocket
+
+toggle D floor 1 5

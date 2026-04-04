@@ -64,6 +64,10 @@ impl Critter {
         self.carrying = Some(t);
     }
 
+    pub fn drop(&mut self) {
+        self.carrying = None;
+    }
+
     pub fn escaped(&self) -> bool {
         self.escaped
     }
