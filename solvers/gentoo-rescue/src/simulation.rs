@@ -416,28 +416,47 @@ impl Map {
             self.critters[critter_index].pick_up(thing.kind);
 
             // If we were already holding something
-            // And there's a wall in the direction we're moving
-            // It gets thrown forward one space instead of disappearing
-            if let Some(old_thing) = old_thing
-                && matches!(
-                    self.wall_at(me.location() + direction.into(), direction),
-                    WallKind::Solid | WallKind::Color(_) | WallKind::Cracked
-                ) {
-                    // BUTTTTTTT... if that space is water, it just gets lost instead of thrown
-                    // This mostly preserves previous solutions, no critter could pick that up (?)
-                    let drop_location = dst + direction.into();
-                    if !self.is_water(drop_location) {
-                        tracing::debug!(
-                            "but there's a wall in the way and we're already holding something, tossing the old thing"
-                        );
+            // Find the next solid wall in the direction we're moving
+            // With a non-water tile one space beyond that
+            // That's where the items goes... (otherwise just into the water with you)
+            if let Some(old_thing) = old_thing {
+                let mut drop_point = dst;
+                let mut found_wall = false;
 
-                        tracing::debug!("tossed {old_thing:?} at {drop_location:?}");
-                        self.things.push(Thing {
-                            kind: old_thing,
-                            location: drop_location,
-                        });
+                loop {
+                    let wall = self.wall_at(drop_point, direction);
+                    if matches!(
+                        wall,
+                        WallKind::Solid | WallKind::Color(_) | WallKind::Cracked
+                    ) {
+                        drop_point = drop_point + direction.into();
+                        found_wall = true;
+                        break;
+                    } else {
+                        drop_point = drop_point + direction.into();
+                    }
+
+                    if drop_point.x < 0
+                        || drop_point.x >= self.width as isize
+                        || drop_point.y < 0
+                        || drop_point.y >= self.height as isize
+                    {
+                        // Went off the map, just drop it in the water
+                        drop_point = Point { x: -10, y: -10 };
+                        break;
                     }
                 }
+
+                if !found_wall || self.is_water(drop_point) {
+                    tracing::debug!("dropped {old_thing:?} into the water at {drop_point:?}");
+                } else {
+                    tracing::debug!("dropped {old_thing:?} at {drop_point:?}");
+                    self.things.push(Thing {
+                        kind: old_thing,
+                        location: drop_point,
+                    });
+                }
+            }
         }
 
         // If we moved onto a toggle, trigger any matching rules
