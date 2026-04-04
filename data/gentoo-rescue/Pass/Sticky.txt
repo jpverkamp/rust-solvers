@@ -1,0 +1,19 @@
+..~
+...
+...
+
+|.|.
+|.||
+|..|
+
+--.
+...
+...
+---
+
+1 2 blue penguin
+2 2 crutch
+2 3 gray penguin
+2 3 blue nest
+3 2 bomb
+3 3 yellow penguin

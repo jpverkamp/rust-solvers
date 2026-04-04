@@ -450,11 +450,25 @@ impl Map {
                 if !found_wall || self.is_water(drop_point) {
                     tracing::debug!("dropped {old_thing:?} into the water at {drop_point:?}");
                 } else {
-                    tracing::debug!("dropped {old_thing:?} at {drop_point:?}");
-                    self.things.push(Thing {
-                        kind: old_thing,
-                        location: drop_point,
-                    });
+                    // If there's a critter there, give them the item
+                    // TODO: What if they're holding something? Right now, they swap
+                    if let Some(other_critter) = self
+                        .critters
+                        .iter()
+                        .position(|c| c.location() == drop_point)
+                    {
+                        tracing::debug!(
+                            "dropped {old_thing:?} onto {other_critter:?}, giving it to them"
+                        );
+                        self.critters[other_critter].pick_up(old_thing);
+                        return true;
+                    } else {
+                        tracing::debug!("dropped {old_thing:?} at {drop_point:?}");
+                        self.things.push(Thing {
+                            kind: old_thing,
+                            location: drop_point,
+                        });
+                    }
                 }
             }
         }
